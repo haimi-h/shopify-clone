@@ -1,0 +1,83 @@
+.order-dashboard {
+  display: flex;
+  flex-direction: column;
+  height: 100vh;
+  padding: 40px;
+  font-family: 'Segoe UI', sans-serif;
+  background-color: #f5f5f5;
+  box-sizing: border-box;
+}
+
+/* Stats Section */
+.stats-container {
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  margin-bottom: 40px;
+}
+
+.stat-box {
+  background: white;
+  border-radius: 15px;
+  padding: 30px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  text-align: center;
+  width: 180px;
+}
+
+.stat-number {
+  font-size: 40px;
+  font-weight: bold;
+  color: #333;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: #666;
+  margin-top: 10px;
+  text-transform: capitalize;
+}
+
+/* Action Button */
+.action-button {
+  text-align: center;
+  margin-bottom: 60px;
+}
+
+.action-button button {
+  padding: 14px 28px;
+  font-size: 16px;
+  background-color: #2d72d9;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: 0.3s ease;
+}
+
+.action-button button:hover {
+  background-color: #1a5bb8;
+}
+
+/* Bottom Navigation */
+.bottom-nav {
+  display: flex;
+  justify-content: space-around;
+  padding: 15px 0;
+  background: white;
+  border-top: 1px solid #ddd;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+}
+
+.nav-icon {
+  font-size: 22px;
+  color: #666;
+  cursor: pointer;
+  transition: color 0.2s ease-in-out;
+}
+
+.nav-icon:hover {
+  color: #2d72d9;
+}

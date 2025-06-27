@@ -1,0 +1,107 @@
+/* Container setup */
+/* Top-right globe icon */
+.top-right {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+}
+
+.globe-icon {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+.globe-icon:hover {
+  opacity: 1;
+}
+
+.auth-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #f5f5f5;
+  font-family: 'Arial', sans-serif;
+}
+
+/* Card */
+.auth-card {
+  background-color: white;
+  width: 90%;
+  max-width: 360px;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+/* Logo */
+.logo {
+  width: 100px;
+  height: auto;
+  /* margin-bottom: 1rem; */
+}
+
+/* Brand name and tagline */
+.brand-name {
+  font-size: 1.5rem;
+  font-weight: bold;
+  /* margin-top: 1 rem; */
+  margin-bottom: 0.25rem;
+}
+
+.tagline {
+  font-size: 0.9rem;
+  color: #777;
+  margin-bottom: 1.5rem;
+}
+
+/* Input fields */
+.auth-input {
+  width: 100%;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 0.95rem;
+}
+
+/* Login button */
+.auth-button {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #5c6ac4;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.auth-button:hover {
+  background-color: #3f4ab8;
+}
+
+/* Register link */
+.auth-link {
+  display: inline-block;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: #5c6ac4;
+  text-decoration: none;
+}
+
+.auth-link:hover {
+  text-decoration: underline;
+}
+
+/* Optional: footer */
+.footer-text {
+  margin-top: 2rem;
+  font-size: 0.8rem;
+  color: #999;
+}

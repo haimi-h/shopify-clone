@@ -1,0 +1,101 @@
+.account-page {
+  max-width: 900px;
+  margin: 60px auto;
+  padding: 40px 60px;
+  background-color: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.08);
+  font-family: 'Segoe UI', sans-serif;
+  color: #333;
+}
+
+h2, h3 {
+  color: #222;
+  margin-bottom: 20px;
+}
+
+.account-section {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 12px;
+}
+
+.account-section label {
+  flex: 1;
+  font-weight: 600;
+  font-size: 18px;
+}
+
+.account-section p,
+.account-section input {
+  flex: 2;
+  font-size: 16px;
+}
+
+.account-section input {
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+  width: 100%;
+  background-color: #fafafa;
+}
+
+.account-actions {
+  margin-top: 20px;
+}
+
+.account-actions button {
+  background-color: #0070f3;
+  color: #fff;
+  border: none;
+  padding: 10px 18px;
+  border-radius: 8px;
+  font-size: 15px;
+  cursor: pointer;
+  margin-right: 12px;
+  transition: background-color 0.2s ease;
+}
+
+.account-actions button:hover {
+  background-color: #005ac1;
+}
+
+hr {
+  margin: 40px 0;
+  border: none;
+  border-top: 1px solid #ddd;
+}
+
+.account-referrals {
+  margin-top: 40px;
+}
+
+.account-referrals ul {
+  list-style: none;
+  padding-left: 0;
+}
+
+.account-referrals li {
+  padding: 10px 0;
+  border-bottom: 1px dashed #ccc;
+}
+
+.logout-btn {
+  display: block;
+  margin: 50px auto 0;
+  background-color: #ff4d4f;
+  color: white;
+  border: none;
+  padding: 12px 30px;
+  font-size: 16px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.logout-btn:hover {
+  background-color: #d9363e;
+}

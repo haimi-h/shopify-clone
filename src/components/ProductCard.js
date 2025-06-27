@@ -1,0 +1,13 @@
+function ProductCard({ product }) {
+  return (
+    <div className="product-card">
+      <img src={product.image} alt={product.name} />
+      <h3>{product.name}</h3>
+      <p>${product.price}</p>
+      <small>{product.description}</small>
+      <button>Promote & Earn</button>
+    </div>
+  );
+}
+
+export default ProductCard;

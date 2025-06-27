@@ -1,0 +1,73 @@
+.records-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: sans-serif;
+  background: #fff;
+  color: #333;
+}
+
+.record-buttons {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.record-button {
+  background-color: #454545;
+  color: white;
+  padding: 12px;
+  border: none;
+  border-radius: 10px;
+  font-size: 16px;
+  text-align: left;
+  cursor: pointer;
+}
+
+.info-links p {
+  margin: 8px 0;
+  font-size: 15px;
+  border-bottom: 1px solid #ddd;
+  padding-bottom: 6px;
+  cursor: pointer;
+}
+
+.customer-service {
+  margin-top: 30px;
+  background: #95BF47;
+  color: white;
+  padding: 16px;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.avatar-placeholder {
+  font-size: 40px;
+  margin: 10px 0;
+}
+
+.service-time {
+  font-weight: bold;
+  font-size: 16px;
+}
+
+.note {
+  font-size: 13px;
+  margin-top: 8px;
+  color: #ccc;
+}
+.chat-button {
+  margin-top: 10px;
+  padding: 10px 15px;
+  background-color: #ff5c5c;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 15px;
+}
+.chat-button:hover {
+  background-color: #e14b4b;
+}
+

@@ -1,0 +1,210 @@
+/* VIPPage.css */
+
+
+.vip-container {
+  background-color: rgba(244, 244, 244, 0.8); /* Light gray with 80% opacity */
+  /* or try a darker tone like: rgba(0, 0, 0, 0.1) */
+  
+  /* existing styles */
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 60px 5%;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.vip-tabs {
+  display: flex;
+  justify-content: center;
+  background: #e0e0e0;
+  border-radius: 50px;
+  overflow: hidden;
+  margin-bottom: 40px;
+  flex-wrap: wrap;
+  width: 100%;
+  max-width: 1200px;
+}
+
+.vip-tab {
+  flex: 1 1 200px;
+  text-align: center;
+  padding: 16px 0;
+  background: white;
+  border: none;
+  font-weight: bold;
+  color: #333;
+  font-size: 18px;
+  cursor: pointer;
+  transition: background 0.3s, color 0.3s;
+}
+
+.vip-tab.active {
+  background: #222;
+  color: white;
+}
+
+.vip-card {
+  background: #95BF47;
+  color: white;
+  border-radius: 24px;
+  width: 100%;
+  max-width: 1200px;
+  padding: 40px 60px;
+  text-align: left;
+  position: relative;
+  margin-bottom: 40px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+}
+
+.vip-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 40px;
+  flex-wrap: wrap;
+}
+
+.vip-icon {
+  background: orange;
+  color: black;
+  font-weight: bold;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-size: 22px;
+}
+
+.vip-title {
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.vip-amount {
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.vip-details {
+  margin-top: 20px;
+  font-size: 18px;
+  color: #f1f1f1;
+  line-height: 1.6;
+}
+
+.go-button {
+  background: #454545;
+  color: white;
+  padding: 18px 80px;
+  border: none;
+  border-radius: 35px;
+  font-size: 20px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-bottom: 60px;
+  transition: background 0.3s;
+}
+
+.go-button:hover {
+  background: #95BF47;
+}
+
+.vip-footer {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #333;
+  font-size: 16px;
+  margin-top: auto;
+  padding-bottom: 30px;
+}
+
+.vip-footer img {
+  width: 32px;
+  height: 32px;
+}
+
+
+/* ------------------ Responsive Styles ------------------ */
+@media (max-width: 1024px) {
+  .vip-container {
+    padding: 50px 4%;
+  }
+
+  .vip-card {
+    padding: 35px 40px;
+  }
+
+  .vip-title,
+  .vip-amount {
+    font-size: 24px;
+  }
+}
+
+@media (max-width: 768px) {
+  .vip-tabs {
+    /* Tabs stay in a horizontal row */
+    flex-wrap: wrap; /* Keep wrapping instead of stacking vertically */
+    justify-content: center;
+  }
+
+  .vip-tab {
+    flex: 1 1 33%; /* Make tabs wrap to new line if needed, 3 per row */
+    padding: 14px;
+    font-size: 16px;
+  }
+
+  .vip-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 20px;
+  }
+
+  .vip-card {
+    padding: 30px 20px;
+  }
+
+  .go-button {
+    width: 100%;
+    padding: 16px;
+  }
+
+  .vip-footer {
+    flex-direction: column;
+    text-align: center;
+    gap: 10px;
+  }
+}
+
+@media (max-width: 480px) {
+  .vip-container {
+    padding: 30px 4%;
+  }
+
+  .vip-icon {
+    font-size: 18px;
+    padding: 10px 14px;
+  }
+
+  .vip-title,
+  .vip-amount {
+    font-size: 20px;
+  }
+
+  .vip-details {
+    font-size: 14px;
+  }
+
+  .go-button {
+    font-size: 16px;
+    padding: 14px;
+  }
+
+  .vip-footer {
+    font-size: 14px;
+  }
+
+  .vip-footer img {
+    width: 24px;
+    height: 24px;
+  }
+}
