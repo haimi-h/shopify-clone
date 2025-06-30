@@ -7,6 +7,7 @@ import shopifyLogo from '../shopify-logo.png';
 import LanguageGlobe from './LanguageGlobe'; // Language switcher component
 
 function Login() {
+  const API_URL = process.env.REACT_APP_API_URL;
   const navigate = useNavigate();
 
   const [phone_number, setPhone] = useState('');
@@ -20,11 +21,11 @@ function Login() {
 
     try {
       // Step 1: Get CSRF cookie (only needed for Sanctum)
-      await axios.get('http://192.168.1.6:8000/sanctum/csrf-cookie', { withCredentials: true });
+      await axios.get(`${API_URL}/sanctum/csrf-cookie`, { withCredentials: true });
 
       // Step 2: Send login credentials
       const response = await axios.post(
-        'http://192.168.1.6:8000/login',
+        `${API_URL}/login`,
         {
           phone_number,
           password,
