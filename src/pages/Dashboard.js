@@ -4,9 +4,10 @@ import {
   FaHandPointer, FaUserCircle, FaCog
 } from 'react-icons/fa';
 import shopifyLogo from '../shopify-logo.png';
-// import { useEffect } from 'react';
+import { useEffect } from 'react';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import axios from "axios";
 
 const products = [
   { name: 'No Ball Pen 50PCS', image: 'https://www.penstore.nl/image/cache/wp/gj/j/jherbin/jherbin_stylo_roller_white-175x175h.webp' },
@@ -19,6 +20,8 @@ const products = [
 ];
 
 function Dashboard() {
+  const [user, setUser] = useState(null);
+ const [error, setError] = useState('')
   const [openFaq, setOpenFaq] = useState(null);
   const toggleFaq = (index) => {
   setOpenFaq(prev => (prev === index ? null : index));
@@ -38,8 +41,31 @@ const faqs = [
     answer: "All payment history and upcoming payouts are available under the “Profile” or “Payments” tab in your account dashboard."
   }
 ];
-
+  const API_URL = process.env.REACT_APP_API_URL;
   const navigate = useNavigate();
+  useEffect(() => {
+  const fetchUser = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/api/user`, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+
+      setUser(response.data); // assuming you have a `user` state
+    } catch (err) {
+      console.error('Failed to fetch user:', err);
+      setError('Session expired. Please log in again.');
+      navigate('/login'); // optional redirect on failure
+    }
+  };
+
+  fetchUser();
+},[API_URL, navigate]);
+
+  if (error) return <div>{error}</div>;
+
+
   return (
     <div className="dashboard-layout">
       

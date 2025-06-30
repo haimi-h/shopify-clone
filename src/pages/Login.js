@@ -21,7 +21,8 @@ function Login() {
 
     try {
       // Step 1: Get CSRF cookie (only needed for Sanctum)
-      await axios.get(`${API_URL}/sanctum/csrf-cookie`, { withCredentials: true });
+      // await axios.get(`${API_URL}/sanctum/csrf-cookie`, { withCredentials: true });
+      await axios.get(`${API_URL}`, { withCredentials: true });
 
       // Step 2: Send login credentials
       const response = await axios.post(
@@ -32,6 +33,7 @@ function Login() {
         },
         { withCredentials: true }
       );
+      localStorage.setItem('token', response.data.access_token);
 
       // Step 3: Redirect or store user info
       console.log('Login success:', response.data);
