@@ -46,7 +46,7 @@ function Register() {
     <div className="auth-container">
       <div className="auth-card">
         <h2 className="brand-name">Registration to</h2>
-        <img src="..." alt="Logo" className="logo" />
+        {/* <img src="..." alt="Logo" className="logo" /> */}
         <p className="tagline">Create your account</p>
 
         <input type="text" placeholder="Username" name="username" value={formData.username} onChange={handleChange} className="auth-input" />

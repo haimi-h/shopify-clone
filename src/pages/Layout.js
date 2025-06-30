@@ -10,7 +10,7 @@ function Layout() {
     <div className="dashboard-layout">
       {/* Sidebar */}
       <aside className="sidebar">
-        <img src={shopifyLogo} alt="Shopify Logo" className="shopify-logo" />
+        {/* <img src={shopifyLogo} alt="Shopify Logo" className="shopify-logo" /> */}
         <nav className="nav-links">
           <FaHome title="Home" />
           <FaClipboardList title="Orders" onClick={() => navigate('/order-dashboard')} />
