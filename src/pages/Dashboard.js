@@ -43,27 +43,27 @@ const faqs = [
 ];
   const API_URL = process.env.REACT_APP_API_URL;
   const navigate = useNavigate();
-  useEffect(() => {
-  const fetchUser = async () => {
-    try {
-      const response = await axios.get(`${API_URL}/api/user`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
+//   useEffect(() => {
+//   const fetchUser = async () => {
+//     try {
+//       const response = await axios.get(`${API_URL}/api/user`, {
+//         headers: {
+//           Authorization: `Bearer ${localStorage.getItem('token')}`,
+//         },
+//       });
 
-      setUser(response.data); // assuming you have a `user` state
-    } catch (err) {
-      console.error('Failed to fetch user:', err);
-      setError('Session expired. Please log in again.');
-      navigate('/login'); // optional redirect on failure
-    }
-  };
+//       setUser(response.data); // assuming you have a `user` state
+//     } catch (err) {
+//       console.error('Failed to fetch user:', err);
+//       setError('Session expired. Please log in again.');
+//       navigate('/login'); // optional redirect on failure
+//     }
+//   };
 
-  fetchUser();
-},[API_URL, navigate]);
+//   fetchUser();
+// },[API_URL, navigate]);
 
-  if (error) return <div>{error}</div>;
+//   if (error) return <div>{error}</div>;
 
 
   return (
