@@ -25,7 +25,7 @@ function Login() {
 
       // Step 2: Send login credentials
       const response = await axios.post(
-        `${API_URL}/login`,
+        `${API_URL}/api/login`,
         {
           phone_number,
           password,
