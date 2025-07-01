@@ -3,7 +3,7 @@ import "../Auth.css";
 import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import axios from "axios";
-// import shopifyLogo from '../shopify-logo.png';
+import shopifyLogo from '../shopify-logo.png';
 import LanguageGlobe from './LanguageGlobe'; // Language switcher component
 
 function Login() {
@@ -21,8 +21,7 @@ function Login() {
 
     try {
       // Step 1: Get CSRF cookie (only needed for Sanctum)
-      // await axios.get(`${API_URL}/sanctum/csrf-cookie`, { withCredentials: true });
-      await axios.get(`${API_URL}`, { withCredentials: true });
+      await axios.get(`${API_URL}/sanctum/csrf-cookie`, { withCredentials: true });
 
       // Step 2: Send login credentials
       const response = await axios.post(
@@ -33,7 +32,6 @@ function Login() {
         },
         { withCredentials: true }
       );
-      localStorage.setItem('token', response.data.access_token);
 
       // Step 3: Redirect or store user info
       console.log('Login success:', response.data);
@@ -56,7 +54,7 @@ function Login() {
         </div>
 
         {/* Logo */}
-        {/* <img src={shopifyLogo} alt="Logo" className="logo" /> */}
+        <img src={shopifyLogo} alt="Logo" className="logo" />
         <h2 className="brand-name">Shopify</h2>
         <p className="tagline">Talking</p>
 
