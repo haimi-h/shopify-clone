@@ -22,7 +22,7 @@ function Layout() {
           {/* <FaDownload title="Downloads" /> */}
           {/* <FaDiamond onClick={() => navigate('/vip')} /> */}
           <GiCutDiamond onClick={() => navigate('/vip')} />
-          <FaHandPointer title="Clicks" />
+          {/* <FaHandPointer title="Clicks" /> */}
           <FaUserCircle title="Profile" onClick={() => navigate('/account')} />
           <FaCog title="Settings" />
           
