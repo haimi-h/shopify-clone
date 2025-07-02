@@ -1,13 +1,11 @@
 // Login.jsx
 import "../Auth.css";
 import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
-import axios from "axios";
+import { useState, useEffect } from "react";
 import shopifyLogo from '../shopify-logo.png';
-import LanguageGlobe from './LanguageGlobe'; // Language switcher component
+import LanguageGlobe from './LanguageGlobe';
 
 function Login() {
-  const API_URL = process.env.REACT_APP_API_URL;
   const navigate = useNavigate();
 
   const [phone_number, setPhone] = useState('');
@@ -15,32 +13,47 @@ function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const handleLogin = async () => {
-    setLoading(true);
+  useEffect(() => {
+    const loggedInUser = JSON.parse(localStorage.getItem('loggedInUser'));
+    if (loggedInUser) {
+      // Redirect admin to admin page, others to dashboard
+      if (loggedInUser.is_admin) {
+        navigate('/admin');
+      } else {
+        navigate('/dashboard');
+      }
+    }
+  }, [navigate]);
+
+  const handleLogin = () => {
     setError('');
+    setLoading(true);
 
     try {
-      // Step 1: Get CSRF cookie (only needed for Sanctum)
-      await axios.get(`${API_URL}/sanctum/csrf-cookie`, { withCredentials: true });
+      const users = JSON.parse(localStorage.getItem('users') || '[]');
+      const user = users.find(u => u.phone_number === phone_number && u.password === password);
 
-      // Step 2: Send login credentials
-      const response = await axios.post(
-        `${API_URL}/login`,
-        {
-          phone_number,
-          password,
-        },
-        { withCredentials: true }
-      );
+      if (!user) {
+        setError('Invalid phone number or password.');
+        setLoading(false);
+        return;
+      }
 
-      // Step 3: Redirect or store user info
-      console.log('Login success:', response.data);
-      navigate('/dashboard');
+      // Mark admin user manually (based on phone number)
+      const isAdmin = phone_number === '0911223344'; // 👈 Set your admin number here
+      const userWithRole = { ...user, is_admin: isAdmin };
 
-    } catch (err) {
-      console.error('Login failed:', err.response?.data || err.message);
-      setError(err.response?.data?.message || 'Login failed. Please try again.');
-    } finally {
+      localStorage.setItem('loggedInUser', JSON.stringify(userWithRole));
+
+      // Redirect based on role
+      if (isAdmin) {
+        navigate('/admin');
+      } else {
+        navigate('/dashboard');
+      }
+
+    } catch {
+      setError('Login failed. Please try again.');
       setLoading(false);
     }
   };
@@ -48,20 +61,14 @@ function Login() {
   return (
     <div className="auth-container">
       <div className="auth-card">
-        {/* Top Right Language Selector */}
-        <div className="top-right">
-          <LanguageGlobe />
-        </div>
+        <div className="top-right"><LanguageGlobe /></div>
 
-        {/* Logo */}
         <img src={shopifyLogo} alt="Logo" className="logo" />
         <h2 className="brand-name">Shopify</h2>
         <p className="tagline">Talking</p>
 
-        {/* Error Message */}
         {error && <p className="error-message">{error}</p>}
 
-        {/* Inputs */}
         <input
           type="text"
           placeholder="Phone Number"
@@ -77,7 +84,6 @@ function Login() {
           onChange={(e) => setPassword(e.target.value)}
         />
 
-        {/* Login Button */}
         <button
           className="auth-button"
           onClick={handleLogin}
@@ -86,10 +92,7 @@ function Login() {
           {loading ? 'Logging in...' : 'LOG IN'}
         </button>
 
-        {/* Register Link */}
         <Link to="/register" className="auth-link">Create an account</Link>
-
-        {/* Footer */}
         <p className="footer-text">Powered by Shopify</p>
       </div>
     </div>

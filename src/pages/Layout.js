@@ -1,18 +1,21 @@
 import '../Dashboard.css';
-import { FaUser, FaHome, FaClipboardList, FaDownload, FaHandPointer, FaUserCircle, FaCog } from 'react-icons/fa';
+import {
+  FaUser, FaHome, FaClipboardList, FaDownload,
+  FaHandPointer, FaUserCircle, FaCog
+} from 'react-icons/fa';
 import shopifyLogo from '../shopify-logo.png';
-import { Outlet } from 'react-router-dom'; // if you're using React Router
-import { useNavigate } from 'react-router-dom';
+import { Outlet, useNavigate } from 'react-router-dom';
 
 function Layout() {
   const navigate = useNavigate();
+
   return (
     <div className="dashboard-layout">
       {/* Sidebar */}
       <aside className="sidebar">
-        {/* <img src={shopifyLogo} alt="Shopify Logo" className="shopify-logo" /> */}
+        <img src={shopifyLogo} alt="Shopify Logo" className="shopify-logo" />
         <nav className="nav-links">
-          <FaHome title="Home" />
+          <FaHome title="Home" onClick={() => navigate('/dashboard')} />
           <FaClipboardList title="Orders" onClick={() => navigate('/order-dashboard')} />
           <FaDownload title="Downloads" />
           <FaHandPointer title="Clicks" />
@@ -21,13 +24,12 @@ function Layout() {
         </nav>
       </aside>
 
-      {/* Main Content Area */}
+      {/* Main Wrapper */}
       <div className="main-wrapper">
         <main className="main-content">
-          <Outlet /> {/* If using React Router */}
+          <Outlet />
         </main>
 
-        {/* Footer */}
         <footer className="dashboard-footer">
           &copy; {new Date().getFullYear()} All rights reserved.
         </footer>

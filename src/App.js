@@ -1,28 +1,3 @@
-// import logo from './logo.svg';
-// import './App.css';
-
-// function App() {
-//   return (
-//     <div className="App">
-//       <header className="App-header">
-//         <img src={logo} className="App-logo" alt="logo" />
-//         <p>
-//           Edit <code>src/App.js</code> and save to reload.
-//         </p>
-//         <a
-//           className="App-link"
-//           href="https://reactjs.org"
-//           target="_blank"
-//           rel="noopener noreferrer"
-//         >
-//           Learn React
-//         </a>
-//       </header>
-//     </div>
-//   );
-// }
-
-// export default App;
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Layout from './pages/Layout';
 import Login from './pages/Login';
@@ -36,9 +11,16 @@ import RechargePage from './pages/RechargePage';
 import RecordsPage from './pages/RecordsPage';
 import OrderDashboard from './pages/OrderDashboard';
 import LanguageSelector from './pages/LanguageGlobe';
-import LanguageGlobe from './pages/LanguageGlobe';
+// import LanguageGlobe from './pages/LanguageGlobe';
 import AccountPage from './pages/AccountPage';
 import ReferralCode from './pages/ReferralCode';
+import AdminPage from './pages/admin/AdminPage';
+import AdminDashboard from './pages/admin/AdminDashboard';
+import UserManagement from './pages/admin/UserManagement';
+import VIPSettings from './pages/admin/VIPSettings';
+import ReferralManagement from './pages/admin/ReferralManagement';
+import TransactionManagement from './pages/admin/TransactionManagement';
+// import RequireAdmin from './pages/admin/RequireAdmin';
 
 function App() {
   return (
@@ -49,7 +31,15 @@ function App() {
         <Route path="/" element={<Login />} />
         <Route element={<Layout />}>
            
-           
+           {/* <Route
+          path="/admin"
+          element={
+            <RequireAdmin>
+              <AdminDashboard />
+            </RequireAdmin>
+          }
+        />
+            */}
            <Route path="/orders" element={<OrdersPage />} />
            <Route path="/account" element={<AccountPage />} />
            <Route path="/dashboard" element={<Dashboard />} />
@@ -59,31 +49,24 @@ function App() {
            <Route path="/ordersummary" element={<OrderSummary />} />
            <Route path="/recharge" element={<RechargePage />} />
            <Route path="/referral" element={<ReferralCode />} />
+           {/* <Route path="/admin" element={<AdminPage />} /> */}
+           <Route path="/admin" element={<AdminDashboard />} />
            <Route path="/records" element={<RecordsPage />} />
+           <Route path="/admin/users" element={<UserManagement />} />
+           <Route path="/admin/vip" element={<VIPSettings />} />
+           <Route path="/admin/referrals" element={<ReferralManagement />} />
+           <Route path="/admin/transactions" element={<TransactionManagement />} />
+           
+           
+           
            
            
         </Route>
       </Routes>
-      <LanguageGlobe />
+      {/* <LanguageGlobe /> */}
     </Router>
   );
 }
 
 export default App;
 
-// import React from 'react';
-// import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
-// import HomePage from './pages/HomePage';
-// import OrdersPage from './pages/OrdersPage';
-// import VIPPage from './pages/VIPPage';
-
-// export default function App() {
-//   return (
-//     <Router>
-//       <Routes>
-//         <Route path="/" element={<HomePage />} />
-//         <Route path="/orders" element={<OrdersPage />} />
-//         <Route path="/vip" element={<VIPPage />} />
-//       </Routes>
-//     </Router>
-//   );

@@ -5,7 +5,7 @@ body {
   background-color: #f5f7fa;
   color: #333;
   overflow-x: hidden;
-  
+
 }
 
 /* Layout */
@@ -26,12 +26,19 @@ body {
   flex-shrink: 0
 }
 
+/* .main-wrapper {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+
+} */
 .main-wrapper {
   display: flex;
   flex-direction: column;
   flex-grow: 1;
-  
+  min-height: 100vh; /* This is the key line */
 }
+
 
 /* .main-content {
   flex-grow: 1;
@@ -104,12 +111,12 @@ body {
 
 .username {
   font-weight: 600;
-  
+
 }
 
 .balance {
   text-align: right;
-  
+
 }
 
 .amount {
@@ -125,7 +132,7 @@ body {
 /* Product section */
 .product-section {
   margin-top: 20px;
-  
+
 }
 
 .product-section h2 {
@@ -142,12 +149,14 @@ body {
   scrollbar-color: #ccc transparent;
   scroll-behavior: smooth;
 } */
- .product-scroll {
+.product-scroll {
   display: flex;
-  flex-wrap: nowrap; /* no wrapping */
+  flex-wrap: nowrap;
+  /* no wrapping */
   overflow-x: auto;
   overflow-y: hidden;
-  max-width: 100%; /* important */
+  max-width: 100%;
+  /* important */
   gap: 16px;
   padding-bottom: 12px;
 
@@ -215,7 +224,7 @@ body {
 /* Start button */
 .start-button {
   margin-top: 20px;
-  margin-left: 130px;
+  /* margin-left: 30px; */
   padding: 14px 20px;
   background-color: #198754;
   color: white;
@@ -232,7 +241,7 @@ body {
 }
 
 /* Footer */
-.dashboard-footer {
+/* .dashboard-footer {
   margin: 0px;
   padding: 12px;
   text-align: center;
@@ -240,7 +249,15 @@ body {
   color: white;
   background-color: #212529;
 
+} */
+.dashboard-footer {
+  padding: 12px;
+  text-align: center;
+  font-size: 14px;
+  color: white;
+  background-color: #212529;
 }
+
 
 /* Additional Info Section */
 .additional-info {
@@ -425,4 +442,71 @@ body {
   padding: 10px;
   font-size: 14px;
   margin-top: auto;
+} */
+
+/* @media (min-width: 900px) {
+  .dashboard-layout {
+    flex-direction: row;
+    min-height: 100vh;
+  }
+
+  .sidebar {
+    width: 220px;
+    align-items: flex-start;
+    padding: 40px 0 0 0;
+  }
+
+  .nav-links {
+    gap: 40px;
+    align-items: flex-start;
+  }
+
+  .main-wrapper {
+    padding: 0 40px;
+  }
+
+  .main-content {
+    padding: 40px 0 0 0;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .dashboard-header {
+    padding: 32px 40px;
+    font-size: 1.3rem;
+  }
+
+  .product-section {
+    margin-top: 40px;
+  }
+
+  .product-scroll {
+    gap: 32px;
+    padding-bottom: 24px;
+  }
+
+  .product-card {
+    width: 220px;
+    padding: 20px;
+    font-size: 1.1rem;
+  }
+
+  .product-image {
+    width: 160px;
+    height: 160px;
+  }
+
+  .faq-list {
+    margin-top: 32px;
+  }
+
+  .faq-item {
+    font-size: 1.1rem;
+    padding: 18px 0;
+  }
+
+  .dashboard-footer {
+    font-size: 1rem;
+    padding: 24px 0;
+  }
 } */
