@@ -1,7 +1,7 @@
 import '../Dashboard.css';
 import {
-  FaUser, FaHome, FaClipboardList, FaDownload,
-  FaHandPointer, FaUserCircle, FaCog
+  FaUser, FaHome, FaClipboardList, FaDiamond, 
+  FaHandPointer, FaUserCircle, FaCog,
 } from 'react-icons/fa';
 import shopifyLogo from '../shopify-logo.png';
 import { useEffect } from 'react';
@@ -55,6 +55,7 @@ const faqs = [
         <header className="dashboard-header">
           <div className="user-info">
             <FaUser className="icon" />
+            
             <button onClick={handleLogout} className="username">Logout</button>
           </div>
           

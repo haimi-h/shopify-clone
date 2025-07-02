@@ -1,8 +1,10 @@
 import '../Dashboard.css';
 import {
-  FaUser, FaHome, FaClipboardList, FaDownload,
-  FaHandPointer, FaUserCircle, FaCog
+  FaUser, FaHome, FaClipboardList,  
+  FaHandPointer, FaUserCircle, FaCog,
 } from 'react-icons/fa';
+import { FaDiamond } from 'react-icons/fa';
+import { GiCutDiamond } from 'react-icons/gi';
 import shopifyLogo from '../shopify-logo.png';
 import { Outlet, useNavigate } from 'react-router-dom';
 
@@ -17,10 +19,18 @@ function Layout() {
         <nav className="nav-links">
           <FaHome title="Home" onClick={() => navigate('/dashboard')} />
           <FaClipboardList title="Orders" onClick={() => navigate('/order-dashboard')} />
-          <FaDownload title="Downloads" />
+          {/* <FaDownload title="Downloads" /> */}
+          {/* <FaDiamond onClick={() => navigate('/vip')} /> */}
+          <GiCutDiamond onClick={() => navigate('/vip')} />
           <FaHandPointer title="Clicks" />
           <FaUserCircle title="Profile" onClick={() => navigate('/account')} />
           <FaCog title="Settings" />
+          
+          {/* <FaDiamond
+  className="icon clickable"
+  onClick={() => navigate('/vip')}
+  title="Go to VIP"
+/> */}
         </nav>
       </aside>
 
