@@ -123,7 +123,7 @@ function Login() {
 
     try {
       // Step 1: Get CSRF cookie (only needed for Sanctum)
-      await axios.get(`${API_URL}sanctum/csrf-cookie `, { withCredentials: true });
+      await axios.get(`${API_URL}/sanctum/csrf-cookie `, { withCredentials: true });
       
 
       
