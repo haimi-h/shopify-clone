@@ -126,7 +126,7 @@ function Login() {
       await axios.get(`${API_URL}/sanctum/csrf-cookie`, { withCredentials: true });
       
 
-      // Step 2: Send login credentials
+      
       const response = await axios.post(
         `${API_URL}/login`,
         {
