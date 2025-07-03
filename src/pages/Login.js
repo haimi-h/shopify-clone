@@ -106,7 +106,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import axios from "axios";
 import shopifyLogo from '../shopify-logo.png';
-import LanguageGlobe from './LanguageGlobe'; // Language switcher component
+import LanguageGlobe from './LanguageGlobe';
 
 function Login() {
   const API_URL = process.env.REACT_APP_API_URL;
