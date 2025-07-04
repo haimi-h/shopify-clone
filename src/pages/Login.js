@@ -220,7 +220,7 @@ import LanguageGlobe from './LanguageGlobe';
 // 2. For Vercel deployment, it's highly recommended to use a Vercel Environment Variable
 //    (e.g., REACT_APP_API_URL) for your backend URL instead of hardcoding it here.
 //    This way, you won't need to change the code and redeploy every time ngrok restarts.
-const API_BASE_URL = 'https://438c-196-189-18-232.ngrok-free.app/'; // <--- UPDATE THIS!
+const API_BASE_URL = 'https://6a39-196-189-18-232.ngrok-free.app'; // <--- UPDATE THIS!
 const API = `${API_BASE_URL}/api/auth`; // Construct the full API base path
 
 function Login() {
