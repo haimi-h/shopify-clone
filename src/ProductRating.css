@@ -1,0 +1,94 @@
+.rating-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 100vh;
+  background-color: #f8f9fa;
+  padding: 20px;
+}
+
+.rating-card {
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+  text-align: center;
+  max-width: 500px;
+  width: 100%;
+}
+
+.rating-image {
+  width: 200px;
+  height: 200px;
+  object-fit: cover;
+  border-radius: 10px;
+  margin-bottom: 20px;
+}
+
+.rating-title {
+  font-size: 24px;
+  font-weight: 600;
+  margin-bottom: 12px;
+  color: #212529;
+}
+
+.rating-description {
+  font-size: 15px;
+  color: #555;
+  margin-bottom: 10px;
+}
+
+.rating-price,
+.rating-category {
+  font-size: 16px;
+  font-weight: 500;
+  margin-bottom: 10px;
+}
+
+.rating-instruction {
+  font-size: 16px;
+  margin: 20px 0 10px;
+  color: #495057;
+}
+
+.stars {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  margin-bottom: 20px;
+}
+
+.star {
+  font-size: 32px;
+  transition: color 0.2s;
+}
+
+.success-message {
+  font-size: 18px;
+  color: green;
+  margin-bottom: 20px;
+  font-weight: 600;
+}
+
+.incomplete-message {
+  font-size: 16px;
+  color: #dc3545;
+  margin-bottom: 20px;
+  font-weight: 500;
+}
+
+.back-button {
+  background-color: #198754;
+  color: white;
+  border: none;
+  padding: 12px 20px;
+  font-size: 14px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s;
+}
+
+.back-button:hover {
+  background-color: #157347;
+}

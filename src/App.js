@@ -22,6 +22,7 @@ import ReferralManagement from './pages/admin/ReferralManagement';
 import TransactionManagement from './pages/admin/TransactionManagement';
 import UserTable from './pages/UserTable';
 import InjectionPlan from './pages/InjectionPlan';
+import ProductRatingPage from './pages/ProductRatingPage';
 // import RequireAdmin from './pages/admin/RequireAdmin';
 
 function App() {
@@ -60,6 +61,7 @@ function App() {
            <Route path="/admin/transactions" element={<TransactionManagement />} />
            <Route path="/admin/usertable" element={<UserTable />} />
            <Route path="/admin/injection" element={<InjectionPlan />} />
+           <Route path="/ratingPage" element={<ProductRatingPage/>} />
            
            
            

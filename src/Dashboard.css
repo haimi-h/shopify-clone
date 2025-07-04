@@ -210,6 +210,9 @@ body {
   color: #333;
 }
 
+
+
+
 /* Congrats text */
 .congrats-text {
   background-color: #d1e7dd;
@@ -218,6 +221,7 @@ body {
   border-radius: 8px;
   margin-top: 24px;
   font-weight: 500;
+  font-size: 20px;
   text-align: center;
 }
 
@@ -403,7 +407,7 @@ body {
   transform: translateY(-4px) scale(1.05);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
-.congrats-text {
+/* .congrats-text {
   height: 40px;
   overflow: hidden;
   position: relative;
@@ -413,7 +417,7 @@ body {
   text-align: center;
   margin: 20px 0;
   padding: 30px;
-}
+} */
 
 .slide-in {
   animation: slideFade 0.5s ease-in-out;

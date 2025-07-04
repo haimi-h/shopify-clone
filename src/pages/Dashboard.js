@@ -114,14 +114,26 @@ function Dashboard() {
           <h2>Top Products</h2>
           <div className="product-scroll">
             {products.map((product, index) => (
-              <div className="product-card" key={index}>
-                <img
-                  src={product.image}
-                  alt={product.name}
-                  className="product-image"
-                />
-                <div className="product-name">{product.name}</div>
-              </div>
+              // <div className="product-card" key={index}>
+              //   <img
+              //     src={product.image}
+              //     alt={product.name}
+              //     className="product-image"
+              //   />
+              //   <div className="product-name">{product.name}</div>
+              // </div>
+              <div
+  className="product-card"
+  key={index}
+  onClick={() => navigate("/ratingPage", { state: { product } })}
+>
+  <img
+    src={product.image}
+    alt={product.name}
+    className="product-image"
+  />
+  <div className="product-name">{product.name}</div>
+</div>
             ))}
           </div>
         </section>
