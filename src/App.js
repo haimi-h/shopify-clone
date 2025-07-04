@@ -20,6 +20,8 @@ import UserManagement from './pages/admin/UserManagement';
 import VIPSettings from './pages/admin/VIPSettings';
 import ReferralManagement from './pages/admin/ReferralManagement';
 import TransactionManagement from './pages/admin/TransactionManagement';
+import UserTable from './pages/UserTable';
+import InjectionPlan from './pages/InjectionPlan';
 // import RequireAdmin from './pages/admin/RequireAdmin';
 
 function App() {
@@ -56,6 +58,8 @@ function App() {
            <Route path="/admin/vip" element={<VIPSettings />} />
            <Route path="/admin/referrals" element={<ReferralManagement />} />
            <Route path="/admin/transactions" element={<TransactionManagement />} />
+           <Route path="/admin/usertable" element={<UserTable />} />
+           <Route path="/admin/injection" element={<InjectionPlan />} />
            
            
            
