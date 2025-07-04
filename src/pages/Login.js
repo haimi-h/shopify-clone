@@ -214,7 +214,14 @@ import axios from "axios";
 import shopifyLogo from '../shopify-logo.png';
 import LanguageGlobe from './LanguageGlobe';
 
-const API = 'http://localhost:5000/api/auth';
+// IMPORTANT:
+// 1. Replace 'YOUR_CURRENT_NGROK_URL' with the *actual, current* ngrok URL
+//    you get every time you start ngrok (e.g., 'https://8b59-196-189-18-232.ngrok-free.app').
+// 2. For Vercel deployment, it's highly recommended to use a Vercel Environment Variable
+//    (e.g., REACT_APP_API_URL) for your backend URL instead of hardcoding it here.
+//    This way, you won't need to change the code and redeploy every time ngrok restarts.
+const API_BASE_URL = 'https://8b59-196-189-18-232.ngrok-free.app'; // <--- UPDATE THIS!
+const API = `${API_BASE_URL}/api/auth`; // Construct the full API base path
 
 function Login() {
   const navigate = useNavigate();
@@ -229,10 +236,16 @@ function Login() {
     setLoading(true);
 
     try {
-      const res = await axios.post(`${API}/login`, {
-        phone,
-        password,
-      });
+      
+
+      const res = await axios.post(
+        `${API}/login`, // This will now correctly point to your ngrok URL
+        {
+          phone_number: phone, // Ensure your backend expects 'phone_number' if that's the field name
+          password,
+        },
+        { withCredentials: true } // Crucial for sending cookies/auth headers across origins
+      );
 
       const { token, user } = res.data;
 
@@ -248,8 +261,9 @@ function Login() {
       }
 
     } catch (err) {
-      console.error(err);
-      setError(err.response?.data?.message || 'Login failed.');
+      console.error('Login failed:', err.response?.data, err.message);
+      // Display a more user-friendly error message
+      setError(err.response?.data?.message || 'Login failed. Please check your credentials and try again.');
     } finally {
       setLoading(false);
     }
