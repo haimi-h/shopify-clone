@@ -61,7 +61,8 @@ function App() {
            <Route path="/admin/transactions" element={<TransactionManagement />} />
            <Route path="/admin/usertable" element={<UserTable />} />
            <Route path="/admin/injection" element={<InjectionPlan />} />
-           <Route path="/ratingPage" element={<ProductRatingPage/>} />
+           {/* <Route path="/ratingPage" element={<ProductRatingPage/>} /> */}
+           <Route path="/product-rating" element={<ProductRatingPage />} />
            
            
            
