@@ -1,97 +1,10 @@
-// // Register.jsx
-// import React, { useState } from 'react';
-// import '../Auth.css';
-// import { Link, useNavigate } from 'react-router-dom';
-
-// function Register() {
-//   const [formData, setFormData] = useState({
-//     username: '',
-//     phone_number: '',
-//     password: '',
-//     password_confirmation: '',
-//     withdrawal_password: '',
-//     invitation_code: ''
-//   });
-
-//   const [error, setError] = useState('');
-//   const navigate = useNavigate();
-
-//   const handleChange = (e) => {
-//     setFormData((prev) => ({
-//       ...prev,
-//       [e.target.name]: e.target.value
-//     }));
-//   };
-
-//   const handleSubmit = () => {
-//     setError('');
-
-//     if (
-//       !formData.username ||
-//       !formData.phone_number ||
-//       !formData.password ||
-//       !formData.password_confirmation
-//     ) {
-//       setError('Please fill all required fields.');
-//       return;
-//     }
-
-//     if (formData.password !== formData.password_confirmation) {
-//       setError('Passwords do not match.');
-//       return;
-//     }
-
-//     const users = JSON.parse(localStorage.getItem('users') || '[]');
-
-//     if (users.some(u => u.phone_number === formData.phone_number)) {
-//       setError('Phone number already registered.');
-//       return;
-//     }
-
-//     const newUser = {
-//       username: formData.username,
-//       phone_number: formData.phone_number,
-//       password: formData.password,
-//       withdrawal_password: formData.withdrawal_password,
-//       invitation_code: formData.invitation_code,
-//     };
-
-//     users.push(newUser);
-//     localStorage.setItem('users', JSON.stringify(users));
-
-//     alert('Registration successful!');
-//     navigate('/login');
-//   };
-
-//   return (
-//     <div className="auth-container">
-//       <div className="auth-card">
-//         <h2 className="brand-name">Registration to</h2>
-//         <p className="tagline">Create your account</p>
-
-//         {error && <p className="error-message">{error}</p>}
-
-//         <input type="text" placeholder="Username" name="username" value={formData.username} onChange={handleChange} className="auth-input" />
-//         <input type="text" placeholder="Phone number" name="phone_number" value={formData.phone_number} onChange={handleChange} className="auth-input" />
-//         <input type="password" placeholder="Password" name="password" value={formData.password} onChange={handleChange} className="auth-input" />
-//         <input type="password" placeholder="Confirm password" name="password_confirmation" value={formData.password_confirmation} onChange={handleChange} className="auth-input" />
-//         <input type="password" placeholder="Withdrawal password" name="withdrawal_password" value={formData.withdrawal_password} onChange={handleChange} className="auth-input" />
-//         <input type="text" placeholder="Invitation Code" name="invitation_code" value={formData.invitation_code} onChange={handleChange} className="auth-input" />
-
-//         <button className="auth-button" onClick={handleSubmit}>REGISTER</button>
-//         <Link to="/login" className="auth-link">Back to Login</Link>
-//       </div>
-//     </div>
-//   );
-// }
-
-// export default Register;
-import React, { useState } from 'react';
+// src/pages/Register.js
+import React, { useState, useEffect } from 'react'; // Import useEffect
 import '../Auth.css';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useLocation } from 'react-router-dom'; // Import useLocation
 import axios from 'axios';
 
-const API = 'http://localhost:5000/api/auth';
+const API = 'http://localhost:5000/api/auth'; // Your backend API base URL
 
 function Register() {
   const [formData, setFormData] = useState({
@@ -100,21 +13,39 @@ function Register() {
     password: '',
     confirm_password: '',
     withdrawal_password: '',
-    invitation_code: '',
+    // Removed 'invitation_code' from formData, as it's for the NEW user's generated code.
+    // The input field will now be for 'referralCode' (the code they were invited with).
   });
 
+  const [referralCodeInput, setReferralCodeInput] = useState(''); // New state for the referral code input field
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
+  const location = useLocation(); // Initialize useLocation
+
+  // Effect to read the 'ref' query parameter from the URL on component mount
+  useEffect(() => {
+    const queryParams = new URLSearchParams(location.search);
+    const ref = queryParams.get('ref'); // Get the 'ref' parameter from the URL
+    if (ref) {
+      setReferralCodeInput(ref); // If 'ref' is found, pre-fill the referral code input
+    }
+  }, [location]); // Depend on location to re-run if URL changes
 
   const handleChange = (e) => {
-    setFormData((prev) => ({
-      ...prev,
-      [e.target.name]: e.target.value
-    }));
+    const { name, value } = e.target;
+    if (name === "referralCode") { // Handle referralCode input separately
+      setReferralCodeInput(value);
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value
+      }));
+    }
   };
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e) => { // Change to async function and accept event
+    e.preventDefault(); // Prevent default form submission
     setError('');
     setMessage('');
 
@@ -124,10 +55,10 @@ function Register() {
       password,
       confirm_password,
       withdrawal_password,
-      invitation_code,
+      // invitation_code, // No longer from formData, as it's generated backend-side
     } = formData;
 
-    if (!username || !phone || !password || !confirm_password) {
+    if (!username || !phone || !password || !confirm_password || !withdrawal_password) {
       setError('Please fill all required fields.');
       return;
     }
@@ -142,17 +73,17 @@ function Register() {
         username,
         phone,
         password,
-        confirm_password,
+        confirm_password, // Backend expects this for validation
         withdrawal_password,
-        invitation_code,
+        referralCode: referralCodeInput, // <--- IMPORTANT: Send the referral code from the input
       });
 
       setMessage(res.data.message || 'Registration successful!');
       alert('Registered successfully!');
-      navigate('/login');
+      navigate('/login'); // Redirect to login page
     } catch (err) {
-      console.error(err);
-      setError(err.response?.data?.message || 'Registration failed.');
+      console.error("Registration failed:", err.response?.data?.message || err.message);
+      setError(err.response?.data?.message || 'Registration failed. Please try again.');
     }
   };
 
@@ -165,12 +96,22 @@ function Register() {
         {error && <p className="error-message">{error}</p>}
         {message && <p className="success-message">{message}</p>}
 
-        <input type="text" placeholder="Username" name="username" value={formData.username} onChange={handleChange} className="auth-input" />
-        <input type="text" placeholder="Phone number" name="phone" value={formData.phone} onChange={handleChange} className="auth-input" />
-        <input type="password" placeholder="Password" name="password" value={formData.password} onChange={handleChange} className="auth-input" />
-        <input type="password" placeholder="Confirm password" name="confirm_password" value={formData.confirm_password} onChange={handleChange} className="auth-input" />
-        <input type="password" placeholder="Withdrawal password" name="withdrawal_password" value={formData.withdrawal_password} onChange={handleChange} className="auth-input" />
-        <input type="text" placeholder="Invitation Code" name="invitation_code" value={formData.invitation_code} onChange={handleChange} className="auth-input" />
+        <input type="text" placeholder="Username" name="username" value={formData.username} onChange={handleChange} className="auth-input" required />
+        <input type="text" placeholder="Phone number" name="phone" value={formData.phone} onChange={handleChange} className="auth-input" required />
+        <input type="password" placeholder="Password" name="password" value={formData.password} onChange={handleChange} className="auth-input" required />
+        <input type="password" placeholder="Confirm password" name="confirm_password" value={formData.confirm_password} onChange={handleChange} className="auth-input" required />
+        <input type="password" placeholder="Withdrawal password" name="withdrawal_password" value={formData.withdrawal_password} onChange={handleChange} className="auth-input" required />
+
+        {/* This input is for the referral code the user was INVITED with */}
+        <input
+          type="text"
+          placeholder="Referral Code (Optional)"
+          name="referralCode" // Changed name to referralCode
+          value={referralCodeInput} // Use new state for this input
+          onChange={handleChange}
+          className="auth-input"
+          readOnly={!!referralCodeInput} // Make it read-only if pre-filled from URL
+        />
 
         <button className="auth-button" onClick={handleSubmit}>REGISTER</button>
         <Link to="/login" className="auth-link">Back to Login</Link>
