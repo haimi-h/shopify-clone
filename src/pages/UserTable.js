@@ -46,7 +46,7 @@ const UserTable = () => {
             if (err.response && (err.response.status === 401 || err.response.status === 403)) {
                 localStorage.removeItem('token');
                 localStorage.removeItem('user'); // Also clear user data if stored
-                navigate('/admin/usertable'); // Redirect to admin login
+                navigate('/usertable'); // Redirect to admin login
             }
         } finally {
             setLoading(false);
