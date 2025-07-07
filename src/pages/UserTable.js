@@ -13,7 +13,7 @@ const UserTable = () => {
 
     // Updated state for "APPLY" functionality: now an array for multiple selections
     const [tasksToApply, setTasksToApply] = useState(''); // For the input field value
-    const [selectedUserIds, setSelectedUserIds] = useState([]); // FIX: Changed to an array for multiple selections
+    const [selectedUserIds, setSelectedUserIds] = useState([]); // Changed to an array for multiple selections
 
     const navigate = useNavigate();
 
@@ -73,7 +73,7 @@ const UserTable = () => {
         (user.wallet_balance ? user.wallet_balance.toString().toLowerCase().includes(filters.wallet.toLowerCase()) : false)
     );
 
-    // FIX: Handle checkbox change for multiple selections
+    // Handle checkbox change for multiple selections
     const handleCheckboxChange = (userId) => {
         setSelectedUserIds(prevSelected => {
             if (prevSelected.includes(userId)) {
@@ -85,28 +85,9 @@ const UserTable = () => {
     };
 
     // --- Action Handlers for existing buttons ---
-    const handleInject = async (userId) => {
-        const amount = window.prompt("Enter amount to inject:");
-        if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
-            window.alert("Please enter a valid positive number.");
-            return;
-        }
-
-        try {
-            const token = localStorage.getItem('token');
-            const config = {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-            };
-            const res = await axios.post(`${API_BASE_URL}/admin/users/inject/${userId}`, { amount: parseFloat(amount) }, config);
-            window.alert(res.data.message);
-            fetchUsers(); // Re-fetch all users to get updated data after injection
-        } catch (err) {
-            console.error('Error injecting wallet:', err);
-            window.alert(err.response?.data?.message || 'Failed to inject wallet balance.');
-        }
+    const handleInject = (userId) => {
+        // FIX: Navigate to the InjectionPlan page, passing the userId as state
+        navigate('/admin/injection', { state: { userIdToInject: userId } });
     };
 
     const handleHistory = (userId) => {
@@ -126,7 +107,7 @@ const UserTable = () => {
 
     // --- New Action Handler for "Apply Daily Tasks" ---
     const handleApplyDailyTasks = async () => {
-        if (selectedUserIds.length === 0) { // FIX: Check if any user is selected
+        if (selectedUserIds.length === 0) {
             window.alert("Please select at least one user to apply tasks to.");
             return;
         }
@@ -144,7 +125,6 @@ const UserTable = () => {
                 },
             };
 
-            // FIX: Loop through selectedUserIds and send individual PUT requests
             const parsedTasksToApply = parseInt(tasksToApply);
             const promises = selectedUserIds.map(userId =>
                 axios.put(`${API_BASE_URL}/admin/users/${userId}`, { daily_orders: parsedTasksToApply }, config)
@@ -163,7 +143,7 @@ const UserTable = () => {
         }
     };
 
-    // FIX: Determine if the APPLY button should be disabled
+    // Determine if the APPLY button should be disabled
     const isApplyButtonDisabled = selectedUserIds.length === 0 ||
                                  !tasksToApply ||
                                  isNaN(parseInt(tasksToApply)) ||
@@ -195,7 +175,7 @@ const UserTable = () => {
                         min="0"
                         className="tasks-input"
                     />
-                    {/* FIX: Add disabled attribute to the APPLY button */}
+                    {/* Add disabled attribute to the APPLY button */}
                     <button onClick={handleApplyDailyTasks} className="btn btn-apply" disabled={isApplyButtonDisabled}>APPLY</button>
                 </div>
             </div>
@@ -219,9 +199,9 @@ const UserTable = () => {
                 <tbody>
                     {filteredUsers.length > 0 ? (
                         filteredUsers.map((user, index) => (
-                            <tr key={user.id} className={selectedUserIds.includes(user.id) ? 'selected-row' : ''}> {/* FIX: Highlight selected rows */}
+                            <tr key={user.id} className={selectedUserIds.includes(user.id) ? 'selected-row' : ''}> {/* Highlight selected rows */}
                                 <td>
-                                    {/* FIX: Changed to checkbox */}
+                                    {/* Changed to checkbox */}
                                     <input
                                         type="checkbox"
                                         checked={selectedUserIds.includes(user.id)}
