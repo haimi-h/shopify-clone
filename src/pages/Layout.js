@@ -1,9 +1,14 @@
 import '../Dashboard.css';
 import {
-  FaUser, FaHome, FaClipboardList,  
-  FaHandPointer, FaUserCircle, FaCog,
+  FaUser,
+  FaHome,
+  FaClipboardList,
+  FaHandPointer,
+  FaUserCircle,
+  FaCog,
+  FaUsers, // <--- Import FaUsers here for the referral icon
 } from 'react-icons/fa';
-import { FaDiamond } from 'react-icons/fa';
+import { FaDiamond } from 'react-icons/fa'; // FaDiamond is already imported, but listed separately
 import { GiCutDiamond } from 'react-icons/gi';
 import shopifyLogo from '../shopify-logo.png';
 import { Outlet, useNavigate } from 'react-router-dom';
@@ -22,10 +27,12 @@ function Layout() {
           
           <GiCutDiamond onClick={() => navigate('/vip')} />
           {/* <FaHandPointer title="Clicks" /> */}
+
+          {/* New Referral Icon */}
+          <FaUsers title="Referral" onClick={() => navigate('/referral')} /> {/* <--- ADD THIS LINE */}
+
           <FaUserCircle title="Profile" onClick={() => navigate('/account')} />
           <FaCog title="Settings" />
-          
-          
         </nav>
       </aside>
 

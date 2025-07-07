@@ -1,91 +1,71 @@
 // components/AccountPage.js
-import React, { useState, useEffect } from 'react'; // Import useEffect
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import '../AccountPage.css'; // Optional: for styling
-// import axios from 'axios'; // We'll need this for fetching referrals or full profile later
+import axios from 'axios'; // <--- Import axios here
 
-export default function AccountPage() { // Removed onLogout prop, handling internally
+export default function AccountPage() {
     const navigate = useNavigate();
 
-    // Initialize user state from localStorage
-    const [currentUser, setCurrentUser] = useState(null); // Will store data from localStorage
+    const [currentUser, setCurrentUser] = useState(null);
     const [isEditing, setIsEditing] = useState(false);
-    // editValues will be initialized after currentUser is loaded
     const [editValues, setEditValues] = useState({});
 
     const [referrals, setReferrals] = useState([]); // State for referrals
 
-    // --- Effect to load user data from localStorage on mount ---
+    // Define your API base URL
+    const API_BASE_URL = 'http://localhost:5000/api'; // <--- Define API_BASE_URL here
+
+    // --- Effect to load user data from localStorage and fetch referrals on mount ---
     useEffect(() => {
-        const loadUserData = () => {
+        const loadAndFetchData = async () => {
             const userString = localStorage.getItem('user');
-            if (userString) {
+            const token = localStorage.getItem('token'); // Get token for API calls
+
+            if (!userString || !token) {
+                console.error("User data or token missing, redirecting to login.");
+                navigate('/login');
+                return;
+            }
+
+            try {
+                const user = JSON.parse(userString);
+                setCurrentUser({
+                    name: user.username || 'N/A',
+                    email: user.email || 'haimi@example.com (Placeholder)', // You might fetch real email later
+                    phone: user.phone || 'N/A',
+                    vipLevel: user.vipLevel || 'Gold (Placeholder)', // You might fetch real VIP level later
+                    id: user.id
+                });
+                setEditValues({
+                    name: user.username || 'N/A',
+                    phone: user.phone || 'N/A',
+                });
+
+                // --- Fetch user's referrals here ---
                 try {
-                    const user = JSON.parse(userString);
-                    // Map backend user fields to your frontend's 'user' state structure
-                    setCurrentUser({
-                        name: user.username || 'N/A', // Use username for name
-                        email: user.email || 'haimi@example.com (Placeholder)', // Email is not in localStorage yet
-                        phone: user.phone || 'N/A', // Phone should be here if backend updated
-                        vipLevel: user.vipLevel || 'Gold (Placeholder)', // VIP Level not in localStorage yet
-                        id: user.id // Store ID for potential future API calls
+                    const referralResponse = await axios.get(`${API_BASE_URL}/users/my-referrals`, {
+                        headers: {
+                            Authorization: `Bearer ${token}`
+                        },
                     });
-                    setEditValues({ // Also initialize editValues
-                        name: user.username || 'N/A',
-                        phone: user.phone || 'N/A',
-                    });
-
-                    // TODO: Fetch real email, VIP Level, and Referrals if needed
-                    // fetchUserFullProfile(user.id);
-                    // fetchUserReferrals(user.id);
-
-                } catch (e) {
-                    console.error("Error parsing user data from localStorage or data missing:", e);
-                    // If localStorage data is corrupted or missing, clear and redirect
-                    localStorage.removeItem('user');
-                    localStorage.removeItem('token');
-                    navigate('/login');
+                    setReferrals(referralResponse.data.referrals); // Assuming backend returns { referrals: [...] }
+                } catch (referralErr) {
+                    console.error('Error fetching referral data:', referralErr);
+                    // Handle specific referral fetching errors if needed
+                    setReferrals([]); // Ensure referrals is an empty array on error
                 }
-            } else {
-                // No user found in localStorage, redirect to login
+
+            } catch (e) {
+                console.error("Error parsing user data from localStorage or data missing:", e);
+                localStorage.removeItem('user');
+                localStorage.removeItem('token');
                 navigate('/login');
             }
         };
 
-        loadUserData();
-    }, [navigate]); // navigate is a dependency of useEffect
-
-    // Placeholder function for fetching full profile (requires backend API)
-    // const fetchUserFullProfile = async (userId) => {
-    //     try {
-    //         const token = localStorage.getItem('token');
-    //         const response = await axios.get(`http://localhost:5000/api/users/${userId}/profile`, {
-    //             headers: { Authorization: `Bearer ${token}` }
-    //         });
-    //         // Update currentUser state with more detailed data
-    //         setCurrentUser(prev => ({
-    //             ...prev,
-    //             email: response.data.email,
-    //             vipLevel: response.data.vipLevel
-    //         }));
-    //     } catch (error) {
-    //         console.error("Error fetching user full profile:", error);
-    //     }
-    // };
-
-    // Placeholder function for fetching referrals (requires backend API)
-    // const fetchUserReferrals = async (userId) => {
-    //     try {
-    //         const token = localStorage.getItem('token');
-    //         const response = await axios.get(`http://localhost:5000/api/users/${userId}/referrals`, {
-    //             headers: { Authorization: `Bearer ${token}` }
-    //         });
-    //         setReferrals(response.data.referrals);
-    //     } catch (error) {
-    //         console.error("Error fetching user referrals:", error);
-    //     }
-    // };
-
+        loadAndFetchData();
+    }, [navigate]);
 
     const handleChange = (e) => {
         const { name, value } = e.target;
@@ -117,7 +97,6 @@ export default function AccountPage() { // Removed onLogout prop, handling inter
     };
 
     const handleCancel = () => {
-        // Reset edit values to current user's values
         setEditValues({
             name: currentUser.name,
             phone: currentUser.phone,
@@ -128,10 +107,9 @@ export default function AccountPage() { // Removed onLogout prop, handling inter
     const handleLogout = () => {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        navigate('/login'); // Redirect to login page
+        navigate('/login');
     };
 
-    // Show loading or redirect if user data is not yet loaded
     if (!currentUser) {
         return (
             <div className="account-page">
@@ -155,7 +133,6 @@ export default function AccountPage() { // Removed onLogout prop, handling inter
 
             <div className="account-section">
                 <label>Email:</label>
-                {/* Email is hardcoded/placeholder as it's not in localStorage by default login response */}
                 <p>{currentUser.email}</p>
             </div>
 
@@ -170,7 +147,6 @@ export default function AccountPage() { // Removed onLogout prop, handling inter
 
             <div className="account-section">
                 <label>VIP Level:</label>
-                {/* VIP Level is hardcoded/placeholder as it's not in localStorage by default login response */}
                 <p>{currentUser.vipLevel}</p>
             </div>
 
@@ -188,22 +164,19 @@ export default function AccountPage() { // Removed onLogout prop, handling inter
             <hr />
 
             <div className="account-referrals">
-                <h3>My Referrals</h3>
+                <h3>My Referrals ({referrals.length})</h3> {/* <--- Display referral count here */}
                 {referrals.length > 0 ? (
                     <ul>
-                        {referrals.map((referral, index) => (
-                            <li key={index}>{referral.name} ({referral.email})</li>
+                        {referrals.map((referral) => ( // Use a unique key like referral.id if available
+                            <li key={referral.id || referral.username}> {/* <--- Changed key for better practice */}
+                                <strong>{referral.username}</strong> — {referral.phone} <br />
+                                Joined: {new Date(referral.created_at).toLocaleDateString()}
+                            </li>
                         ))}
                     </ul>
                 ) : (
                     <p>No Referrals yet.</p>
                 )}
-                {/*
-                    The current example referral list is hardcoded.
-                    To display real referrals, you would need:
-                    1. A backend endpoint (e.g., GET /api/users/:id/referrals) to fetch them.
-                    2. An Axios call in useEffect here to retrieve them.
-                */}
             </div>
 
             <button className="logout-btn" onClick={handleLogout}>🚪 Logout</button>
