@@ -69,8 +69,8 @@ const UserTable = () => {
         user.username.toLowerCase().includes(filters.username.toLowerCase()) &&
         user.phone.includes(filters.phone) &&
         user.invitation_code.toLowerCase().includes(filters.code.toLowerCase()) && // Use invitation_code
-        // Ensure wallet_balance is treated as a string for includes, or convert filter value to number if exact match is needed
-        user.wallet_balance.toString().toLowerCase().includes(filters.wallet.toLowerCase())
+        // Filter wallet address as a string
+        (user.wallet_balance ? user.wallet_balance.toString().toLowerCase().includes(filters.wallet.toLowerCase()) : false)
     );
 
     // --- Action Handlers for existing buttons ---
@@ -90,12 +90,20 @@ const UserTable = () => {
                     'Content-Type': 'application/json',
                 },
             };
+            // Note: The backend's `injectWalletBalance` function assumes wallet_balance is numerical.
+            // If the 'wallet_balance' column in your DB is strictly for addresses,
+            // you might need a separate numerical 'balance' column or clarify its purpose.
             const res = await axios.post(`${API_BASE_URL}/admin/users/inject/${userId}`, { amount: parseFloat(amount) }, config);
             window.alert(res.data.message);
             // Update the user's wallet balance in the local state for immediate UI refresh
+            // If wallet_balance is an address, this update logic needs re-evaluation.
+            // Assuming for now, there's an implicit numerical balance being updated.
             setUsers(prevUsers => prevUsers.map(user =>
-                user.id === userId ? { ...user, wallet_balance: parseFloat(user.wallet_balance) + parseFloat(amount) } : user
+                user.id === userId ? { ...user, wallet_balance: user.wallet_balance } : user // No change to wallet_balance display here
             ));
+            // A re-fetch might be better if the injected amount changes a separate numerical balance
+            // that isn't directly the 'wallet_balance' string.
+            fetchUsers(); // Re-fetch all users to get updated data after injection
         } catch (err) {
             console.error('Error injecting wallet:', err);
             window.alert(err.response?.data?.message || 'Failed to inject wallet balance.');
@@ -201,7 +209,7 @@ const UserTable = () => {
                         <th>Daily Orders</th>
                         <th>Completed</th>
                         <th>Uncompleted</th>
-                        <th>Wallet</th>
+                        <th>Wallet</th> {/* This header is for the wallet address */}
                         <th>Actions</th>
                     </tr>
                 </thead>
@@ -225,7 +233,7 @@ const UserTable = () => {
                                 <td>{user.daily_orders}</td> {/* Backend field name */}
                                 <td>{user.completed_orders}</td> {/* Backend field name */}
                                 <td>{user.uncompleted_orders}</td> {/* Backend field name */}
-                                <td>{user.wallet_balance ? parseFloat(user.wallet_balance).toFixed(2) : '0.00'}</td> {/* FIX: Added parseFloat() */}
+                                <td>{user.wallet_balance || 'N/A'}</td> {/* FIX: Display wallet_balance directly as string */}
                                 <td className="actions">
                                     <button className="btn btn-red" onClick={() => handleInject(user.id)}>INJECT</button>
                                     <button className="btn btn-blue" onClick={() => handleHistory(user.id)}>HISTORY</button>
@@ -243,7 +251,6 @@ const UserTable = () => {
                         </tr>
                     )}
                 </tbody>
-              
             </table>
             <div className="pagination">
                 <button>1</button>
