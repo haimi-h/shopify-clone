@@ -94,7 +94,7 @@ const UserTable = () => {
             window.alert(res.data.message);
             // Update the user's wallet balance in the local state for immediate UI refresh
             setUsers(prevUsers => prevUsers.map(user =>
-                user.id === userId ? { ...user, wallet_balance: user.wallet_balance + parseFloat(amount) } : user
+                user.id === userId ? { ...user, wallet_balance: parseFloat(user.wallet_balance) + parseFloat(amount) } : user
             ));
         } catch (err) {
             console.error('Error injecting wallet:', err);
@@ -225,7 +225,7 @@ const UserTable = () => {
                                 <td>{user.daily_orders}</td> {/* Backend field name */}
                                 <td>{user.completed_orders}</td> {/* Backend field name */}
                                 <td>{user.uncompleted_orders}</td> {/* Backend field name */}
-                                <td>{user.wallet_balance ? user.wallet_balance.toFixed(2) : '0.00'}</td> {/* Backend field name, format as currency */}
+                                <td>{user.wallet_balance ? parseFloat(user.wallet_balance).toFixed(2) : '0.00'}</td> {/* FIX: Added parseFloat() */}
                                 <td className="actions">
                                     <button className="btn btn-red" onClick={() => handleInject(user.id)}>INJECT</button>
                                     <button className="btn btn-blue" onClick={() => handleHistory(user.id)}>HISTORY</button>
@@ -243,6 +243,7 @@ const UserTable = () => {
                         </tr>
                     )}
                 </tbody>
+              
             </table>
             <div className="pagination">
                 <button>1</button>
