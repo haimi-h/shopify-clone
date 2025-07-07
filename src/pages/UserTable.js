@@ -11,9 +11,9 @@ const UserTable = () => {
     const [loading, setLoading] = useState(true); // New state for loading status
     const [error, setError] = useState(null); // New state for error messages
 
-    // New states for the "40 APPLY" functionality
+    // Updated state for "APPLY" functionality: now an array for multiple selections
     const [tasksToApply, setTasksToApply] = useState(''); // For the input field value
-    const [selectedUserId, setSelectedUserId] = useState(null); // To track which user's radio button is selected
+    const [selectedUserIds, setSelectedUserIds] = useState([]); // FIX: Changed to an array for multiple selections
 
     const navigate = useNavigate();
 
@@ -27,7 +27,7 @@ const UserTable = () => {
             if (!token) {
                 setError('Authentication required. Please log in as an administrator.');
                 setLoading(false);
-                navigate('/login'); // FIX: Redirect to the general login page
+                navigate('/login'); // Redirect to the general login page
                 return;
             }
 
@@ -46,7 +46,7 @@ const UserTable = () => {
             if (err.response && (err.response.status === 401 || err.response.status === 403)) {
                 localStorage.removeItem('token');
                 localStorage.removeItem('user'); // Also clear user data if stored
-                navigate('/login'); // FIX: Redirect to the general login page
+                navigate('/login'); // Redirect to the general login page
             }
         } finally {
             setLoading(false);
@@ -56,7 +56,7 @@ const UserTable = () => {
     // useEffect to fetch users when the component mounts
     useEffect(() => {
         fetchUsers();
-    }, [navigate]); // navigate is a dependency to ensure effect runs if navigation changes (though less common here)
+    }, [navigate]);
 
     // Handler for filter input changes
     const handleFilterChange = (e) => {
@@ -68,15 +68,25 @@ const UserTable = () => {
     const filteredUsers = users.filter(user =>
         user.username.toLowerCase().includes(filters.username.toLowerCase()) &&
         user.phone.includes(filters.phone) &&
-        user.invitation_code.toLowerCase().includes(filters.code.toLowerCase()) && // Use invitation_code
-        // Filter wallet address as a string
+        user.invitation_code.toLowerCase().includes(filters.code.toLowerCase()) &&
+        // Handle wallet_balance filtering safely, assuming it's a string or can be converted
         (user.wallet_balance ? user.wallet_balance.toString().toLowerCase().includes(filters.wallet.toLowerCase()) : false)
     );
 
+    // FIX: Handle checkbox change for multiple selections
+    const handleCheckboxChange = (userId) => {
+        setSelectedUserIds(prevSelected => {
+            if (prevSelected.includes(userId)) {
+                return prevSelected.filter(id => id !== userId); // Deselect
+            } else {
+                return [...prevSelected, userId]; // Select
+            }
+        });
+    };
+
     // --- Action Handlers for existing buttons ---
     const handleInject = async (userId) => {
-        // Replaced alert/prompt with a simple modal-like confirmation for better UX
-        const amount = window.prompt("Enter amount to inject:"); // Using window.prompt for simplicity in this example
+        const amount = window.prompt("Enter amount to inject:");
         if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
             window.alert("Please enter a valid positive number.");
             return;
@@ -90,19 +100,8 @@ const UserTable = () => {
                     'Content-Type': 'application/json',
                 },
             };
-            // Note: The backend's `injectWalletBalance` function assumes wallet_balance is numerical.
-            // If the 'wallet_balance' column in your DB is strictly for addresses,
-            // you might need a separate numerical 'balance' column or clarify its purpose.
             const res = await axios.post(`${API_BASE_URL}/admin/users/inject/${userId}`, { amount: parseFloat(amount) }, config);
             window.alert(res.data.message);
-            // Update the user's wallet balance in the local state for immediate UI refresh
-            // If wallet_balance is an address, this update logic needs re-evaluation.
-            // Assuming for now, there's an implicit numerical balance being updated.
-            setUsers(prevUsers => prevUsers.map(user =>
-                user.id === userId ? { ...user, wallet_balance: user.wallet_balance } : user // No change to wallet_balance display here
-            ));
-            // A re-fetch might be better if the injected amount changes a separate numerical balance
-            // that isn't directly the 'wallet_balance' string.
             fetchUsers(); // Re-fetch all users to get updated data after injection
         } catch (err) {
             console.error('Error injecting wallet:', err);
@@ -113,26 +112,22 @@ const UserTable = () => {
     const handleHistory = (userId) => {
         console.log(`Viewing history for user ID: ${userId}`);
         window.alert(`Implement history view for user ID: ${userId}`);
-        // Example: navigate(`/admin/users/${userId}/history`);
     };
 
     const handleSetting = (userId) => {
         console.log(`Setting for user ID: ${userId}`);
         window.alert(`Implement setting functionality for user ID: ${userId}`);
-        // Example: navigate(`/admin/users/${userId}/edit`);
     };
 
-    // This "CREATE" button should ideally be a global action, not per row
     const handleCreate = () => {
         console.log('Initiating new user creation');
         window.alert('Implement new user creation functionality.');
-        // Example: navigate('/admin/users/new');
     };
 
     // --- New Action Handler for "Apply Daily Tasks" ---
     const handleApplyDailyTasks = async () => {
-        if (selectedUserId === null) {
-            window.alert("Please select a user to apply tasks to.");
+        if (selectedUserIds.length === 0) { // FIX: Check if any user is selected
+            window.alert("Please select at least one user to apply tasks to.");
             return;
         }
         if (!tasksToApply || isNaN(tasksToApply) || parseInt(tasksToApply) < 0) {
@@ -148,25 +143,32 @@ const UserTable = () => {
                     'Content-Type': 'application/json',
                 },
             };
-            // Send a PUT request to update the user's daily_orders
-            const res = await axios.put(`${API_BASE_URL}/admin/users/${selectedUserId}`, {
-                daily_orders: parseInt(tasksToApply)
-            }, config);
 
-            window.alert(res.data.message);
-            // Update the user's daily_orders in the local state for immediate UI refresh
-            setUsers(prevUsers => prevUsers.map(user =>
-                user.id === selectedUserId ? { ...user, daily_orders: parseInt(tasksToApply) } : user
-            ));
-            // Optionally, clear the input and selection after successful application
+            // FIX: Loop through selectedUserIds and send individual PUT requests
+            const parsedTasksToApply = parseInt(tasksToApply);
+            const promises = selectedUserIds.map(userId =>
+                axios.put(`${API_BASE_URL}/admin/users/${userId}`, { daily_orders: parsedTasksToApply }, config)
+            );
+
+            await Promise.all(promises); // Wait for all updates to complete
+
+            window.alert(`Daily tasks applied successfully to ${selectedUserIds.length} user(s).`);
+            fetchUsers(); // Re-fetch all users to get updated data after applying tasks
             setTasksToApply('');
-            setSelectedUserId(null);
+            setSelectedUserIds([]); // Clear selection after successful application
 
         } catch (err) {
             console.error('Error applying daily tasks:', err);
             window.alert(err.response?.data?.message || 'Failed to apply daily tasks.');
         }
     };
+
+    // FIX: Determine if the APPLY button should be disabled
+    const isApplyButtonDisabled = selectedUserIds.length === 0 ||
+                                 !tasksToApply ||
+                                 isNaN(parseInt(tasksToApply)) ||
+                                 parseInt(tasksToApply) < 0;
+
 
     // Display loading or error messages
     if (loading) return <p className="loading-message">Loading users...</p>;
@@ -193,14 +195,15 @@ const UserTable = () => {
                         min="0"
                         className="tasks-input"
                     />
-                    <button onClick={handleApplyDailyTasks} className="btn btn-apply">APPLY</button>
+                    {/* FIX: Add disabled attribute to the APPLY button */}
+                    <button onClick={handleApplyDailyTasks} className="btn btn-apply" disabled={isApplyButtonDisabled}>APPLY</button>
                 </div>
             </div>
 
             <table className="user-table">
                 <thead>
                     <tr>
-                        <th></th> {/* For radio button/selection */}
+                        <th></th> {/* For checkbox/selection */}
                         <th>#</th>
                         <th>Username</th>
                         <th>Phone No</th>
@@ -216,13 +219,13 @@ const UserTable = () => {
                 <tbody>
                     {filteredUsers.length > 0 ? (
                         filteredUsers.map((user, index) => (
-                            <tr key={user.id} className={selectedUserId === user.id ? 'selected-row' : ''}>
+                            <tr key={user.id} className={selectedUserIds.includes(user.id) ? 'selected-row' : ''}> {/* FIX: Highlight selected rows */}
                                 <td>
+                                    {/* FIX: Changed to checkbox */}
                                     <input
-                                        type="radio"
-                                        name="selectUser" // Group radio buttons by name
-                                        checked={selectedUserId === user.id}
-                                        onChange={() => setSelectedUserId(user.id)}
+                                        type="checkbox"
+                                        checked={selectedUserIds.includes(user.id)}
+                                        onChange={() => handleCheckboxChange(user.id)}
                                     />
                                 </td>
                                 <td>{index + 1}</td> {/* Use index + 1 for row number */}
@@ -233,14 +236,11 @@ const UserTable = () => {
                                 <td>{user.daily_orders}</td> {/* Backend field name */}
                                 <td>{user.completed_orders}</td> {/* Backend field name */}
                                 <td>{user.uncompleted_orders}</td> {/* Backend field name */}
-                                <td>{user.wallet_balance || 'N/A'}</td> {/* FIX: Display wallet_balance directly as string */}
+                                <td>{user.wallet_balance || 'N/A'}</td> {/* Display wallet_balance directly as string */}
                                 <td className="actions">
                                     <button className="btn btn-red" onClick={() => handleInject(user.id)}>INJECT</button>
                                     <button className="btn btn-blue" onClick={() => handleHistory(user.id)}>HISTORY</button>
                                     <button className="btn btn-yellow" onClick={() => handleSetting(user.id)}>SETTING</button>
-                                    {/* The CREATE button is typically for adding a new user globally, not per row.
-                                        Consider moving it outside the table if that's its intended function.
-                                        For now, keeping it here but calling a global handler. */}
                                     <button className="btn btn-green" onClick={handleCreate}>CREATE</button>
                                 </td>
                             </tr>
