@@ -27,7 +27,7 @@ const UserTable = () => {
             if (!token) {
                 setError('Authentication required. Please log in as an administrator.');
                 setLoading(false);
-                navigate('/admin-login'); // Redirect to admin login if no token
+                navigate('/usertable'); // Redirect to admin login if no token
                 return;
             }
 
