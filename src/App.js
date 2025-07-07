@@ -55,10 +55,7 @@ function App() {
            {/* <Route path="/admin" element={<AdminPage />} /> */}
            <Route path="/admin" element={<AdminDashboard />} />
            <Route path="/records" element={<RecordsPage />} />
-           <Route path="/admin/users" element={<UserManagement />} />
-           <Route path="/admin/vip" element={<VIPSettings />} />
-           <Route path="/admin/referrals" element={<ReferralManagement />} />
-           <Route path="/admin/transactions" element={<TransactionManagement />} />
+           
            <Route path="/usertable" element={<UserTable />} />
            <Route path="/admin/injection" element={<InjectionPlan />} />
            {/* <Route path="/ratingPage" element={<ProductRatingPage/>} /> */}

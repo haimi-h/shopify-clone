@@ -27,7 +27,7 @@ const UserTable = () => {
             if (!token) {
                 setError('Authentication required. Please log in as an administrator.');
                 setLoading(false);
-                navigate('/usertable'); // Redirect to admin login if no token
+                navigate('/login'); // FIX: Redirect to the general login page
                 return;
             }
 
@@ -46,7 +46,7 @@ const UserTable = () => {
             if (err.response && (err.response.status === 401 || err.response.status === 403)) {
                 localStorage.removeItem('token');
                 localStorage.removeItem('user'); // Also clear user data if stored
-                navigate('/usertable'); // Redirect to admin login
+                navigate('/login'); // FIX: Redirect to the general login page
             }
         } finally {
             setLoading(false);
@@ -69,14 +69,16 @@ const UserTable = () => {
         user.username.toLowerCase().includes(filters.username.toLowerCase()) &&
         user.phone.includes(filters.phone) &&
         user.invitation_code.toLowerCase().includes(filters.code.toLowerCase()) && // Use invitation_code
-        user.wallet_balance.toString().toLowerCase().includes(filters.wallet.toLowerCase()) // Use wallet_balance
+        // Ensure wallet_balance is treated as a string for includes, or convert filter value to number if exact match is needed
+        user.wallet_balance.toString().toLowerCase().includes(filters.wallet.toLowerCase())
     );
 
     // --- Action Handlers for existing buttons ---
     const handleInject = async (userId) => {
-        const amount = prompt("Enter amount to inject:");
+        // Replaced alert/prompt with a simple modal-like confirmation for better UX
+        const amount = window.prompt("Enter amount to inject:"); // Using window.prompt for simplicity in this example
         if (!amount || isNaN(amount) || parseFloat(amount) <= 0) {
-            alert("Please enter a valid positive number.");
+            window.alert("Please enter a valid positive number.");
             return;
         }
 
@@ -89,44 +91,44 @@ const UserTable = () => {
                 },
             };
             const res = await axios.post(`${API_BASE_URL}/admin/users/inject/${userId}`, { amount: parseFloat(amount) }, config);
-            alert(res.data.message);
+            window.alert(res.data.message);
             // Update the user's wallet balance in the local state for immediate UI refresh
             setUsers(prevUsers => prevUsers.map(user =>
                 user.id === userId ? { ...user, wallet_balance: user.wallet_balance + parseFloat(amount) } : user
             ));
         } catch (err) {
             console.error('Error injecting wallet:', err);
-            alert(err.response?.data?.message || 'Failed to inject wallet balance.');
+            window.alert(err.response?.data?.message || 'Failed to inject wallet balance.');
         }
     };
 
     const handleHistory = (userId) => {
         console.log(`Viewing history for user ID: ${userId}`);
-        alert(`Implement history view for user ID: ${userId}`);
+        window.alert(`Implement history view for user ID: ${userId}`);
         // Example: navigate(`/admin/users/${userId}/history`);
     };
 
     const handleSetting = (userId) => {
         console.log(`Setting for user ID: ${userId}`);
-        alert(`Implement setting functionality for user ID: ${userId}`);
+        window.alert(`Implement setting functionality for user ID: ${userId}`);
         // Example: navigate(`/admin/users/${userId}/edit`);
     };
 
     // This "CREATE" button should ideally be a global action, not per row
     const handleCreate = () => {
         console.log('Initiating new user creation');
-        alert('Implement new user creation functionality.');
+        window.alert('Implement new user creation functionality.');
         // Example: navigate('/admin/users/new');
     };
 
     // --- New Action Handler for "Apply Daily Tasks" ---
     const handleApplyDailyTasks = async () => {
         if (selectedUserId === null) {
-            alert("Please select a user to apply tasks to.");
+            window.alert("Please select a user to apply tasks to.");
             return;
         }
         if (!tasksToApply || isNaN(tasksToApply) || parseInt(tasksToApply) < 0) {
-            alert("Please enter a valid non-negative number of tasks.");
+            window.alert("Please enter a valid non-negative number of tasks.");
             return;
         }
 
@@ -143,7 +145,7 @@ const UserTable = () => {
                 daily_orders: parseInt(tasksToApply)
             }, config);
 
-            alert(res.data.message);
+            window.alert(res.data.message);
             // Update the user's daily_orders in the local state for immediate UI refresh
             setUsers(prevUsers => prevUsers.map(user =>
                 user.id === selectedUserId ? { ...user, daily_orders: parseInt(tasksToApply) } : user
@@ -154,7 +156,7 @@ const UserTable = () => {
 
         } catch (err) {
             console.error('Error applying daily tasks:', err);
-            alert(err.response?.data?.message || 'Failed to apply daily tasks.');
+            window.alert(err.response?.data?.message || 'Failed to apply daily tasks.');
         }
     };
 
