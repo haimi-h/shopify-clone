@@ -33,7 +33,7 @@ function Login() {
 
       // Navigate based on role
       if (user.role === 'admin') {
-        navigate('/admin/usertable');
+        navigate('/usertable');
       } else {
         navigate('/dashboard');
       }
