@@ -57,10 +57,10 @@ function App() {
            <Route path="/records" element={<RecordsPage />} />
            
            <Route path="/usertable" element={<UserTable />} />
-           {/* <Route path="/admin/injection" element={<InjectionPlan />} /> */}
+           <Route path="/admin/injection" element={<InjectionPlan />} />
            {/* <Route path="/ratingPage" element={<ProductRatingPage/>} /> */}
            <Route path="/product-rating" element={<ProductRatingPage />} />
-           <Route path="/admin/injection/:userIdToInject" element={<InjectionPlan />} />
+           
            
            
            

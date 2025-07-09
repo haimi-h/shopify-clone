@@ -86,8 +86,8 @@ const UserTable = () => {
 
     // --- Action Handlers for existing buttons ---
     const handleInject = (userId) => {
-        // FIX: Navigate to the InjectionPlan page, passing the userId as a URL parameter
-        navigate(`/admin/injection/${userId}`);
+        // Navigate to the InjectionPlan page, passing the userId as state
+        navigate('/admin/injection', { state: { userIdToInject: userId } });
     };
 
     const handleHistory = (userId) => {
