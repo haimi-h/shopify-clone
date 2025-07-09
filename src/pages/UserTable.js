@@ -86,7 +86,7 @@ const UserTable = () => {
 
     // --- Action Handlers for existing buttons ---
     const handleInject = (userId) => {
-        // FIX: Navigate to the InjectionPlan page, passing the userId as state
+        // Navigate to the InjectionPlan page, passing the userId as state
         navigate('/admin/injection', { state: { userIdToInject: userId } });
     };
 
@@ -107,6 +107,10 @@ const UserTable = () => {
 
     // --- New Action Handler for "Apply Daily Tasks" ---
     const handleApplyDailyTasks = async () => {
+        console.log('[UserTable - handleApplyDailyTasks] APPLY button clicked.'); // DEBUG LOG
+        console.log('[UserTable - handleApplyDailyTasks] Selected User IDs:', selectedUserIds); // DEBUG LOG
+        console.log('[UserTable - handleApplyDailyTasks] Tasks to Apply:', tasksToApply); // DEBUG LOG
+
         if (selectedUserIds.length === 0) {
             window.alert("Please select at least one user to apply tasks to.");
             return;
@@ -126,19 +130,25 @@ const UserTable = () => {
             };
 
             const parsedTasksToApply = parseInt(tasksToApply);
-            const promises = selectedUserIds.map(userId =>
-                axios.put(`${API_BASE_URL}/admin/users/${userId}`, { daily_orders: parsedTasksToApply }, config)
-            );
+            console.log(`[UserTable - handleApplyDailyTasks] Sending PUT request for ${selectedUserIds.length} users with daily_orders: ${parsedTasksToApply}`); // DEBUG LOG
+
+            const promises = selectedUserIds.map(userId => {
+                const url = `${API_BASE_URL}/admin/users/${userId}`;
+                const data = { daily_orders: parsedTasksToApply };
+                console.log(`[UserTable - handleApplyDailyTasks] Requesting: PUT ${url} with data:`, data); // DEBUG LOG
+                return axios.put(url, data, config);
+            });
 
             await Promise.all(promises); // Wait for all updates to complete
 
             window.alert(`Daily tasks applied successfully to ${selectedUserIds.length} user(s).`);
+            console.log('[UserTable - handleApplyDailyTasks] All PUT requests successful. Re-fetching users.'); // DEBUG LOG
             fetchUsers(); // Re-fetch all users to get updated data after applying tasks
             setTasksToApply('');
             setSelectedUserIds([]); // Clear selection after successful application
 
         } catch (err) {
-            console.error('Error applying daily tasks:', err);
+            console.error('[UserTable - handleApplyDailyTasks] Error applying daily tasks:', err); // DEBUG LOG
             window.alert(err.response?.data?.message || 'Failed to apply daily tasks.');
         }
     };
