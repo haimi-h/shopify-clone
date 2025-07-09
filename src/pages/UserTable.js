@@ -76,11 +76,11 @@ const UserTable = () => {
     // Handle checkbox change for multiple selections
     const handleCheckboxChange = (userId) => {
         setSelectedUserIds(prevSelected => {
-            if (prevSelected.includes(userId)) {
-                return prevSelected.filter(id => id !== userId); // Deselect
-            } else {
-                return [...prevSelected, userId]; // Select
-            }
+            const newSelected = prevSelected.includes(userId)
+                ? prevSelected.filter(id => id !== userId) // Deselect
+                : [...prevSelected, userId]; // Select
+            console.log('[UserTable - handleCheckboxChange] New selectedUserIds:', newSelected); // DEBUG LOG
+            return newSelected;
         });
     };
 
@@ -108,20 +108,29 @@ const UserTable = () => {
     // --- New Action Handler for "Apply Daily Tasks" ---
     const handleApplyDailyTasks = async () => {
         console.log('[UserTable - handleApplyDailyTasks] APPLY button clicked.'); // DEBUG LOG
-        console.log('[UserTable - handleApplyDailyTasks] Selected User IDs:', selectedUserIds); // DEBUG LOG
+        console.log('[UserTable - handleApplyDailyTasks] Selected User IDs at click:', selectedUserIds); // DEBUG LOG
         console.log('[UserTable - handleApplyDailyTasks] Tasks to Apply:', tasksToApply); // DEBUG LOG
 
         if (selectedUserIds.length === 0) {
             window.alert("Please select at least one user to apply tasks to.");
+            console.log('[UserTable - handleApplyDailyTasks] No users selected. Aborting.'); // DEBUG LOG
             return;
         }
         if (!tasksToApply || isNaN(tasksToApply) || parseInt(tasksToApply) < 0) {
             window.alert("Please enter a valid non-negative number of tasks.");
+            console.log('[UserTable - handleApplyDailyTasks] Invalid tasksToApply. Aborting.'); // DEBUG LOG
             return;
         }
 
         try {
             const token = localStorage.getItem('token');
+            if (!token) {
+                console.warn('[UserTable - handleApplyDailyTasks] No token found. Redirecting to login.'); // DEBUG LOG
+                setError('Authentication required. Please log in as an administrator.');
+                navigate('/login');
+                return;
+            }
+
             const config = {
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -131,6 +140,13 @@ const UserTable = () => {
 
             const parsedTasksToApply = parseInt(tasksToApply);
             console.log(`[UserTable - handleApplyDailyTasks] Sending PUT request for ${selectedUserIds.length} users with daily_orders: ${parsedTasksToApply}`); // DEBUG LOG
+
+            // CRITICAL CHECK: Ensure selectedUserIds is not empty here
+            if (selectedUserIds.length === 0) {
+                console.error('[UserTable - handleApplyDailyTasks] ERROR: selectedUserIds is unexpectedly empty right before sending requests.');
+                window.alert('An internal error occurred: No users selected for update.');
+                return;
+            }
 
             const promises = selectedUserIds.map(userId => {
                 const url = `${API_BASE_URL}/admin/users/${userId}`;
@@ -150,6 +166,12 @@ const UserTable = () => {
         } catch (err) {
             console.error('[UserTable - handleApplyDailyTasks] Error applying daily tasks:', err); // DEBUG LOG
             window.alert(err.response?.data?.message || 'Failed to apply daily tasks.');
+            // If unauthorized, clear token and redirect to login
+            if (err.response && (err.response.status === 401 || err.response.status === 403)) {
+                localStorage.removeItem('token');
+                localStorage.removeItem('user');
+                navigate('/login');
+            }
         }
     };
 
