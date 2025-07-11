@@ -10,7 +10,6 @@ function InjectionPlan() {
     const navigate = useNavigate();
 
     // Safely destructure userIdToInject from location.state.
-    // If navigating directly or state is undefined, userIdToInject will be undefined.
     const { userIdToInject } = location.state || {};
 
     // State for table data
@@ -18,21 +17,19 @@ function InjectionPlan() {
     const [rowsPerPage, setRowsPerPage] = useState(20);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
-    // Add successMessage and setSuccessMessage here
-    const [successMessage, setSuccessMessage] = useState(null); // <--- ADD THIS LINE
+    const [successMessage, setSuccessMessage] = useState(null);
 
     // State for "Add Injection" modal
     const [showAddModal, setShowAddModal] = useState(false);
     const [newInjection, setNewInjection] = useState({
         injection_order: '',
-        commission_rate: 50.0, // Default value as per your backend controller
+        commission_rate: 50.0,
         injections_amount: ''
     });
 
     // --- Function to fetch injection plans from the backend ---
     const fetchInjectionPlans = async () => {
         if (!userIdToInject) {
-            // If no user ID is available, don't attempt to fetch
             setLoading(false);
             setError("No user selected. Please go back to User List and click 'INJECT' for a user.");
             return;
@@ -40,13 +37,13 @@ function InjectionPlan() {
 
         try {
             setLoading(true);
-            setError(null); // Clear previous errors
+            setError(null);
 
             const token = localStorage.getItem('token');
             if (!token) {
                 setError("Authentication token not found. Please log in.");
                 setLoading(false);
-                navigate('/login'); // Redirect to login if no token
+                navigate('/login');
                 return;
             }
 
@@ -56,18 +53,15 @@ function InjectionPlan() {
                 }
             });
 
-            // Map backend data to frontend state structure
             setData(response.data.map(item => ({
                 id: item.id,
                 uid: item.user_id,
                 order: item.injection_order,
-                commission: `${item.commission_rate}%`, // Display as percentage
+                commission: `${item.commission_rate}%`,
                 amount: item.injections_amount,
-                // These fields are not directly in injection_plans table per your model.
-                // Keep as placeholders or fetch from 'tasks' table if needed.
-                completed: false,
-                taskNumber: '',
-                completionTime: '',
+                completed: false, // This seems to be a placeholder, adjust as needed
+                taskNumber: '',   // This seems to be a placeholder, adjust as needed
+                completionTime: '', // This seems to be a placeholder, adjust as needed
                 creationTime: item.created_at ? new Date(item.created_at).toLocaleString() : '-',
             })));
 
@@ -90,15 +84,13 @@ function InjectionPlan() {
         }
     };
 
-    // Fetch data when the component mounts or userIdToInject changes
     useEffect(() => {
         fetchInjectionPlans();
-    }, [userIdToInject, navigate]); // Add navigate to dependency array for effect re-run
+    }, [userIdToInject, navigate]);
 
     // --- Handlers for table actions ---
     const handleEdit = (id) => {
         alert(`Edit clicked for ID: ${id}. This would open a form to edit the data.`);
-        // Implement fetching item data, opening a modal, pre-filling, and then a PUT request.
     };
 
     const handleDelete = async (id) => {
@@ -117,7 +109,7 @@ function InjectionPlan() {
                     }
                 });
 
-                setData(data.filter(item => item.id !== id)); // Optimistic UI update
+                setData(data.filter(item => item.id !== id));
                 alert('Injection plan deleted successfully!');
             } catch (err) {
                 console.error("Error deleting injection plan:", err);
@@ -130,26 +122,26 @@ function InjectionPlan() {
     // --- Handlers for "Add Injection" modal ---
     const handleAdd = () => {
         setShowAddModal(true);
-        setNewInjection({ // Reset form fields when opening
+        setNewInjection({
             injection_order: '',
             commission_rate: 50.0,
             injections_amount: ''
         });
-        setError(null); // Clear any previous errors when opening modal
-        setSuccessMessage(null); // Clear any previous success messages
+        setError(null);
+        setSuccessMessage(null);
     };
 
     const handleNewInjectionChange = (e) => {
         const { name, value } = e.target;
         setNewInjection(prev => ({ ...prev, [name]: value }));
     };
-
+    
+    // ✅ **FIX APPLIED IN THIS FUNCTION**
     const handleNewInjectionSubmit = async (e) => {
         e.preventDefault();
         setError(null);
         setSuccessMessage(null);
 
-        // Frontend validation
         if (!userIdToInject) {
             setError("Error: User ID is missing for the new injection plan.");
             return;
@@ -167,7 +159,7 @@ function InjectionPlan() {
             setError("Injection Order must be a positive number.");
             return;
         }
-        if (isNaN(rate) || rate < 0) { // Commission rate can be 0 or positive
+        if (isNaN(rate) || rate < 0) {
             setError("Commission Rate must be a non-negative number.");
             return;
         }
@@ -190,19 +182,24 @@ function InjectionPlan() {
                     'Content-Type': 'application/json',
                 },
             };
-
-            const response = await axios.post(`${API_BASE_URL}/injection-plans/${userIdToInject}`, {
-                user_id: userIdToInject, // Send user_id in the body too
+            
+            // The user_id is no longer sent in the body. The backend will use the ID from the URL.
+            const requestBody = {
                 injection_order: order,
                 commission_rate: rate,
                 injections_amount: amount
-            }, config);
+            };
+
+            const response = await axios.post(
+                `${API_BASE_URL}/injection-plans/${userIdToInject}`,
+                requestBody,
+                config
+            );
 
             setSuccessMessage(response.data.message || 'Injection plan added successfully!');
-            setShowAddModal(false); // Close the modal
-            fetchInjectionPlans(); // Refresh the list to show the new item
+            setShowAddModal(false);
+            fetchInjectionPlans();
 
-            // Reset form fields
             setNewInjection({
                 injection_order: '',
                 commission_rate: 50.0,
@@ -211,6 +208,7 @@ function InjectionPlan() {
 
         } catch (err) {
             console.error("Error adding injection plan:", err);
+            // This will now correctly display the foreign key error if the backend issue persists
             setError(`Failed to add injection plan: ${err.response?.data?.message || err.message}`);
         }
     };
@@ -218,14 +216,15 @@ function InjectionPlan() {
     return (
         <div className="container">
             <div className="header">
-                <h2>UID: {userIdToInject || 'N/A'} Injection Plan</h2> {/* Display dynamic UID */}
+                <h2>UID: {userIdToInject || 'N/A'} Injection Plan</h2>
                 <button className="add-button" onClick={handleAdd} disabled={!userIdToInject}>Add Injection</button>
             </div>
 
-            {/* Display loading, error, or data */}
+            {successMessage && <p className="success-message" style={{color: 'green', textAlign: 'center'}}>{successMessage}</p>}
+
             {loading ? (
                 <p>Loading injection plans...</p>
-            ) : error ? (
+            ) : error && !showAddModal ? ( // Only show main error if modal is closed
                 <p className="error-message">{error}</p>
             ) : (
                 <div className="table-container">
@@ -257,9 +256,11 @@ function InjectionPlan() {
                                         <td>{item.order}</td>
                                         <td>{item.commission}</td>
                                         <td>{item.amount}</td>
-                                        <td><span className={item.completed ? "completed-label" : "unfinished-label"}>
-                                            {item.completed ? "Completed" : "Unfinished"}
-                                        </span></td>
+                                        <td>
+                                            <span className={item.completed ? "completed-label" : "unfinished-label"}>
+                                                {item.completed ? "Completed" : "Unfinished"}
+                                            </span>
+                                        </td>
                                         <td>{item.taskNumber || '-'}</td>
                                         <td>{item.completionTime || '-'}</td>
                                         <td>{item.creationTime}</td>
@@ -281,13 +282,11 @@ function InjectionPlan() {
                 <span>Total {Math.ceil(data.length / rowsPerPage)} page. Currently showing page 1.</span>
             </div>
 
-            {/* Add Injection Plan Modal/Form */}
             {showAddModal && (
                 <div className="modal-overlay">
                     <div className="modal-content">
                         <h3>Add New Injection Plan for User ID: {userIdToInject}</h3>
                         {error && <p className="error-message">{error}</p>}
-                        {successMessage && <p className="success-message">{successMessage}</p>}
                         <form onSubmit={handleNewInjectionSubmit}>
                             <div className="form-group">
                                 <label>Injection Order:</label>
