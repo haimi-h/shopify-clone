@@ -47,17 +47,20 @@ function InjectionPlan() {
             const response = await axios.get(`${API_BASE_URL}/injection-plans/${userIdToInject}`, {
                 headers: { Authorization: `Bearer ${token}` }
             });
+
+            // ✅ **THE FIX IS HERE:** Convert API string data to numbers immediately.
             setData(response.data.map(item => ({
                 id: item.id,
                 uid: item.user_id,
-                order: item.injection_order,
-                commission: item.commission_rate, // Store raw number for editing
-                amount: item.injections_amount,
+                order: parseInt(item.injection_order, 10),
+                commission: parseFloat(item.commission_rate), 
+                amount: parseFloat(item.injections_amount), // This now ensures 'amount' is a number
                 completed: false,
                 taskNumber: '',
                 completionTime: '',
                 creationTime: item.created_at ? new Date(item.created_at).toLocaleString() : '-',
             })));
+
         } catch (err) {
             handleApiError(err, "load injection plans");
         } finally {
@@ -91,7 +94,6 @@ function InjectionPlan() {
                     headers: { Authorization: `Bearer ${token}` }
                 });
                 setSuccessMessage('Injection plan deleted successfully!');
-                // Optimistic UI update
                 setData(data.filter(item => item.id !== injectionId));
                 setTimeout(() => setSuccessMessage(null), 3000);
             } catch (err) {
@@ -104,7 +106,7 @@ function InjectionPlan() {
     const handleEditClick = (injection) => {
         setEditingInjection(injection);
         setShowEditModal(true);
-        setError(null); // Clear previous errors
+        setError(null);
     };
 
     const handleEditChange = (e) => {
@@ -121,7 +123,7 @@ function InjectionPlan() {
             const { id, order, commission, amount } = editingInjection;
             
             const requestBody = {
-                injection_order: parseInt(order),
+                injection_order: parseInt(order, 10),
                 commission_rate: parseFloat(commission),
                 injections_amount: parseFloat(amount)
             };
@@ -132,14 +134,13 @@ function InjectionPlan() {
 
             setSuccessMessage('Injection plan updated successfully!');
             setShowEditModal(false);
-            fetchInjectionPlans(); // Refetch data to show updated values
+            fetchInjectionPlans(); 
             setTimeout(() => setSuccessMessage(null), 3000);
 
         } catch (err) {
             handleApiError(err, "update injection plan");
         }
     };
-
 
     // --- "Add" Functionality ---
     const handleAddClick = () => {
@@ -157,7 +158,7 @@ function InjectionPlan() {
         try {
             const token = localStorage.getItem('token');
             const requestBody = {
-                injection_order: parseInt(newInjection.injection_order),
+                injection_order: parseInt(newInjection.injection_order, 10),
                 commission_rate: parseFloat(newInjection.commission_rate),
                 injections_amount: parseFloat(newInjection.injections_amount)
             };
@@ -173,7 +174,6 @@ function InjectionPlan() {
             handleApiError(err, "add injection plan");
         }
     };
-
 
     // --- Render Logic ---
     return (
@@ -203,11 +203,12 @@ function InjectionPlan() {
                             {data.length === 0 ? (
                                 <tr><td colSpan="7">No injection plans found.</td></tr>
                             ) : (
-                                data.slice(0, rowsPerPage).map(item => (
+                                data.map(item => (
                                     <tr key={item.id}>
                                         <td>{item.id}</td>
                                         <td>{item.order}</td>
                                         <td>{item.commission}%</td>
+                                        {/* This line will now work correctly */}
                                         <td>${item.amount.toFixed(2)}</td>
                                         <td>{item.creationTime}</td>
                                         <td><button className="edit-button" onClick={() => handleEditClick(item)}>Edit</button></td>
