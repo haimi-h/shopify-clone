@@ -47,8 +47,7 @@ function InjectionPlan() {
         id: item.id,
         uid: item.user_id, // Map user_id from backend to uid for frontend display
         order: item.injection_order,
-        // FIX: Display commission rate directly as received from backend, assuming it's a percentage number (e.g., 50 for 50%)
-        commission: `${item.commission_rate}%`, //
+        commission: `${item.commission_rate}%`,
         amount: item.injections_amount,
         // These fields (completed, taskNumber, completionTime, creationTime)
         // are not directly in the `injection_plans` table as per your model.
@@ -129,7 +128,7 @@ function InjectionPlan() {
     setShowAddModal(true);
     setNewInjection({ // Reset form fields when opening
       injection_order: '',
-      commission_rate: 50.0, // Default value
+      commission_rate: 50.0,
       injections_amount: ''
     });
   };
@@ -168,10 +167,10 @@ function InjectionPlan() {
         return;
       }
 
+
       await axios.post(`${API_BASE_URL}/injection-plans/${userId}`, {
         injection_order: parseInt(newInjection.injection_order),
-        // FIX: Send commission_rate as a raw percentage number (e.g., 50 for 50%)
-        commission_rate: parseFloat(newInjection.commission_rate), //
+        commission_rate: parseFloat(newInjection.commission_rate),
         injections_amount: parseFloat(newInjection.injections_amount)
       }, {
         headers: {
