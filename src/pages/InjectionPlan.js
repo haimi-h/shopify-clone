@@ -18,6 +18,8 @@ function InjectionPlan() {
     const [rowsPerPage, setRowsPerPage] = useState(20);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
+    // Add successMessage and setSuccessMessage here
+    const [successMessage, setSuccessMessage] = useState(null); // <--- ADD THIS LINE
 
     // State for "Add Injection" modal
     const [showAddModal, setShowAddModal] = useState(false);
