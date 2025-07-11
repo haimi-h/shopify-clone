@@ -7,6 +7,12 @@ function InjectionPlan() {
   const [rowsPerPage, setRowsPerPage] = useState(20);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [showAddModal, setShowAddModal] = useState(false); // State to control add modal visibility
+  const [newInjection, setNewInjection] = useState({ // State for new injection form data
+    injection_order: '',
+    commission_rate: 50.0, // Default value
+    injections_amount: ''
+  });
 
   // This userId should ideally come from a user context or props after login
   // For demonstration, we'll use '44128' as per your screenshot and backend routes
@@ -117,13 +123,75 @@ function InjectionPlan() {
     }
   };
 
-  // Handler for adding a new injection plan (will open a modal/form)
+  // Handler for opening the add new injection plan modal/form
   const handleAdd = () => {
-    alert('Add Injection button clicked. This will open a form to create a new injection plan.');
-    // In a full implementation, you'd open a modal/form for inputting new data,
-    // then make a POST request to `${API_BASE_URL}/injection-plans/${userId}` on submit.
-    // After successful creation, call fetchInjectionPlans() to refresh the list.
+    setShowAddModal(true);
+    setNewInjection({ // Reset form fields when opening
+      injection_order: '',
+      commission_rate: 50.0,
+      injections_amount: ''
+    });
   };
+
+  // Handler for input changes in the add new injection form
+  const handleNewInjectionChange = (e) => {
+    const { name, value } = e.target;
+    setNewInjection(prev => ({ ...prev, [name]: value }));
+  };
+
+  // Handler for submitting the new injection plan form
+  const handleNewInjectionSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        setError("Authentication token not found. Please log in.");
+        return;
+      }
+
+      // Basic validation
+      if (!newInjection.injection_order || !newInjection.injections_amount) {
+        alert("Please fill in both Injection Order and Amount.");
+        return;
+      }
+      if (isNaN(newInjection.injection_order) || parseInt(newInjection.injection_order) <= 0) {
+        alert("Injection Order must be a positive number.");
+        return;
+      }
+      if (isNaN(newInjection.injections_amount) || parseFloat(newInjection.injections_amount) <= 0) {
+        alert("Injection Amount must be a positive number.");
+        return;
+      }
+       if (isNaN(newInjection.commission_rate) || parseFloat(newInjection.commission_rate) <= 0) {
+        alert("Commission Rate must be a positive number.");
+        return;
+      }
+
+
+      await axios.post(`${API_BASE_URL}/injection-plans/${userId}`, {
+        injection_order: parseInt(newInjection.injection_order),
+        commission_rate: parseFloat(newInjection.commission_rate),
+        injections_amount: parseFloat(newInjection.injections_amount)
+      }, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+
+      alert('Injection plan added successfully!');
+      setShowAddModal(false); // Close the modal
+      fetchInjectionPlans(); // Refresh the list
+    } catch (err) {
+      console.error("Error adding injection plan:", err);
+      if (err.response) {
+        setError(`Failed to add injection plan: ${err.response.data.message || err.message}`);
+      } else {
+        setError(`Failed to add injection plan. Network error: ${err.message}`);
+      }
+      alert('Failed to add injection plan. Check console for details.');
+    }
+  };
+
 
   return (
     <div className="container">
@@ -192,6 +260,56 @@ function InjectionPlan() {
         {/* Basic pagination display (client-side, based on fetched data) */}
         <span>Total {Math.ceil(data.length / rowsPerPage)} page. Currently showing page 1.</span>
       </div>
+
+      {/* Add Injection Plan Modal/Form */}
+      {showAddModal && (
+        <div className="modal-overlay">
+          <div className="modal-content">
+            <h3>Add New Injection Plan</h3>
+            <form onSubmit={handleNewInjectionSubmit}>
+              <div className="form-group">
+                <label>Injection Order:</label>
+                <input
+                  type="number"
+                  name="injection_order"
+                  value={newInjection.injection_order}
+                  onChange={handleNewInjectionChange}
+                  placeholder="e.g., 1 (for first lucky order)"
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Commission Rate (%):</label>
+                <input
+                  type="number"
+                  name="commission_rate"
+                  value={newInjection.commission_rate}
+                  onChange={handleNewInjectionChange}
+                  placeholder="e.g., 50 (for 50%)"
+                  step="0.01"
+                  required
+                />
+              </div>
+              <div className="form-group">
+                <label>Amount (USD):</label>
+                <input
+                  type="number"
+                  name="injections_amount"
+                  value={newInjection.injections_amount}
+                  onChange={handleNewInjectionChange}
+                  placeholder="e.g., 100"
+                  step="0.01"
+                  required
+                />
+              </div>
+              <div className="modal-actions">
+                <button type="submit" className="add-button">Create Injection</button>
+                <button type="button" className="delete-button" onClick={() => setShowAddModal(false)}>Cancel</button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
