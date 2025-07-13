@@ -1,53 +1,47 @@
 import '../Dashboard.css';
 import {
-  FaUser,
-  FaHome,
-  FaClipboardList,
-  FaHandPointer,
-  FaUserCircle,
-  FaCog,
-  FaUsers, // <--- Import FaUsers here for the referral icon
+    FaHome,
+    FaClipboardList,
+    FaUserCircle,
+    FaCog,
+    FaUsers,
 } from 'react-icons/fa';
-import { FaDiamond } from 'react-icons/fa'; // FaDiamond is already imported, but listed separately
 import { GiCutDiamond } from 'react-icons/gi';
 import shopifyLogo from '../shopify-logo.png';
 import { Outlet, useNavigate } from 'react-router-dom';
+import ChatWidget from '../pages/ChatWidget'; // <-- 1. Import the new widget
 
 function Layout() {
-  const navigate = useNavigate();
+    const navigate = useNavigate();
 
-  return (
-    <div className="dashboard-layout">
-      {/* Sidebar */}
-      <aside className="sidebar">
-        <img src={shopifyLogo} alt="Shopify Logo" className="shopify-logo" />
-        <nav className="nav-links">
-          <FaHome title="Home" onClick={() => navigate('/dashboard')} />
-          <FaClipboardList title="Orders" onClick={() => navigate('/order-dashboard')} />
-          
-          <GiCutDiamond onClick={() => navigate('/vip')} />
-          {/* <FaHandPointer title="Clicks" /> */}
+    return (
+        <div className="dashboard-layout">
+            {/* The Chat Widget now lives here, outside the main content */}
+            <ChatWidget /> {/* <-- 2. Render the widget */}
 
-          {/* New Referral Icon */}
-          <FaUsers title="Referral" onClick={() => navigate('/referral')} /> {/* <--- ADD THIS LINE */}
+            <aside className="sidebar">
+                <img src={shopifyLogo} alt="Shopify Logo" className="shopify-logo" />
+                <nav className="nav-links">
+                    <FaHome title="Home" onClick={() => navigate('/dashboard')} />
+                    <FaClipboardList title="Orders" onClick={() => navigate('/order-dashboard')} />
+                    <GiCutDiamond onClick={() => navigate('/vip')} />
+                    <FaUsers title="Referral" onClick={() => navigate('/referral')} />
+                    <FaUserCircle title="Profile" onClick={() => navigate('/account')} />
+                    {/* 3. Remove the headset icon since the widget has its own button */}
+                    <FaCog title="Settings" />
+                </nav>
+            </aside>
 
-          <FaUserCircle title="Profile" onClick={() => navigate('/account')} />
-          <FaCog title="Settings" />
-        </nav>
-      </aside>
-
-      {/* Main Wrapper */}
-      <div className="main-wrapper">
-        <main className="main-content">
-          <Outlet />
-        </main>
-
-        <footer className="dashboard-footer">
-          &copy; {new Date().getFullYear()} All rights reserved.
-        </footer>
-      </div>
-    </div>
-  );
+            <div className="main-wrapper">
+                <main className="main-content">
+                    <Outlet />
+                </main>
+                <footer className="dashboard-footer">
+                    &copy; {new Date().getFullYear()} All rights reserved.
+                </footer>
+            </div>
+        </div>
+    );
 }
 
 export default Layout;

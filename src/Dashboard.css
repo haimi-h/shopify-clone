@@ -434,3 +434,88 @@ body {
   }
 }
 
+@media (max-width: 768px) {
+
+  /* 1. Change main layout to be vertical */
+  .dashboard-layout {
+    flex-direction: column;
+  }
+
+  /* 2. Transform the sidebar into a fixed bottom navbar */
+  .sidebar {
+    width: 100%;             /* Occupy full width */
+    height: 65px;            /* Set a fixed height */
+    position: fixed;         /* Stick to the screen */
+    bottom: 0;               /* Position at the bottom */
+    left: 0;
+    z-index: 1000;           /* Ensure it's on top of other content */
+    flex-direction: row;     /* Arrange items horizontally */
+    justify-content: center; /* Center the icons */
+    padding: 0;
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1); /* Add a subtle shadow */
+  }
+
+  /* 3. Hide the logo on mobile */
+  .sidebar .shopify-logo {
+    display: none;
+  }
+
+  /* 4. Arrange nav icons in a row */
+  .nav-links {
+    flex-direction: row;      /* Display icons horizontally */
+    justify-content: space-around; /* Evenly space the icons */
+    width: 100%;
+    align-items: center;
+    gap: 10px;               /* Adjust space between icons */
+  }
+
+  .nav-links svg {
+    font-size: 22px;         /* Slightly smaller icons for mobile */
+  }
+
+  /* 5. Adjust main content to prevent overlap with the new navbar */
+  .main-wrapper {
+    /* Add padding to the bottom equal to the navbar's height */
+    padding-bottom: 75px; 
+  }
+
+  .main-content {
+    padding: 16px; /* Reduce padding on smaller screens */
+  }
+
+  /* 6. Make fonts and other elements responsive */
+  .dashboard-header {
+    flex-direction: column; /* Stack user info and balance */
+    align-items: flex-start;
+    gap: 10px;
+  }
+
+  .balance {
+    align-self: flex-end; /* Move balance to the right */
+  }
+
+  .amount {
+    font-size: 28px; /* Slightly smaller font for the amount */
+  }
+
+  .product-card {
+    width: 150px; /* Make product cards a bit smaller */
+  }
+
+  .product-image {
+    width: 110px;
+    height: 110px;
+  }
+
+  .congrats-text,
+  .additional-info h2,
+  .partnered-section h2 {
+    font-size: 18px; /* Adjust heading sizes */
+  }
+  
+  .start-button {
+    width: 100%; /* Make the button full-width for easier tapping */
+    padding: 16px;
+    text-align: center;
+  }
+}

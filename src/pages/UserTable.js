@@ -3,6 +3,10 @@ import '../UserTable.css'; // Your existing CSS file
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios'; // Import axios for API calls
 
+// Import new modal components - FIX: Adjusted paths based on your file structure
+import HistoryModal from './admin/HistoryModal'; // UserTable is in src/pages, Modals are in src/pages/admin
+import SettingModal from './admin/SettingModal'; // UserTable is in src/pages, Modals are in src/pages/admin
+
 const API_BASE_URL = 'http://localhost:5000/api'; // Your backend API base URL
 
 const UserTable = () => {
@@ -14,6 +18,11 @@ const UserTable = () => {
     // Updated state for "APPLY" functionality: now an array for multiple selections
     const [tasksToApply, setTasksToApply] = useState(''); // For the input field value
     const [selectedUserIds, setSelectedUserIds] = useState([]); // Changed to an array for multiple selections
+
+    // States for History and Setting Modals
+    const [showHistoryModal, setShowHistoryModal] = useState(false);
+    const [showSettingModal, setShowSettingModal] = useState(false);
+    const [selectedUserForModal, setSelectedUserForModal] = useState(null); // Stores the user object for the modal
 
     const navigate = useNavigate();
 
@@ -79,25 +88,27 @@ const UserTable = () => {
             const newSelected = prevSelected.includes(userId)
                 ? prevSelected.filter(id => id !== userId) // Deselect
                 : [...prevSelected, userId]; // Select
-            console.log('[UserTable - handleCheckboxChange] New selectedUserIds:', newSelected); // DEBUG LOG
+            // console.log('[UserTable - handleCheckboxChange] New selectedUserIds:', newSelected); // DEBUG LOG
             return newSelected;
         });
     };
 
     // --- Action Handlers for existing buttons ---
     const handleInject = (userId) => {
-        // Navigate to the InjectionPlan page, passing the userId as state
+        // PRESERVED: Navigate to the InjectionPlan page, passing the userId as state
         navigate('/admin/injection', { state: { userIdToInject: userId } });
     };
 
-    const handleHistory = (userId) => {
-        console.log(`Viewing history for user ID: ${userId}`);
-        window.alert(`Implement history view for user ID: ${userId}`);
+    // NEW: Handle History button click - Pass the whole user object
+    const handleHistory = (user) => { // Pass the entire user object
+        setSelectedUserForModal(user);
+        setShowHistoryModal(true);
     };
 
-    const handleSetting = (userId) => {
-        console.log(`Setting for user ID: ${userId}`);
-        window.alert(`Implement setting functionality for user ID: ${userId}`);
+    // NEW: Handle Setting button click - Pass the whole user object
+    const handleSetting = (user) => { // Pass the entire user object
+        setSelectedUserForModal(user);
+        setShowSettingModal(true);
     };
 
     const handleCreate = () => {
@@ -107,25 +118,25 @@ const UserTable = () => {
 
     // --- New Action Handler for "Apply Daily Tasks" ---
     const handleApplyDailyTasks = async () => {
-        console.log('[UserTable - handleApplyDailyTasks] APPLY button clicked.'); // DEBUG LOG
-        console.log('[UserTable - handleApplyDailyTasks] Selected User IDs at click:', selectedUserIds); // DEBUG LOG
-        console.log('[UserTable - handleApplyDailyTasks] Tasks to Apply:', tasksToApply); // DEBUG LOG
+        // console.log('[UserTable - handleApplyDailyTasks] APPLY button clicked.'); // DEBUG LOG
+        // console.log('[UserTable - handleApplyDailyTasks] Selected User IDs at click:', selectedUserIds); // DEBUG LOG
+        // console.log('[UserTable - handleApplyDailyTasks] Tasks to Apply:', tasksToApply); // DEBUG LOG
 
         if (selectedUserIds.length === 0) {
             window.alert("Please select at least one user to apply tasks to.");
-            console.log('[UserTable - handleApplyDailyTasks] No users selected. Aborting.'); // DEBUG LOG
+            // console.log('[UserTable - handleApplyDailyTasks] No users selected. Aborting.'); // DEBUG LOG
             return;
         }
         if (!tasksToApply || isNaN(tasksToApply) || parseInt(tasksToApply) < 0) {
             window.alert("Please enter a valid non-negative number of tasks.");
-            console.log('[UserTable - handleApplyDailyTasks] Invalid tasksToApply. Aborting.'); // DEBUG LOG
+            // console.log('[UserTable - handleApplyDailyTasks] Invalid tasksToApply. Aborting.'); // DEBUG LOG
             return;
         }
 
         try {
             const token = localStorage.getItem('token');
             if (!token) {
-                console.warn('[UserTable - handleApplyDailyTasks] No token found. Redirecting to login.'); // DEBUG LOG
+                // console.warn('[UserTable - handleApplyDailyTasks] No token found. Redirecting to login.'); // DEBUG LOG
                 setError('Authentication required. Please log in as an administrator.');
                 navigate('/login');
                 return;
@@ -139,7 +150,7 @@ const UserTable = () => {
             };
 
             const parsedTasksToApply = parseInt(tasksToApply);
-            console.log(`[UserTable - handleApplyDailyTasks] Sending PUT request for ${selectedUserIds.length} users with daily_orders: ${parsedTasksToApply}`); // DEBUG LOG
+            // console.log(`[UserTable - handleApplyDailyTasks] Sending PUT request for ${selectedUserIds.length} users with daily_orders: ${parsedTasksToApply}`); // DEBUG LOG
 
             // CRITICAL CHECK: Ensure selectedUserIds is not empty here
             if (selectedUserIds.length === 0) {
@@ -151,20 +162,20 @@ const UserTable = () => {
             const promises = selectedUserIds.map(userId => {
                 const url = `${API_BASE_URL}/admin/users/${userId}`;
                 const data = { daily_orders: parsedTasksToApply };
-                console.log(`[UserTable - handleApplyDailyTasks] Requesting: PUT ${url} with data:`, data); // DEBUG LOG
+                // console.log(`[UserTable - handleApplyDailyTasks] Requesting: PUT ${url} with data:`, data); // DEBUG LOG
                 return axios.put(url, data, config);
             });
 
             await Promise.all(promises); // Wait for all updates to complete
 
             window.alert(`Daily tasks applied successfully to ${selectedUserIds.length} user(s).`);
-            console.log('[UserTable - handleApplyDailyTasks] All PUT requests successful. Re-fetching users.'); // DEBUG LOG
+            // console.log('[UserTable - handleApplyDailyTasks] All PUT requests successful. Re-fetching users.'); // DEBUG LOG
             fetchUsers(); // Re-fetch all users to get updated data after applying tasks
             setTasksToApply('');
             setSelectedUserIds([]); // Clear selection after successful application
 
         } catch (err) {
-            console.error('[UserTable - handleApplyDailyTasks] Error applying daily tasks:', err); // DEBUG LOG
+                console.error('[UserTable - handleApplyDailyTasks] Error applying daily tasks:', err); // DEBUG LOG
             window.alert(err.response?.data?.message || 'Failed to apply daily tasks.');
             // If unauthorized, clear token and redirect to login
             if (err.response && (err.response.status === 401 || err.response.status === 403)) {
@@ -173,6 +184,14 @@ const UserTable = () => {
                 navigate('/login');
             }
         }
+    };
+
+    // Callback for when settings are saved in the SettingModal
+    const handleSettingsSaved = () => {
+        setShowSettingModal(false); // Close the modal
+        fetchUsers(); // Re-fetch users to update the table with new data
+        // Optionally show a success message
+        // window.alert('User settings updated successfully!');
     };
 
     // Determine if the APPLY button should be disabled
@@ -212,58 +231,63 @@ const UserTable = () => {
                 </div>
             </div>
 
-            <table className="user-table">
-                <thead>
-                    <tr>
-                        <th></th> {/* For checkbox/selection */}
-                        <th>#</th>
-                        <th>Username</th>
-                        <th>Phone No</th>
-                        <th>Invitation Code</th>
-                        <th>Invited By</th>
-                        <th>Daily Orders</th>
-                        <th>Completed</th>
-                        <th>Uncompleted</th>
-                        <th>Wallet</th> {/* This header is for the wallet address */}
-                        <th>Actions</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    {filteredUsers.length > 0 ? (
-                        filteredUsers.map((user, index) => (
-                            <tr key={user.id} className={selectedUserIds.includes(user.id) ? 'selected-row' : ''}> {/* Highlight selected rows */}
-                                <td>
-                                    {/* Changed to checkbox */}
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedUserIds.includes(user.id)}
-                                        onChange={() => handleCheckboxChange(user.id)}
-                                    />
-                                </td>
-                                <td>{index + 1}</td> {/* Use index + 1 for row number */}
-                                <td>{user.username}</td>
-                                <td>{user.phone}</td>
-                                <td>{user.invitation_code}</td> {/* Backend field name */}
-                                <td>{user.invited_by || 'N/A'}</td> {/* Backend field name, default 'N/A' */}
-                                <td>{user.daily_orders}</td> {/* Backend field name */}
-                                <td>{user.completed_orders}</td> {/* Backend field name */}
-                                <td>{user.uncompleted_orders}</td> {/* Backend field name */}
-                                <td>{user.wallet_balance || 'N/A'}</td> {/* Display wallet_balance directly as string */}
-                                <td className="actions">
-                                    <button className="btn btn-red" onClick={() => handleInject(user.id)}>INJECT</button>
-                                    <button className="btn btn-blue" onClick={() => handleHistory(user.id)}>HISTORY</button>
-                                    <button className="btn btn-yellow" onClick={() => handleSetting(user.id)}>SETTING</button>
-                                    <button className="btn btn-green" onClick={handleCreate}>CREATE</button>
-                                </td>
-                            </tr>
-                        ))
-                    ) : (
+            {/* Wrap the table in a responsive div */}
+            <div className="table-responsive-wrapper">
+                <table className="user-table">
+                    <thead>
                         <tr>
-                            <td colSpan="11" style={{ textAlign: 'center' }}>No users found or matching filters.</td>
+                            <th></th> {/* For checkbox/selection */}
+                            <th>#</th>
+                            <th>Username</th>
+                            <th>Phone No</th>
+                            <th>Invitation Code</th>
+                            <th>Invited By</th>
+                            <th>Daily Orders</th>
+                            <th>Completed</th>
+                            <th>Uncompleted</th>
+                            <th>Wallet</th> {/* This header is for the wallet address */}
+                            <th>Actions</th>
                         </tr>
-                    )}
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        {filteredUsers.length > 0 ? (
+                            filteredUsers.map((user, index) => (
+                                <tr key={user.id} className={selectedUserIds.includes(user.id) ? 'selected-row' : ''}> {/* Highlight selected rows */}
+                                    <td>
+                                        {/* Changed to checkbox */}
+                                        <input
+                                            type="checkbox"
+                                            checked={selectedUserIds.includes(user.id)}
+                                            onChange={() => handleCheckboxChange(user.id)}
+                                        />
+                                    </td>
+                                    <td>{index + 1}</td> {/* Use index + 1 for row number */}
+                                    <td>{user.username}</td>
+                                    <td>{user.phone}</td>
+                                    <td>{user.invitation_code}</td> {/* Backend field name */}
+                                    <td>{user.invited_by || 'N/A'}</td> {/* Backend field name, default 'N/A' */}
+                                    <td>{user.daily_orders}</td> {/* Backend field name */}
+                                    <td>{user.completed_orders}</td> {/* Backend field name */}
+                                    <td>{user.uncompleted_orders}</td> {/* Backend field name */}
+                                    <td>{user.wallet_balance || 'N/A'}</td> {/* Display wallet_balance directly as string */}
+                                    <td className="actions">
+                                        <button className="btn btn-red" onClick={() => handleInject(user.id)}>INJECT</button>
+                                        {/* Corrected: Pass the full user object to handleHistory and handleSetting */}
+                                        <button className="btn btn-blue" onClick={() => handleHistory(user)}>HISTORY</button>
+                                        <button className="btn btn-yellow" onClick={() => handleSetting(user)}>SETTING</button>
+                                        <button className="btn btn-green" onClick={handleCreate}>CREATE</button>
+                                    </td>
+                                </tr>
+                            ))
+                        ) : (
+                            <tr>
+                                <td colSpan="11" style={{ textAlign: 'center' }}>No users found or matching filters.</td>
+                            </tr>
+                        )}
+                    </tbody>
+                </table>
+            </div> {/* End of table-responsive-wrapper */}
+
             <div className="pagination">
                 <button>1</button>
                 <button>2</button>
@@ -271,6 +295,23 @@ const UserTable = () => {
                 <button>+</button>
                 <button>5</button>
             </div>
+
+            {/* History Modal */}
+            {showHistoryModal && selectedUserForModal && (
+                <HistoryModal
+                    user={selectedUserForModal}
+                    onClose={() => setShowHistoryModal(false)}
+                />
+            )}
+
+            {/* Setting Modal */}
+            {showSettingModal && selectedUserForModal && (
+                <SettingModal
+                    user={selectedUserForModal}
+                    onClose={() => setShowSettingModal(false)}
+                    onSave={handleSettingsSaved} // Callback to re-fetch users after save
+                />
+            )}
         </div>
     );
 };

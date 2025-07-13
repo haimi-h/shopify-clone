@@ -93,7 +93,7 @@ function Dashboard() {
   }, [phones.length]);
 
   return (
-    <div className="dashboard-layout">
+    // <div className="dashboard-layout">
       <main className="main-content">
         <header className="dashboard-header">
           <div className="user-info">
@@ -205,7 +205,7 @@ function Dashboard() {
           </section>
         </section>
       </main>
-    </div>
+    // </div>
   );
 }
 
