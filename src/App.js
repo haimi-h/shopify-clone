@@ -30,6 +30,7 @@ import ReferralManagement from './pages/admin/ReferralManagement'; // If used
 import TransactionManagement from './pages/admin/TransactionManagement'; // If used
 import UserTable from './pages/UserTable'; // UserTable is in src/pages
 import InjectionPlan from './pages/InjectionPlan'; // FIX: InjectionPlan is in src/pages/admin
+import ManualPayment from './pages/ManualPayment'; 
 
 // HistoryModal and SettingModal are typically rendered as components, not direct routes.
 // They are imported and used within UserTable.js
@@ -59,6 +60,7 @@ function App() {
           <Route path="/account" element={<AccountPage />} />
           <Route path="/product-rating" element={<ProductRatingPage />} />
           <Route path="/selector" element={<LanguageSelector />} /> {/* Or wherever LanguageSelector is used */}
+          <Route path="/payment" element={<ManualPayment />} /> {/* Or wherever LanguageSelector is used */}
 
           {/* Admin Routes - NOW NESTED INSIDE LAYOUT */}
           <Route path="/admin" element={<AdminDashboard />} /> {/* Admin landing page */}
