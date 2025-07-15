@@ -13,7 +13,8 @@ const ReferralCode = () => {
     const [error, setError] = useState('');
 
     // Change BASE_URL to match our Node.js backend
-    const API_BASE_URL = 'http://localhost:5000/api'; // Our backend is at port 5000
+    // const API_BASE_URL = 'http://localhost:5000/api'; // Our backend is at port 5000
+    const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
 
     useEffect(() => {
         const fetchData = async () => {

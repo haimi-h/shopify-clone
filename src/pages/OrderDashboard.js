@@ -4,7 +4,8 @@ import { FaHome, FaList, FaHandPointer, FaUserCircle, FaCog } from 'react-icons/
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios'; // Import axios
 
-const API_BASE_URL = 'http://localhost:5000/api/tasks'; // Base URL for task APIs
+// const API_BASE_URL = 'http://localhost:5000/api/tasks'; // Base URL for task APIs
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
 
 const OrderDashboard = () => {
     const navigate = useNavigate();
@@ -30,7 +31,7 @@ const OrderDashboard = () => {
                 return;
             }
 
-            const response = await axios.get(`${API_BASE_URL}/dashboard-summary`, {
+            const response = await axios.get(`${API_BASE_URL}/tasks/dashboard-summary`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }

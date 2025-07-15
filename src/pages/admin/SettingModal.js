@@ -2,7 +2,9 @@ import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import '../../Modal.css'; // Common CSS for modals
 
-const API_BASE_URL = 'http://localhost:5000/api/admin/users'; // Backend endpoint for user updates
+// const API_BASE_URL = 'http://localhost:5000/api/admin/users'; // Backend endpoint for user updates
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
+
 
 function SettingModal({ user, onClose, onSave }) {
     const [formData, setFormData] = useState({
@@ -55,7 +57,7 @@ function SettingModal({ user, onClose, onSave }) {
 
             const token = localStorage.getItem('token');
             // UPDATED: Call the new route /api/admin/users/:userId/profile
-            const response = await axios.put(`${API_BASE_URL}/${user.id}/profile`, dataToSend, {
+            const response = await axios.put(`${API_BASE_URL}/admin/users/${user.id}/profile`, dataToSend, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }

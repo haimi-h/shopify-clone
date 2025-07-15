@@ -14,7 +14,8 @@ export default function AccountPage() {
     const [referrals, setReferrals] = useState([]); // State for referrals
 
     // Define your API base URL
-    const API_BASE_URL = 'http://localhost:5000/api'; // <--- Define API_BASE_URL here
+    // const API_BASE_URL = 'http://localhost:5000/api'; // <--- Define API_BASE_URL here
+    const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
 
     // --- Effect to load user data from localStorage and fetch referrals on mount ---
     useEffect(() => {

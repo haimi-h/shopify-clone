@@ -2,7 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { QRCodeCanvas } from 'qrcode.react';
 import axios from 'axios'; // Import axios for API calls
 
-const API_BASE_URL = 'http://localhost:5000/api'; // Your backend API base URL
+// const API_BASE_URL = 'http://localhost:5000/api'; // Your backend API base URL
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
 
 function ManualPayment() {
   const [paymentAddress, setPaymentAddress] = useState('');

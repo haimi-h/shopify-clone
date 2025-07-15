@@ -8,8 +8,10 @@ const BotIcon = () => <span className="icon bot-icon">A</span>;
 const ChatIcon = () => '💬';
 const CloseIcon = () => '✖️';
 
-const API_BASE_URL = 'http://localhost:5000/api';
-const SOCKET_SERVER_URL = 'http://localhost:5000';
+// const API_BASE_URL = 'http://localhost:5000/api';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
+// const SOCKET_SERVER_URL = 'http://localhost:5000';
+const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || 'http://localhost:5000';
 
 const ChatWidget = () => {
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -84,7 +86,7 @@ const ChatWidget = () => {
     }
 
     if (!socketRef.current) {
-      socketRef.current = io(SOCKET_SERVER_URL);
+      socketRef.current = io(SOCKET_URL);
 
       socketRef.current.on('connect', () => {
         socketRef.current.emit('joinRoom', `user-${currentUserId}`);

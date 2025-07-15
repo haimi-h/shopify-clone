@@ -7,7 +7,8 @@ import axios from 'axios'; // Import axios for API calls
 import HistoryModal from './admin/HistoryModal'; // UserTable is in src/pages, Modals are in src/pages/admin
 import SettingModal from './admin/SettingModal'; // UserTable is in src/pages, Modals are in src/pages/admin
 
-const API_BASE_URL = 'http://localhost:5000/api'; // Your backend API base URL
+// const API_BASE_URL = 'http://localhost:5000/api'; // Your backend API base URL
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
 
 const UserTable = () => {
     const [users, setUsers] = useState([]); // Initialize with empty array, data will come from backend

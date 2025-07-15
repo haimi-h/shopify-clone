@@ -4,7 +4,8 @@ import '../Auth.css';
 import { Link, useNavigate, useLocation } from 'react-router-dom'; // Import useLocation
 import axios from 'axios';
 
-const API = 'http://localhost:5000/api/auth'; // Your backend API base URL
+// const API = 'http://localhost:5000/api/auth'; // Your backend API base URL
+const API_URL = process.env.REACT_APP_API_URL;
 
 function Register() {
   const [formData, setFormData] = useState({
@@ -69,7 +70,7 @@ function Register() {
     }
 
     try {
-      const res = await axios.post(`${API}/signup`, {
+      const res = await axios.post(`${API_URL}/signup`, {
         username,
         phone,
         password,

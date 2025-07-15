@@ -1,23 +1,29 @@
-import React, { useState, useEffect } from "react"; // Add useEffect
-import { useLocation, useNavigate } from "react-router-dom";
+// Updated ProductRatingPage.jsx based on client requirements
+import React, { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import { FaStar } from "react-icons/fa";
-import axios from "axios"; // Import axios
+import axios from "axios";
 import "../ProductRating.css";
 
-const API_BASE_URL = 'http://localhost:5000/api/tasks'; // Base URL for task APIs
+// const API_BASE_URL = 'http://localhost:5000/api/tasks';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
+const LUCKY_ORDER_POSITION = 22; // We'll later make this dynamic if needed
 
 function ProductRatingPage() {
     const navigate = useNavigate();
-    // const location = useLocation(); // We will no longer rely on location.state for product
 
-    const [product, setProduct] = useState(null); // State to hold the fetched product (task)
+    const [product, setProduct] = useState(null);
     const [rating, setRating] = useState(0);
     const [hover, setHover] = useState(null);
-    const [loading, setLoading] = useState(true); // Loading state for fetching task
-    const [error, setError] = useState(''); // Error state for API calls
-    const [message, setMessage] = useState(''); // Success/info message for rating submission
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState('');
+    const [message, setMessage] = useState('');
+    const [userBalance, setUserBalance] = useState(0);
+    const [taskCount, setTaskCount] = useState(0);
+    const [capitalRequired, setCapitalRequired] = useState(0);
+    const [profitAmount, setProfitAmount] = useState(0);
+    const [rechargeRequired, setRechargeRequired] = useState(false);
 
-    // --- Function to fetch a new task ---
     const fetchTask = async () => {
         setLoading(true);
         setError('');
@@ -25,28 +31,34 @@ function ProductRatingPage() {
         try {
             const token = localStorage.getItem('token');
             if (!token) {
-                // If no token, redirect to login
                 navigate('/login');
                 return;
             }
 
-            const response = await axios.get(`${API_BASE_URL}/task`, {
-                headers: {
-                    Authorization: `Bearer ${token}`
-                }
+            const res = await axios.get(`${API_BASE_URL}/tasks/task`, {
+                headers: { Authorization: `Bearer ${token}` }
             });
 
-            // The backend returns { task: {...} }
-            setProduct(response.data.task);
-            setRating(0); // Reset rating for new task
+            const task = res.data.task;
+            setProduct(task);
+            setRating(0);
+            setCapitalRequired(task.capital_required || 0);
+            setProfitAmount(task.profit || 0);
+            setUserBalance(res.data.balance || 0);
+            setTaskCount(res.data.taskCount || 0);
+
+            if ((res.data.taskCount + 1) === LUCKY_ORDER_POSITION) {
+                setRechargeRequired(true);
+            } else {
+                setRechargeRequired(false);
+            }
+
         } catch (err) {
             console.error("Error fetching task:", err);
-            setError(err.response?.data?.message || 'Failed to load task. Please try again.');
-            setProduct(null); // Clear product on error
-            if (err.response && (err.response.status === 401 || err.response.status === 403)) {
-                // If unauthorized, clear token and redirect to login
+            setError(err.response?.data?.message || 'Failed to load task.');
+            setProduct(null);
+            if ([401, 403].includes(err.response?.status)) {
                 localStorage.removeItem('token');
-                localStorage.removeItem('user');
                 navigate('/login');
             }
         } finally {
@@ -54,110 +66,98 @@ function ProductRatingPage() {
         }
     };
 
-    // --- Function to submit the rating ---
     const handleSubmitRating = async () => {
         setError('');
         setMessage('');
-        if (!product || !product.id) {
-            setError("No product to rate.");
+
+        if (rechargeRequired) {
+            alert(`In order to evaluate this item, please recharge $${capitalRequired}.`);
+            navigate('/recharge');
             return;
         }
-        if (rating < 1 || rating > 5) {
-            setError("Please provide a rating between 1 and 5 stars.");
+
+        if (!product?.id || rating < 1 || rating > 5) {
+            setError("Please provide a valid rating.");
             return;
         }
 
         try {
             const token = localStorage.getItem('token');
-            if (!token) {
-                navigate('/login');
-                return;
-            }
-
-            const res = await axios.post(`${API_BASE_URL}/submit-rating`,
-                {
-                    productId: product.id,
-                    rating: rating
-                },
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                        'Content-Type': 'application/json'
-                    }
+            const res = await axios.post(`${API_BASE_URL}/tasks/submit-rating`, {
+                productId: product.id,
+                rating
+            }, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json'
                 }
-            );
+            });
 
-            setMessage(res.data.message); // "Task completed successfully!" or "Rating submitted."
-            // If task completed, you might want to automatically fetch the next task
+            setMessage(res.data.message);
+
             if (res.data.isCompleted) {
-                // Optionally wait a bit before fetching next task or navigate back
-                setTimeout(() => {
-                    fetchTask(); // Fetch the next task automatically
-                }, 1500); // Wait 1.5 seconds to show success message
+                setTimeout(fetchTask, 1500);
             }
 
         } catch (err) {
-            console.error("Error submitting rating:", err);
             setError(err.response?.data?.message || 'Failed to submit rating.');
-            if (err.response && (err.response.status === 401 || err.response.status === 403)) {
+            if ([401, 403].includes(err.response?.status)) {
                 localStorage.removeItem('token');
-                localStorage.removeItem('user');
                 navigate('/login');
             }
         }
     };
 
-    // --- useEffect to fetch task on component mount ---
     useEffect(() => {
         fetchTask();
-    }, []); // Empty dependency array means this runs once on mount
+    }, []);
 
-    const handleStarClick = (index) => {
-        setRating(index + 1);
-    };
+    const handleStarClick = (index) => setRating(index + 1);
 
-    const isTaskCompleted = rating === 5; // This is now a local UI state, not backend driven directly
+    if (loading) return <div className="rating-wrapper"><h2>Loading task...</h2></div>;
 
-    if (loading) {
-        return (
-            <div className="rating-wrapper">
-                <h2>Loading task...</h2>
-            </div>
-        );
-    }
+    if (error) return (
+        <div className="rating-wrapper">
+            <h2>Error: {error}</h2>
+            <button onClick={fetchTask}>Try Again</button>
+            <button onClick={() => navigate("/dashboard")}>Back to Dashboard</button>
+        </div>
+    );
 
-    if (error) {
-        return (
-            <div className="rating-wrapper">
-                <h2>Error: {error}</h2>
-                <button onClick={fetchTask}>Try Again</button>
-                <button onClick={() => navigate("/dashboard")}>Back to Dashboard</button>
-            </div>
-        );
-    }
-
-    if (!product) {
-        return (
-            <div className="rating-wrapper">
-                <h2>No new tasks available.</h2>
-                <p>Please check back later or try refreshing.</p>
-                <button onClick={fetchTask}>Refresh Tasks</button>
-                <button onClick={() => navigate("/dashboard")}>Back to Dashboard</button>
-            </div>
-        );
-    }
+    if (!product) return (
+        <div className="rating-wrapper">
+            <h2>No new tasks available.</h2>
+            <button onClick={fetchTask}>Refresh Tasks</button>
+            <button onClick={() => navigate("/dashboard")}>Back to Dashboard</button>
+        </div>
+    );
 
     return (
         <div className="rating-wrapper">
             <div className="rating-card">
-                {/* Use product.image_url from backend instead of product.image */}
                 <img src={product.image_url} alt={product.name} className="rating-image" />
                 <h2 className="rating-title">{product.name}</h2>
                 <p className="rating-description">{product.description}</p>
-                <p className="rating-price">Price: ₹{product.price}</p>
-                {/* Removed product.category as it's not in your backend product schema */}
+                <p className="rating-price">Price: ${product.price}</p>
 
-                <p className="rating-instruction">Rate this product (5 stars to complete task)</p>
+                {/* Dollar Info */}
+                <div className="rating-financials">
+                    <p><strong>💰 Your Balance:</strong> ${userBalance.toFixed(2)}</p>
+                    <p><strong>📈 Profit if you rate:</strong> ${profitAmount.toFixed(2)}</p>
+                    <p><strong>💵 Capital Required:</strong> ${capitalRequired.toFixed(2)}</p>
+                </div>
+
+                {/* Lucky order message */}
+                {rechargeRequired && (
+                    <div className="lucky-order-warning">
+                        ⚠️ This is a lucky order! You need to recharge ${capitalRequired} to proceed.
+                        <br />
+                        <button onClick={() => navigate('/recharge')}>Continue to Recharge</button>
+                    </div>
+                )}
+
+                {/* Rating Stars */}
+                <div className="rating-instruction">Rate this product (5 stars to complete task)</div>
                 <div className="stars">
                     {[...Array(5)].map((_, index) => (
                         <FaStar
@@ -171,35 +171,30 @@ function ProductRatingPage() {
                     ))}
                 </div>
 
-                {/* Display messages */}
+                {/* Feedback */}
                 {message && <p className="success-message">{message}</p>}
                 {error && <p className="error-message">{error}</p>}
 
-
-                {/* Dynamically show messages based on rating */}
                 {!message && rating > 0 && rating < 5 && (
                     <div className="incomplete-message">
                         ⭐ Task not complete – Please give 5 stars to finish.
                     </div>
                 )}
                 {!message && rating === 5 && (
-                     <div className="success-message">
+                    <div className="success-message">
                         ✅ Ready to complete – Submit your 5-star rating!
                     </div>
                 )}
 
-                {/* Submit Button */}
                 <button
-                    className="submit-rating-button" // Add a class for styling if needed
+                    className="submit-rating-button"
                     onClick={handleSubmitRating}
-                    disabled={loading || rating === 0 || message.includes("Task completed")} // Disable if loading, no rating, or already completed
+                    disabled={loading || rating === 0 || message.includes("Task completed")}
                 >
                     Submit Rating
                 </button>
 
-                <button className="back-button" onClick={() => navigate("/dashboard")}>
-                    Back to Dashboard
-                </button>
+                <button className="back-button" onClick={() => navigate("/dashboard")}>Back to Dashboard</button>
             </div>
         </div>
     );
