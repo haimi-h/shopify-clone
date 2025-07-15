@@ -8,7 +8,7 @@ function SettingModal({ user, onClose, onSave }) {
     const [formData, setFormData] = useState({
         username: user.username || '',
         phone: user.phone || '',
-        wallet_balance: user.wallet_balance || '', // Assuming wallet_balance is the wallet address
+        walletAddress: user.walletAddress || '', // UPDATED: Use walletAddress
         new_password: '', // For changing password
         confirm_password: '' // For confirming new password
     });
@@ -20,7 +20,7 @@ function SettingModal({ user, onClose, onSave }) {
         setFormData({
             username: user.username || '',
             phone: user.phone || '',
-            wallet_balance: user.wallet_balance || '',
+            walletAddress: user.walletAddress || '', // UPDATED: Use walletAddress
             new_password: '',
             confirm_password: ''
         });
@@ -39,50 +39,43 @@ function SettingModal({ user, onClose, onSave }) {
         setError('');
 
         if (formData.new_password && formData.new_password !== formData.confirm_password) {
-            setError("New password and confirm password do not match.");
+            setError('New password and confirm password do not match.');
             return;
         }
 
         try {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                setError('Authentication required. Please log in.');
-                return;
-            }
-
-            const updateData = {
+            const dataToSend = {
                 username: formData.username,
                 phone: formData.phone,
-                wallet_balance: formData.wallet_balance,
+                walletAddress: formData.walletAddress, // UPDATED: Send walletAddress to backend
             };
-
             if (formData.new_password) {
-                updateData.password = formData.new_password; // Add password only if provided
+                dataToSend.new_password = formData.new_password;
             }
 
-            const config = {
+            const token = localStorage.getItem('token');
+            // UPDATED: Call the new route /api/admin/users/:userId/profile
+            const response = await axios.put(`${API_BASE_URL}/${user.id}/profile`, dataToSend, {
                 headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-            };
+                    Authorization: `Bearer ${token}`
+                }
+            });
 
-            // Send update request to backend
-            const response = await axios.put(`${API_BASE_URL}/settings/${user.id}`, updateData, config);
-            setMessage(response.data.message || 'Settings updated successfully!');
-            onSave(); // Call parent's onSave to re-fetch user list
+            setMessage(response.data.message || 'User updated successfully!');
+            onSave(); // Trigger re-fetch of users in UserTable
+            onClose(); // Close modal after successful save
         } catch (err) {
-            console.error("Error updating user settings:", err);
-            setError(err.response?.data?.message || 'Failed to update settings.');
+            console.error('Error updating user:', err);
+            setError(err.response?.data?.message || 'Failed to update user.');
         }
     };
 
     return (
         <div className="modal-overlay">
             <div className="modal-content">
-                <h3>Settings for {user.username} (ID: {user.id})</h3>
-                {message && <p className="info-message">{message}</p>}
-                {error && <p className="error-message">{error}</p>}
+                <h3>Edit User Settings</h3>
+                {message && <p style={{ color: 'green' }}>{message}</p>}
+                {error && <p style={{ color: 'red' }}>{error}</p>}
                 <form onSubmit={handleSubmit}>
                     <div className="form-group">
                         <label>Username:</label>
@@ -94,7 +87,7 @@ function SettingModal({ user, onClose, onSave }) {
                     </div>
                     <div className="form-group">
                         <label>Wallet Address:</label>
-                        <input type="text" name="wallet_balance" value={formData.wallet_balance} onChange={handleChange} />
+                        <input type="text" name="walletAddress" value={formData.walletAddress} onChange={handleChange} /> {/* UPDATED: Use walletAddress */}
                     </div>
                     <div className="form-group">
                         <label>New Password (optional):</label>

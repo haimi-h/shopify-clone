@@ -1,104 +1,224 @@
-import React, { useState, useEffect, useRef } from 'react';
-import '../CustomerServicePage.css'; // You can keep using the same CSS
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import axios from 'axios';
+import io from 'socket.io-client';
+import '../CustomerServicePage.css';
 
-// --- Helper Components ---
 const UserIcon = () => <span className="icon user-icon">U</span>;
-const BotIcon = () => <span className="icon bot-icon">B</span>;
+const BotIcon = () => <span className="icon bot-icon">A</span>;
 const ChatIcon = () => '💬';
 const CloseIcon = () => '✖️';
 
+const API_BASE_URL = 'http://localhost:5000/api';
+const SOCKET_SERVER_URL = 'http://localhost:5000';
+
 const ChatWidget = () => {
-    const [isChatOpen, setIsChatOpen] = useState(false);
-    const [messages, setMessages] = useState([
-        { id: 1, sender: 'bot', text: 'Welcome to customer service! How can I help you?' },
-        { id: 2, sender: 'bot', text: 'THnossE2QZQRUciv7tXXX TRC20 Wallet address of shopping e-commerce company' },
-    ]);
-    const [inputValue, setInputValue] = useState('');
-    const chatEndRef = useRef(null);
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [messages, setMessages] = useState([]);
+  const [inputValue, setInputValue] = useState('');
+  const chatEndRef = useRef(null);
+  const [loadingChat, setLoadingChat] = useState(false);
+  const [chatError, setChatError] = useState(null);
+  const socketRef = useRef(null);
+  const optimisticMessageIds = useRef(new Set());
 
-    useEffect(() => {
-        chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-    }, [messages]);
+  const currentUser = JSON.parse(localStorage.getItem('user'));
+  const currentUserId = currentUser ? currentUser.id : null;
 
-    const handleSendMessage = (e) => {
-        e.preventDefault();
-        if (inputValue.trim() === '') return;
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
 
-        const newMessage = { id: Date.now(), sender: 'user', text: inputValue };
-        setMessages(prev => [...prev, newMessage]);
-        setInputValue('');
+  const handleReceiveMessage = useCallback((message) => {
+    console.log('CLIENT RECEIVED MESSAGE:', JSON.stringify(message, null, 2));
 
-        setTimeout(() => {
-            const botResponse = {
-                id: Date.now() + 1,
-                sender: 'bot',
-                text: "An agent will be with you shortly.",
-            };
-            setMessages(prev => [...prev, botResponse]);
-        }, 1500);
+    setMessages((prevMessages) => {
+      if (
+        message.sender_role === 'user' &&
+        message.tempId &&
+        optimisticMessageIds.current.has(message.tempId)
+      ) {
+        console.log(`Replacing optimistic message with tempId: ${message.tempId}`);
+        optimisticMessageIds.current.delete(message.tempId);
+
+        return prevMessages.map((msg) =>
+          msg.tempId === message.tempId
+            ? {
+                id: message.id,
+                sender: message.sender_role,
+                text: message.message_text,
+                timestamp: message.timestamp,
+              }
+            : msg
+        );
+      }
+
+      const isDuplicate = prevMessages.some(
+        (msg) => msg.id === message.id || msg.tempId === message.tempId
+      );
+
+      if (!isDuplicate) {
+        console.log(`Adding new message from other user/admin with id: ${message.id}`);
+        return [
+          ...prevMessages,
+          {
+            id: message.id,
+            sender: message.sender_role,
+            text: message.message_text,
+            timestamp: message.timestamp,
+          },
+        ];
+      }
+
+      console.log(`Ignoring already present message with id: ${message.id}`);
+      return prevMessages;
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!currentUserId || !isChatOpen) {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
+      return;
+    }
+
+    if (!socketRef.current) {
+      socketRef.current = io(SOCKET_SERVER_URL);
+
+      socketRef.current.on('connect', () => {
+        socketRef.current.emit('joinRoom', `user-${currentUserId}`);
+      });
+
+      socketRef.current.on('receiveMessage', handleReceiveMessage);
+    }
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
+    };
+  }, [isChatOpen, currentUserId, handleReceiveMessage]);
+
+  const fetchChatHistory = useCallback(async () => {
+    if (!currentUserId) return;
+    setLoadingChat(true);
+    try {
+      const token = localStorage.getItem('token');
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      const response = await axios.get(
+        `${API_BASE_URL}/chat/messages/${currentUserId}`,
+        config
+      );
+
+      setMessages(
+        response.data.map((msg) => ({
+          id: msg.id,
+          sender: msg.sender_role,
+          text: msg.message_text,
+          timestamp: msg.timestamp,
+        }))
+      );
+    } catch (err) {
+      setChatError('Failed to load chat history.');
+    } finally {
+      setLoadingChat(false);
+    }
+  }, [currentUserId]);
+
+  useEffect(() => {
+    if (isChatOpen) {
+      fetchChatHistory();
+    }
+  }, [isChatOpen, fetchChatHistory]);
+
+  const handleSendMessage = (e) => {
+    e.preventDefault();
+    if (inputValue.trim() === '' || !socketRef.current) return;
+
+    const tempMessageId = `optimistic-user-${Date.now()}`;
+    const messageToSend = {
+      userId: currentUserId,
+      senderId: currentUserId,
+      senderRole: 'user',
+      messageText: inputValue.trim(),
+      tempId: tempMessageId,
     };
 
-    const toggleChat = () => setIsChatOpen(!isChatOpen);
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: tempMessageId,
+        tempId: tempMessageId, // This is required to match later
+        sender: 'user',
+        text: messageToSend.messageText,
+        timestamp: new Date().toISOString(),
+      },
+    ]);
+    optimisticMessageIds.current.add(tempMessageId);
+    setInputValue('');
 
-    useEffect(() => {
-        if (isChatOpen) {
-            document.body.classList.add('chat-open');
-        } else {
-            document.body.classList.remove('chat-open');
-        }
-    }, [isChatOpen]);
+    socketRef.current.emit('sendMessage', messageToSend);
+  };
 
-    return (
-        <>
-            {/* --- Floating Chat Icon Button --- */}
-            <button
-                onClick={toggleChat}
-                className="chat-toggle-button"
-                aria-label="Toggle chat"
-            >
-                <ChatIcon />
+  const toggleChat = () => setIsChatOpen(!isChatOpen);
+
+  return (
+    <>
+      <button onClick={toggleChat} className="chat-toggle-button" aria-label="Toggle chat">
+        <ChatIcon />
+      </button>
+      <div className={`chat-popup ${isChatOpen ? 'active' : ''}`}>
+        <header className="chat-header">
+          <h1>Customer Service</h1>
+          <button onClick={toggleChat} className="chat-close-button">
+            <CloseIcon />
+          </button>
+        </header>
+
+        <main className="chat-messages-area">
+          {loadingChat ? (
+            <div className="loading-message">Loading...</div>
+          ) : chatError ? (
+            <div className="error-message">{chatError}</div>
+          ) : (
+            messages.map((message) => (
+              <div
+                key={message.id}
+                className={`message-container ${
+                  message.sender === 'user' ? 'user-message' : 'bot-message'
+                }`}
+              >
+                {message.sender !== 'user' && <BotIcon />}
+                <div className="message-bubble">
+                  <p>{message.text}</p>
+                </div>
+                {message.sender === 'user' && <UserIcon />}
+              </div>
+            ))
+          )}
+          <div ref={chatEndRef} />
+        </main>
+
+        <footer className="chat-footer">
+          <form onSubmit={handleSendMessage} className="message-form">
+            <input
+              type="text"
+              value={inputValue}
+              onChange={(e) => setInputValue(e.target.value)}
+              placeholder={currentUserId ? 'Type your message...' : 'Please log in to chat'}
+              className="message-input"
+              disabled={!currentUserId}
+            />
+            <button type="submit" className="send-button" disabled={!currentUserId}>
+              ➤
             </button>
-
-            {/* --- Chat Window --- */}
-            <div className={`chat-popup ${isChatOpen ? 'active' : ''}`}>
-                <header className="chat-header">
-                    <h1>Customer Service</h1>
-                    <button onClick={toggleChat} className="chat-close-button">
-                        <CloseIcon />
-                    </button>
-                </header>
-
-                <main className="chat-messages-area">
-                    {messages.map((message) => (
-                        <div
-                            key={message.id}
-                            className={`message-container ${message.sender === 'user' ? 'user-message' : 'bot-message'}`}
-                        >
-                            {message.sender === 'bot' && <BotIcon />}
-                            <div className="message-bubble">
-                                <p>{message.text}</p>
-                            </div>
-                            {message.sender === 'user' && <UserIcon />}
-                        </div>
-                    ))}
-                    <div ref={chatEndRef} />
-                </main>
-
-                <footer className="chat-footer">
-                    <form onSubmit={handleSendMessage} className="message-form">
-                        <input
-                            type="text"
-                            value={inputValue}
-                            onChange={(e) => setInputValue(e.target.value)}
-                            placeholder="Type your message..."
-                            className="message-input"
-                        />
-                        <button type="submit" className="send-button">➤</button>
-                    </form>
-                </footer>
-            </div>
-        </>
-    );
+          </form>
+        </footer>
+      </div>
+    </>
+  );
 };
 
 export default ChatWidget;
