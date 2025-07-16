@@ -519,3 +519,37 @@ body {
     text-align: center;
   }
 }
+@media (max-width: 768px) {
+  /* ... existing styles ... */
+
+  /* Reduce horizontal padding in main content */
+  .main-wrapper {
+    padding-left: 12px;   /* less padding on sides */
+    padding-right: 12px;
+    padding-bottom: 75px; /* keep bottom padding for navbar */
+  }
+
+  .main-content {
+    padding-left: 0;
+    padding-right: 0;
+    padding-top: 16px;
+    padding-bottom: 16px;
+  }
+
+  /* Adjust container width if any */
+  .product-scroll {
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  /* Optional: you can also reset margins inside key containers */
+  .additional-info,
+  .partnered-section {
+    margin-left: 0;
+    margin-right: 0;
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+
+  /* Keep other responsive styles as you had */
+}
