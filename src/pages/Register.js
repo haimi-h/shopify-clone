@@ -1,11 +1,9 @@
 // src/pages/Register.js
-import React, { useState, useEffect } from 'react'; // Import useEffect
+import React, { useState, useEffect } from 'react';
 import '../Auth.css';
-import { Link, useNavigate, useLocation } from 'react-router-dom'; // Import useLocation
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 
-// const API = 'http://localhost:5000/api/auth'; // Your backend API base URL
-// const API_URL = process.env.REACT_APP_API_URL;
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
 
 function Register() {
@@ -14,29 +12,26 @@ function Register() {
     phone: '',
     password: '',
     confirm_password: '',
-    withdrawal_password: '',
-    // Removed 'invitation_code' from formData, as it's for the NEW user's generated code.
-    // The input field will now be for 'referralCode' (the code they were invited with).
+    withdrawal_password: '', // ⭐ CORRECTED: Initialize with an empty string
   });
 
-  const [referralCodeInput, setReferralCodeInput] = useState(''); // New state for the referral code input field
+  const [referralCodeInput, setReferralCodeInput] = useState('');
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const navigate = useNavigate();
-  const location = useLocation(); // Initialize useLocation
+  const location = useLocation();
 
-  // Effect to read the 'ref' query parameter from the URL on component mount
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
-    const ref = queryParams.get('ref'); // Get the 'ref' parameter from the URL
+    const ref = queryParams.get('ref');
     if (ref) {
-      setReferralCodeInput(ref); // If 'ref' is found, pre-fill the referral code input
+      setReferralCodeInput(ref);
     }
-  }, [location]); // Depend on location to re-run if URL changes
+  }, [location]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    if (name === "referralCode") { // Handle referralCode input separately
+    if (name === "referralCode") {
       setReferralCodeInput(value);
     } else {
       setFormData((prev) => ({
@@ -46,8 +41,8 @@ function Register() {
     }
   };
 
-  const handleSubmit = async (e) => { // Change to async function and accept event
-    e.preventDefault(); // Prevent default form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
     setError('');
     setMessage('');
 
@@ -57,7 +52,6 @@ function Register() {
       password,
       confirm_password,
       withdrawal_password,
-      // invitation_code, // No longer from formData, as it's generated backend-side
     } = formData;
 
     if (!username || !phone || !password || !confirm_password || !withdrawal_password) {
@@ -70,19 +64,24 @@ function Register() {
       return;
     }
 
+    if (!referralCodeInput) {
+        setError('Referral code is required for registration.');
+        return;
+    }
+
     try {
       const res = await axios.post(`${API_BASE_URL}/auth/signup`, {
         username,
         phone,
         password,
-        confirm_password, // Backend expects this for validation
+        confirm_password,
         withdrawal_password,
-        referralCode: referralCodeInput, // <--- IMPORTANT: Send the referral code from the input
+        referralCode: referralCodeInput,
       });
 
       setMessage(res.data.message || 'Registration successful!');
       alert('Registered successfully!');
-      navigate('/login'); // Redirect to login page
+      navigate('/login');
     } catch (err) {
       console.error("Registration failed:", err.response?.data?.message || err.message);
       setError(err.response?.data?.message || 'Registration failed. Please try again.');
@@ -104,15 +103,15 @@ function Register() {
         <input type="password" placeholder="Confirm password" name="confirm_password" value={formData.confirm_password} onChange={handleChange} className="auth-input" required />
         <input type="password" placeholder="Withdrawal password" name="withdrawal_password" value={formData.withdrawal_password} onChange={handleChange} className="auth-input" required />
 
-        {/* This input is for the referral code the user was INVITED with */}
         <input
           type="text"
-          placeholder="Referral Code (Optional)"
-          name="referralCode" // Changed name to referralCode
-          value={referralCodeInput} // Use new state for this input
+          placeholder="Referral Code (Required)"
+          name="referralCode"
+          value={referralCodeInput}
           onChange={handleChange}
           className="auth-input"
-          readOnly={!!referralCodeInput} // Make it read-only if pre-filled from URL
+          required
+          readOnly={!!referralCodeInput}
         />
 
         <button className="auth-button" onClick={handleSubmit}>REGISTER</button>
