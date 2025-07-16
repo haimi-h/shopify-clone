@@ -6,7 +6,8 @@ import shopifyLogo from '../shopify-logo.png';
 import LanguageGlobe from './LanguageGlobe';
 
 // const API = 'http://localhost:5000/api/auth';
-const API_URL = process.env.REACT_APP_API_URL;
+// const API_URL = process.env.REACT_APP_API_URL;
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
 
 function Login() {
   const navigate = useNavigate();
@@ -21,7 +22,7 @@ function Login() {
     setLoading(true);
 
     try {
-      const res = await axios.post(`${API_URL}/login`, {
+      const res = await axios.post(`${API_BASE_URL}/auth/login`, {
         phone,
         password,
       });
