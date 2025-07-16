@@ -443,16 +443,16 @@ body {
 
   /* 2. Transform the sidebar into a fixed bottom navbar */
   .sidebar {
-    width: 100%;             /* Occupy full width */
-    height: 65px;            /* Set a fixed height */
-    position: fixed;         /* Stick to the screen */
-    bottom: 0;               /* Position at the bottom */
+    width: 100%;
+    height: 65px;
+    position: fixed;
+    bottom: 0;
     left: 0;
-    z-index: 1000;           /* Ensure it's on top of other content */
-    flex-direction: row;     /* Arrange items horizontally */
-    justify-content: center; /* Center the icons */
+    z-index: 1000;
+    flex-direction: row;
+    justify-content: center;
     padding: 0;
-    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1); /* Add a subtle shadow */
+    box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
   }
 
   /* 3. Hide the logo on mobile */
@@ -462,21 +462,20 @@ body {
 
   /* 4. Arrange nav icons in a row */
   .nav-links {
-    flex-direction: row;      /* Display icons horizontally */
-    justify-content: space-around; /* Evenly space the icons */
+    flex-direction: row;
+    justify-content: space-around;
     width: 100%;
     align-items: center;
-    gap: 10px;               /* Adjust space between icons */
+    gap: 10px;
   }
 
   .nav-links svg {
-    font-size: 22px;         /* Slightly smaller icons for mobile */
+    font-size: 22px;
   }
 
   /* 5. Adjust main content to prevent overlap with the new navbar */
   .main-wrapper {
-    /* Add padding to the bottom equal to the navbar's height */
-    padding-bottom: 75px; 
+    padding-bottom: 75px; /* Add padding for the fixed navbar */
   }
 
   .main-content {
@@ -498,14 +497,31 @@ body {
     font-size: 28px; /* Slightly smaller font for the amount */
   }
 
-  .product-card {
-    width: 150px; /* Make product cards a bit smaller */
+  /*
+  * UPDATED PRODUCT SECTION FOR MOBILE
+  */
+
+  /* A. Change product list to a grid */
+  .product-scroll {
+    display: grid;                 /* 👈 Use a responsive grid */
+    grid-template-columns: 1fr 1fr;  /* 👈 Create two equal columns */
+    gap: 16px;                     /* 👈 Set space between cards */
+    overflow-x: hidden;            /* 👈 Remove horizontal scroll */
   }
 
-  .product-image {
-    width: 110px;
-    height: 110px;
+  /* B. Allow product cards to fill the column */
+  .product-card {
+    width: 100%; /* 👈 Card will now fill the column's width */
   }
+
+  /* C. Make product images scale correctly */
+  .product-image {
+    width: 100%;      /* 👈 Image fills the card's width */
+    height: auto;     /* 👈 Height adjusts automatically */
+    aspect-ratio: 1;  /* 👈 Keeps the image square */
+    object-fit: cover;
+  }
+
 
   .congrats-text,
   .additional-info h2,
@@ -518,38 +534,4 @@ body {
     padding: 16px;
     text-align: center;
   }
-}
-@media (max-width: 768px) {
-  /* ... existing styles ... */
-
-  /* Reduce horizontal padding in main content */
-  .main-wrapper {
-    padding-left: 12px;   /* less padding on sides */
-    padding-right: 12px;
-    padding-bottom: 75px; /* keep bottom padding for navbar */
-  }
-
-  .main-content {
-    padding-left: 0;
-    padding-right: 0;
-    padding-top: 16px;
-    padding-bottom: 16px;
-  }
-
-  /* Adjust container width if any */
-  .product-scroll {
-    padding-left: 0;
-    padding-right: 0;
-  }
-
-  /* Optional: you can also reset margins inside key containers */
-  .additional-info,
-  .partnered-section {
-    margin-left: 0;
-    margin-right: 0;
-    padding-left: 12px;
-    padding-right: 12px;
-  }
-
-  /* Keep other responsive styles as you had */
 }
