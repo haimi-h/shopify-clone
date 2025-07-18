@@ -122,6 +122,8 @@ function Dashboard() {
               //   />
               //   <div className="product-name">{product.name}</div>
               // </div>
+              
+              
               <div
   className="product-card"
   key={index}

@@ -1,16 +1,16 @@
 // Updated ProductRatingPage.jsx based on client requirements
 import React, { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom"; // Import useLocation
 import { FaStar } from "react-icons/fa";
 import axios from "axios";
 import "../ProductRating.css";
 
-// const API_BASE_URL = 'http://localhost:5000/api/tasks';
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
 const LUCKY_ORDER_POSITION = 22; // We'll later make this dynamic if needed
 
 function ProductRatingPage() {
     const navigate = useNavigate();
+    const location = useLocation(); // Initialize useLocation
 
     const [product, setProduct] = useState(null);
     const [rating, setRating] = useState(0);
@@ -23,6 +23,9 @@ function ProductRatingPage() {
     const [capitalRequired, setCapitalRequired] = useState(0);
     const [profitAmount, setProfitAmount] = useState(0);
     const [rechargeRequired, setRechargeRequired] = useState(false);
+
+    // ⭐ NEW: State to hold the product passed from the dashboard
+    const [initialDashboardProduct, setInitialDashboardProduct] = useState(null);
 
     const fetchTask = async () => {
         setLoading(true);
@@ -66,6 +69,22 @@ function ProductRatingPage() {
         }
     };
 
+    // ⭐ MODIFIED useEffect: Handle initial product from dashboard
+    useEffect(() => {
+        // Check if a product was passed via navigation state
+        if (location.state && location.state.product) {
+            setInitialDashboardProduct(location.state.product);
+            // Optionally, if you want to initially display *only* this product
+            // and fetch the actual task later, you could set 'product' here too
+            // setProduct({
+            //     name: location.state.product.name,
+            //     image_url: location.state.product.image // Note: using image_url for consistency
+            // });
+            // setLoading(false); // If you don't want to show 'Loading task...' initially
+        }
+        fetchTask(); // Always fetch a new task from the backend
+    }, [location]); // Depend on location to re-run if state changes
+
     const handleSubmitRating = async () => {
         setError('');
         setMessage('');
@@ -108,15 +127,16 @@ function ProductRatingPage() {
         }
     };
 
-    useEffect(() => {
-        fetchTask();
-    }, []);
-
     const handleStarClick = (index) => setRating(index + 1);
 
-    if (loading) return <div className="rating-wrapper"><h2>Loading task...</h2></div>;
+    // ⭐ MODIFIED rendering logic to use initialDashboardProduct if available
+    const displayProduct = product || initialDashboardProduct;
+    const displayImage = product?.image_url || initialDashboardProduct?.image;
+    const displayName = product?.name || initialDashboardProduct?.name;
 
-    if (error) return (
+    if (loading && !initialDashboardProduct) return <div className="rating-wrapper"><h2>Loading task...</h2></div>;
+
+    if (error && !displayProduct) return (
         <div className="rating-wrapper">
             <h2>Error: {error}</h2>
             <button onClick={fetchTask}>Try Again</button>
@@ -124,7 +144,7 @@ function ProductRatingPage() {
         </div>
     );
 
-    if (!product) return (
+    if (!displayProduct) return (
         <div className="rating-wrapper">
             <h2>No new tasks available.</h2>
             <button onClick={fetchTask}>Refresh Tasks</button>
@@ -135,20 +155,29 @@ function ProductRatingPage() {
     return (
         <div className="rating-wrapper">
             <div className="rating-card">
-                <img src={product.image_url} alt={product.name} className="rating-image" />
-                <h2 className="rating-title">{product.name}</h2>
-                <p className="rating-description">{product.description}</p>
-                <p className="rating-price">Price: ${product.price}</p>
+                {displayImage && ( // Display image from either fetched task or initial dashboard product
+                    <img src={displayImage} alt={displayName} className="rating-image" />
+                )}
+                <h2 className="rating-title">{displayName}</h2> {/* Display name from either */}
+                {/* Only show description and price if a task product is loaded */}
+                {product && (
+                    <>
+                        <p className="rating-description">{product.description}</p>
+                        <p className="rating-price">Price: ${product.price}</p>
+                    </>
+                )}
 
-                {/* Dollar Info */}
-                <div className="rating-financials">
-                    <p><strong>💰 Your Balance:</strong> ${userBalance.toFixed(2)}</p>
-                    <p><strong>📈 Profit if you rate:</strong> ${profitAmount.toFixed(2)}</p>
-                    <p><strong>💵 Capital Required:</strong> ${capitalRequired.toFixed(2)}</p>
-                </div>
+                {/* Dollar Info - Only relevant if a task product is loaded */}
+                {product && (
+                    <div className="rating-financials">
+                        <p><strong>💰 Your Balance:</strong> ${userBalance.toFixed(2)}</p>
+                        <p><strong>📈 Profit if you rate:</strong> ${profitAmount.toFixed(2)}</p>
+                        <p><strong>💵 Capital Required:</strong> ${capitalRequired.toFixed(2)}</p>
+                    </div>
+                )}
 
-                {/* Lucky order message */}
-                {rechargeRequired && (
+                {/* Lucky order message - Only relevant if a task product is loaded */}
+                {product && rechargeRequired && (
                     <div className="lucky-order-warning">
                         ⚠️ This is a lucky order! You need to recharge ${capitalRequired} to proceed.
                         <br />
@@ -156,40 +185,50 @@ function ProductRatingPage() {
                     </div>
                 )}
 
-                {/* Rating Stars */}
-                <div className="rating-instruction">Rate this product (5 stars to complete task)</div>
-                <div className="stars">
-                    {[...Array(5)].map((_, index) => (
-                        <FaStar
-                            key={index}
-                            className="star"
-                            color={(hover || rating) > index ? "#ffc107" : "#ccc"}
-                            onClick={() => handleStarClick(index)}
-                            onMouseEnter={() => setHover(index + 1)}
-                            onMouseLeave={() => setHover(null)}
-                        />
-                    ))}
-                </div>
+                {/* Display a message if initially showing dashboard product and a task is loading */}
+                {initialDashboardProduct && !product && loading && (
+                     <p className="loading-task-message">Loading your next task...</p>
+                )}
+                {/* Rating Stars - Only allow rating if a task product is loaded */}
+                {product && (
+                    <>
+                        <div className="rating-instruction">Rate this product (5 stars to complete task)</div>
+                        <div className="stars">
+                            {[...Array(5)].map((_, index) => (
+                                <FaStar
+                                    key={index}
+                                    className="star"
+                                    color={(hover || rating) > index ? "#ffc107" : "#ccc"}
+                                    onClick={() => handleStarClick(index)}
+                                    onMouseEnter={() => setHover(index + 1)}
+                                    onMouseLeave={() => setHover(null)}
+                                />
+                            ))}
+                        </div>
+                    </>
+                )}
+
 
                 {/* Feedback */}
                 {message && <p className="success-message">{message}</p>}
                 {error && <p className="error-message">{error}</p>}
 
-                {!message && rating > 0 && rating < 5 && (
+                {product && !message && rating > 0 && rating < 5 && (
                     <div className="incomplete-message">
                         ⭐ Task not complete – Please give 5 stars to finish.
                     </div>
                 )}
-                {!message && rating === 5 && (
+                {product && !message && rating === 5 && (
                     <div className="success-message">
                         ✅ Ready to complete – Submit your 5-star rating!
                     </div>
                 )}
 
+                {/* Only enable submit button if a task is loaded */}
                 <button
                     className="submit-rating-button"
                     onClick={handleSubmitRating}
-                    disabled={loading || rating === 0 || message.includes("Task completed")}
+                    disabled={!product || loading || rating === 0 || message.includes("Task completed")}
                 >
                     Submit Rating
                 </button>
