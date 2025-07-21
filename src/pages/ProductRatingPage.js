@@ -1,4 +1,4 @@
-// Updated ProductRatingPage.jsx based on client requirements
+// Updated ProductRatingPage.jsx to dynamically handle lucky orders from backend
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaStar } from "react-icons/fa";
@@ -6,9 +6,7 @@ import axios from "axios";
 import "../ProductRating.css"; // Ensure you have styling for .lucky-order-warning
 
 // Define your API base URL. It's crucial this matches your backend server.js.
-// This typically comes from a .env file (e.g., REACT_APP_API_BASE_URL=http://localhost:5000/api)
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000/api";
-const LUCKY_ORDER_POSITION = 22; // This defines which task number is the "lucky order"
 
 function ProductRatingPage() {
   const navigate = useNavigate();
@@ -23,7 +21,11 @@ function ProductRatingPage() {
   const [taskCount, setTaskCount] = useState(0);
   const [capitalRequired, setCapitalRequired] = useState(0);
   const [profitAmount, setProfitAmount] = useState(0);
-  const [rechargeRequired, setRechargeRequired] = useState(false); // State to control lucky order warning
+  // This state will now be set by the backend response
+  const [rechargeRequired, setRechargeRequired] = useState(false);
+  // State to hold the specific capital required for a lucky order, if applicable
+  const [luckyOrderCapital, setLuckyOrderCapital] = useState(0);
+
 
   const fetchTask = async () => {
     setLoading(true);
@@ -43,25 +45,32 @@ function ProductRatingPage() {
       const task = res.data.task;
       setProduct(task);
       setRating(0); // Reset rating for new task
-      setCapitalRequired(task.capital_required || 0);
       setProfitAmount(task.profit || 0);
       setUserBalance(res.data.balance || 0);
       setTaskCount(res.data.taskCount || 0); // Current task count from backend
 
-      // --- DEBUGGING: Log taskCount and expected lucky order position ---
+      // --- NEW LOGIC FOR LUCKY ORDER ---
+      // The backend should now tell us if this is a lucky order and its capital
+      const isLuckyOrder = res.data.isLuckyOrder || false;
+      const requiredCapitalForLuckyOrder = res.data.luckyOrderCapitalRequired || 0;
+
+      setRechargeRequired(isLuckyOrder);
+      setLuckyOrderCapital(requiredCapitalForLuckyOrder);
+
+      // Set capitalRequired based on whether it's a lucky order or a regular task
+      if (isLuckyOrder) {
+        setCapitalRequired(requiredCapitalForLuckyOrder);
+      } else {
+        setCapitalRequired(task.capital_required || 0);
+      }
+
+      // --- DEBUGGING: Log received data ---
       console.log("Current taskCount from backend:", res.data.taskCount);
-      console.log("Next task number (taskCount + 1):", res.data.taskCount + 1);
-      console.log("LUCKY_ORDER_POSITION:", LUCKY_ORDER_POSITION);
+      console.log("Is this a lucky order?", isLuckyOrder);
+      console.log("Lucky order capital required:", requiredCapitalForLuckyOrder);
+      console.log("Final capitalRequired set:", capitalRequired); // Note: This might log the previous state's value due to async setState
       // --- END DEBUGGING ---
 
-      // Check if the next task is the lucky order
-      if (res.data.taskCount + 1 === LUCKY_ORDER_POSITION) {
-        setRechargeRequired(true); // Activate the lucky order warning
-        console.log("rechargeRequired set to TRUE for lucky order."); // DEBUGGING
-      } else {
-        setRechargeRequired(false); // Deactivate if not a lucky order
-        console.log("rechargeRequired set to FALSE (not a lucky order)."); // DEBUGGING
-      }
     } catch (err) {
       console.error("Error fetching task:", err);
       setError(err.response?.data?.message || "Failed to load task.");
@@ -80,11 +89,12 @@ function ProductRatingPage() {
     setMessage("");
 
     // If it's a lucky order and recharge is required, enforce recharge before submission
+    // Use the luckyOrderCapital state for the alert
     if (rechargeRequired) {
       // Using a custom modal/message box is recommended instead of alert()
       // For now, keeping alert as per original code, but note this limitation in Canvas
       alert(
-        `In order to evaluate this item, please recharge $${capitalRequired}.`
+        `In order to evaluate this item, please recharge $${luckyOrderCapital.toFixed(2)}.`
       );
       navigate("/recharge");
       return; // Stop submission
@@ -200,7 +210,7 @@ function ProductRatingPage() {
         {/* This div will appear if the current task is identified as a lucky order. */}
         {rechargeRequired && (
           <div className="lucky-order-warning">
-            ⚠️ This is a lucky order! You need to recharge ${capitalRequired} to
+            ⚠️ This is a lucky order! You need to recharge ${luckyOrderCapital.toFixed(2)} to
             proceed.
             <br />
             <button onClick={() => navigate("/recharge")}>
