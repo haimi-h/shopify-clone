@@ -162,9 +162,9 @@ function ProductRatingPage() {
 
         {/* Dollar Info */}
         <div className="rating-financials">
-          <p>
+          {/* <p>
             <strong>💰 Your Balance:</strong> ${userBalance.toFixed(2)}
-          </p>
+          </p> */}
           <p>
             <strong>📈 Profit if you rate:</strong> ${profitAmount.toFixed(2)}
           </p>
