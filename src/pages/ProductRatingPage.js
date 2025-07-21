@@ -3,12 +3,12 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaStar } from "react-icons/fa";
 import axios from "axios";
-import "../ProductRating.css";
+import "../ProductRating.css"; // Ensure you have styling for .lucky-order-warning
 
-// const API_BASE_URL = 'http://localhost:5000/api/tasks';
-const API_BASE_URL =
-  process.env.REACT_APP_API_BASE_URL || "http://localhost:5000/api";
-const LUCKY_ORDER_POSITION = 22; // We'll later make this dynamic if needed
+// Define your API base URL. It's crucial this matches your backend server.js.
+// This typically comes from a .env file (e.g., REACT_APP_API_BASE_URL=http://localhost:5000/api)
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000/api";
+const LUCKY_ORDER_POSITION = 22; // This defines which task number is the "lucky order"
 
 function ProductRatingPage() {
   const navigate = useNavigate();
@@ -23,7 +23,7 @@ function ProductRatingPage() {
   const [taskCount, setTaskCount] = useState(0);
   const [capitalRequired, setCapitalRequired] = useState(0);
   const [profitAmount, setProfitAmount] = useState(0);
-  const [rechargeRequired, setRechargeRequired] = useState(false);
+  const [rechargeRequired, setRechargeRequired] = useState(false); // State to control lucky order warning
 
   const fetchTask = async () => {
     setLoading(true);
@@ -42,21 +42,22 @@ function ProductRatingPage() {
 
       const task = res.data.task;
       setProduct(task);
-      setRating(0);
+      setRating(0); // Reset rating for new task
       setCapitalRequired(task.capital_required || 0);
       setProfitAmount(task.profit || 0);
       setUserBalance(res.data.balance || 0);
-      setTaskCount(res.data.taskCount || 0);
+      setTaskCount(res.data.taskCount || 0); // Current task count from backend
 
+      // Check if the next task is the lucky order
       if (res.data.taskCount + 1 === LUCKY_ORDER_POSITION) {
-        setRechargeRequired(true);
+        setRechargeRequired(true); // Activate the lucky order warning
       } else {
-        setRechargeRequired(false);
+        setRechargeRequired(false); // Deactivate if not a lucky order
       }
     } catch (err) {
       console.error("Error fetching task:", err);
       setError(err.response?.data?.message || "Failed to load task.");
-      setProduct(null);
+      setProduct(null); // Clear product if there's an error
       if ([401, 403].includes(err.response?.status)) {
         localStorage.removeItem("token");
         navigate("/login");
@@ -70,12 +71,15 @@ function ProductRatingPage() {
     setError("");
     setMessage("");
 
+    // If it's a lucky order and recharge is required, enforce recharge before submission
     if (rechargeRequired) {
+      // Using a custom modal/message box is recommended instead of alert()
+      // For now, keeping alert as per original code, but note this limitation in Canvas
       alert(
         `In order to evaluate this item, please recharge $${capitalRequired}.`
       );
       navigate("/recharge");
-      return;
+      return; // Stop submission
     }
 
     if (!product?.id || rating < 1 || rating > 5) {
@@ -101,6 +105,7 @@ function ProductRatingPage() {
 
       setMessage(res.data.message);
 
+      // If the task is completed, fetch a new task after a short delay
       if (res.data.isCompleted) {
         setTimeout(fetchTask, 1500);
       }
@@ -113,12 +118,14 @@ function ProductRatingPage() {
     }
   };
 
+  // Fetch task on component mount
   useEffect(() => {
     fetchTask();
-  }, []);
+  }, []); // Empty dependency array means this runs once on mount
 
   const handleStarClick = (index) => setRating(index + 1);
 
+  // --- Conditional rendering based on loading/error states ---
   if (loading)
     return (
       <div className="rating-wrapper">
@@ -162,17 +169,6 @@ function ProductRatingPage() {
 
         {/* Dollar Info */}
         <div className="rating-financials">
-          {/* <p>
-            <strong>💰 Your Balance:</strong> ${userBalance.toFixed(2)}
-          </p> */}
-          <p>
-            <strong>📈 Profit if you rate:</strong> ${profitAmount.toFixed(2)}
-          </p>
-          <p>
-            <strong>💵 Capital Required:</strong> ${capitalRequired.toFixed(2)}
-          </p>
-        </div>
-        <div className="rating-financials">
           <p>
             <strong>💰 Your Balance:</strong> ${userBalance.toFixed(2)}
             {/* Add this button/icon */}
@@ -192,7 +188,8 @@ function ProductRatingPage() {
           </p>
         </div>
 
-        {/* Lucky order message */}
+        {/* --- LUCKY ORDER DISPLAY --- */}
+        {/* This div will appear if the current task is identified as a lucky order. */}
         {rechargeRequired && (
           <div className="lucky-order-warning">
             ⚠️ This is a lucky order! You need to recharge ${capitalRequired} to
@@ -203,6 +200,7 @@ function ProductRatingPage() {
             </button>
           </div>
         )}
+        {/* --- END LUCKY ORDER DISPLAY --- */}
 
         {/* Rating Stars */}
         <div className="rating-instruction">
@@ -221,10 +219,11 @@ function ProductRatingPage() {
           ))}
         </div>
 
-        {/* Feedback */}
+        {/* Feedback Messages */}
         {message && <p className="success-message">{message}</p>}
         {error && <p className="error-message">{error}</p>}
 
+        {/* Task completion status messages */}
         {!message && rating > 0 && rating < 5 && (
           <div className="incomplete-message">
             ⭐ Task not complete – Please give 5 stars to finish.
