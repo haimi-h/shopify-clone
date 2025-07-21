@@ -48,11 +48,19 @@ function ProductRatingPage() {
       setUserBalance(res.data.balance || 0);
       setTaskCount(res.data.taskCount || 0); // Current task count from backend
 
+      // --- DEBUGGING: Log taskCount and expected lucky order position ---
+      console.log("Current taskCount from backend:", res.data.taskCount);
+      console.log("Next task number (taskCount + 1):", res.data.taskCount + 1);
+      console.log("LUCKY_ORDER_POSITION:", LUCKY_ORDER_POSITION);
+      // --- END DEBUGGING ---
+
       // Check if the next task is the lucky order
       if (res.data.taskCount + 1 === LUCKY_ORDER_POSITION) {
         setRechargeRequired(true); // Activate the lucky order warning
+        console.log("rechargeRequired set to TRUE for lucky order."); // DEBUGGING
       } else {
         setRechargeRequired(false); // Deactivate if not a lucky order
+        console.log("rechargeRequired set to FALSE (not a lucky order)."); // DEBUGGING
       }
     } catch (err) {
       console.error("Error fetching task:", err);
