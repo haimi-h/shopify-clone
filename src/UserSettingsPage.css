@@ -1,0 +1,92 @@
+/* UserSettingsPage.css */
+
+.settings-container {
+    max-width: 550px;
+    margin: 30px auto;
+    padding: 30px;
+    background-color: #fff;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    font-family: 'Inter', sans-serif;
+    color: #333;
+    position: relative; /* For the back button positioning */
+}
+
+.back-button {
+    position: absolute;
+    top: 20px;
+    left: 20px;
+    background: none;
+    border: none;
+    font-size: 1.2em;
+    color: #007bff;
+    cursor: pointer;
+    transition: color 0.2s ease;
+    padding: 5px 10px;
+    border-radius: 5px;
+}
+
+.back-button:hover {
+    color: #0056b3;
+    background-color: #f0f0f0;
+}
+
+
+.settings-container h2 {
+    text-align: center;
+    color: #007bff;
+    margin-bottom: 30px;
+    font-size: 2em;
+    font-weight: 600;
+    padding-top: 10px; /* Adjust for back button */
+}
+
+.setting-item {
+    background-color: #f8f9fa;
+    border: 1px solid #e9ecef;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+}
+
+.setting-item label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+    color: #007bff; /* Highlight labels */
+    font-size: 1.1em;
+}
+
+.setting-item p {
+    word-break: break-all; /* Ensures long text like wallet addresses wrap */
+    background-color: #e9ecef;
+    padding: 10px;
+    border-radius: 4px;
+    font-family: 'Courier New', Courier, monospace; /* Monospace for technical details */
+    font-size: 1em;
+    color: #495057;
+    margin-top: 8px;
+    line-height: 1.5;
+}
+
+.wallet-info .wallet-address-display {
+    font-size: 0.95em; /* Slightly smaller for the address itself */
+}
+
+.wallet-note, .password-note {
+    display: block;
+    font-size: 0.85em;
+    color: #6c757d;
+    margin-top: 10px;
+    line-height: 1.4;
+}
+
+.error-message {
+    color: #dc3545; /* Red */
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    padding: 10px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    text-align: center;
+}
