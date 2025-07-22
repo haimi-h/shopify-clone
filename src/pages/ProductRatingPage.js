@@ -56,19 +56,13 @@ function ProductRatingPage() {
     setError("");
     setMessage("");
 
-    // --- MODIFIED: Lucky Order Recharge Logic ---
     if (isLuckyOrder && userBalance < luckyOrderCapital) {
-      // 1. Calculate the shortfall (the amount the user actually needs to recharge)
       const shortfall = luckyOrderCapital - userBalance;
-
-      // 2. Alert the user with the correct amount
       alert(
         `This is a lucky order! Your current balance is $${userBalance.toFixed(2)}. Please recharge the remaining $${shortfall.toFixed(2)} to proceed.`
       );
-
-      // 3. Navigate to the recharge page with the shortfall amount
       navigate("/recharge", { state: { requiredAmount: shortfall } });
-      return; // Stop the submission
+      return; 
     }
 
     if (!product?.id || rating !== 5) {
@@ -78,6 +72,7 @@ function ProductRatingPage() {
 
     try {
       const token = localStorage.getItem("token");
+      // Simplified body, as server now determines profit/capital
       const res = await axios.post(
         `${API_BASE_URL}/tasks/submit-rating`,
         { productId: product.id, rating },
@@ -100,7 +95,6 @@ function ProductRatingPage() {
   if (error) return <div className="rating-wrapper"><h2>Error: {error}</h2><button onClick={fetchTask}>Try Again</button><button onClick={() => navigate("/dashboard")}>Back to Dashboard</button></div>;
   if (!product) return <div className="rating-wrapper"><h2>No new tasks available.</h2><button onClick={fetchTask}>Refresh Tasks</button><button onClick={() => navigate("/dashboard")}>Back to Dashboard</button></div>;
 
-  // Calculate shortfall for display purposes
   const shortfall = isLuckyOrder && userBalance < luckyOrderCapital ? luckyOrderCapital - userBalance : 0;
   
   return (
@@ -115,7 +109,6 @@ function ProductRatingPage() {
           <p><strong>📈 Profit if you rate:</strong> ${product.profit?.toFixed(2)}</p>
         </div>
 
-        {/* --- MODIFIED: Lucky Order Display Logic --- */}
         {isLuckyOrder && (
           <div className="lucky-order-warning">
             {userBalance < luckyOrderCapital ? (
