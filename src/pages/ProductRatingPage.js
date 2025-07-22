@@ -17,7 +17,6 @@ function ProductRatingPage() {
   const [userBalance, setUserBalance] = useState(0);
   const [isLuckyOrder, setIsLuckyOrder] = useState(false);
   const [luckyOrderCapital, setLuckyOrderCapital] = useState(0);
-  const [userDefaultProfit, setUserDefaultProfit] = useState(0); // ADDED: State to store default task profit
 
   const fetchTask = async () => {
     setLoading(true);
@@ -25,41 +24,71 @@ function ProductRatingPage() {
     setMessage("");
     try {
       const token = localStorage.getItem("token");
-      if (!token) {
-        navigate("/login");
-        return;
-      }
+      if (!token) { navigate("/login"); return; }
 
-      // Fetch the task details
-      const taskRes = await axios.get(`${API_BASE_URL}/tasks/task`, {
+      const res = await axios.get(`${API_BASE_URL}/tasks/task`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setProduct(taskRes.data.task);
 
-      // Fetch the current user's profile to get default_task_profit and latest balance
-      // Assuming '/api/users/me' endpoint returns the logged-in user's profile
-      // which should now include 'default_task_profit' from your backend changes.
-      const userRes = await axios.get(`${API_BASE_URL}/users/me`, { //
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setUserBalance(userRes.data.user.wallet_balance);
-      setUserDefaultProfit(userRes.data.user.default_task_profit || 0); // ADDED: Set default profit
-
+      setProduct(res.data.task);
       setRating(0);
-      setIsLuckyOrder(taskRes.data.task.is_lucky_order);
-      setLuckyOrderCapital(taskRes.data.task.lucky_order_capital || 0);
+      setUserBalance(res.data.balance || 0);
+      
+      const isLucky = res.data.isLuckyOrder || false;
+      const luckyCapital = res.data.luckyOrderCapitalRequired || 0;
+      setIsLuckyOrder(isLucky);
+      setLuckyOrderCapital(luckyCapital);
 
-      setLoading(false);
     } catch (err) {
-      console.error("Error fetching task or user data:", err);
-      setError(
-        err.response?.data?.message || "Failed to load task or user data."
-      );
-      setLoading(false);
-      // If the error is 401 or 403, redirect to login
-      if (err.response && (err.response.status === 401 || err.response.status === 403)) {
+      console.error("Error fetching task:", err);
+      setError(err.response?.data?.message || "Failed to load task.");
+      setProduct(null);
+      if ([401, 403].includes(err.response?.status)) {
+        localStorage.removeItem("token");
         navigate("/login");
       }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSubmitRating = async () => {
+    setError("");
+    setMessage("");
+
+    // --- MODIFIED: Lucky Order Recharge Logic ---
+    if (isLuckyOrder && userBalance < luckyOrderCapital) {
+      // 1. Calculate the shortfall (the amount the user actually needs to recharge)
+      const shortfall = luckyOrderCapital - userBalance;
+
+      // 2. Alert the user with the correct amount
+      alert(
+        `This is a lucky order! Your current balance is $${userBalance.toFixed(2)}. Please recharge the remaining $${shortfall.toFixed(2)} to proceed.`
+      );
+
+      // 3. Navigate to the recharge page with the shortfall amount
+      navigate("/recharge", { state: { requiredAmount: shortfall } });
+      return; // Stop the submission
+    }
+
+    if (!product?.id || rating !== 5) {
+      setError("Please provide a 5-star rating to complete the task.");
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.post(
+        `${API_BASE_URL}/tasks/submit-rating`,
+        { productId: product.id, rating },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      setMessage(res.data.message);
+      if (res.data.isCompleted) {
+        setTimeout(fetchTask, 1500); // Fetch a new task after success
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to submit rating.");
     }
   };
 
@@ -67,111 +96,32 @@ function ProductRatingPage() {
     fetchTask();
   }, []);
 
-  // Calculate shortfall for lucky orders
-  const shortfall = isLuckyOrder ? luckyOrderCapital - userBalance : 0;
+  if (loading) return <div className="rating-wrapper"><h2>Loading task...</h2></div>;
+  if (error) return <div className="rating-wrapper"><h2>Error: {error}</h2><button onClick={fetchTask}>Try Again</button><button onClick={() => navigate("/dashboard")}>Back to Dashboard</button></div>;
+  if (!product) return <div className="rating-wrapper"><h2>No new tasks available.</h2><button onClick={fetchTask}>Refresh Tasks</button><button onClick={() => navigate("/dashboard")}>Back to Dashboard</button></div>;
 
-  const handleSubmitRating = async () => {
-    if (rating === 0) {
-      setError("Please select a star rating.");
-      return;
-    }
-    if (!product) {
-      setError("No task available to rate.");
-      return;
-    }
-    if (isLuckyOrder && userBalance < luckyOrderCapital) {
-      setError("Insufficient balance for lucky order. Please recharge.");
-      return;
-    }
-
-    setLoading(true);
-    setError("");
-    setMessage("");
-
-    try {
-      const token = localStorage.getItem("token");
-      const res = await axios.post(
-        `${API_BASE_URL}/tasks/complete`,
-        {
-          taskId: product.id,
-          rating: rating,
-          isLuckyOrder: isLuckyOrder,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      setMessage(res.data.message || "Task completed successfully!");
-      // Optionally, re-fetch task to get a new one or update UI
-      fetchTask();
-    } catch (err) {
-      console.error("Error completing task:", err);
-      setError(err.response?.data?.message || "Failed to complete task.");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (loading) {
-    return <div className="loading">Loading task...</div>;
-  }
-
+  // Calculate shortfall for display purposes
+  const shortfall = isLuckyOrder && userBalance < luckyOrderCapital ? luckyOrderCapital - userBalance : 0;
+  
   return (
-    <div className="product-rating-page">
-      <div className="rating-container">
-        {product ? (
-          <>
-            <img
-              src={product.image_url || "placeholder.jpg"}
-              alt={product.name}
-              className="product-image"
-            />
-            <h2>{product.name}</h2>
-            <p className="product-description">{product.description}</p>
-            <p className="product-price">Price: ${product.price}</p>
-          </>
-        ) : (
-          <p>No task available. Please check back later.</p>
-        )}
+    <div className="rating-wrapper">
+      <div className="rating-card">
+        <img src={product.image_url} alt={product.name} className="rating-image" />
+        <h2 className="rating-title">{product.name}</h2>
+        <p className="rating-price">Price: ${product.price}</p>
 
-        {/* ADDED: Display Default Task Profit */}
-        <div className="profit-info">
-          {isLuckyOrder ? (
-            <p>
-              **Lucky Order!** Potential profit for this task:{" "}
-              <strong>${product.profit_rate.toFixed(2)}</strong>
-            </p>
-          ) : (
-            <p>
-              Expected profit for this task:{" "}
-              <strong>
-                ${product.profit_rate !== undefined && product.profit_rate !== null
-                  ? product.profit_rate.toFixed(2)
-                  : userDefaultProfit.toFixed(2)} {/* Use task profit if available, else user default */}
-              </strong>
-            </p>
-          )}
-        </div>
-        {/* END ADDED SECTION */}
-
-        <div className="user-balance-info">
-          Your current balance: ${userBalance.toFixed(2)}
+        <div className="rating-financials">
+          <p><strong>💰 Your Balance:</strong> ${userBalance.toFixed(2)} <button onClick={() => navigate("/recharge")} className="add-balance-button" title="Add Funds">+</button></p>
+          <p><strong>📈 Profit if you rate:</strong> ${product.profit?.toFixed(2)}</p>
         </div>
 
+        {/* --- MODIFIED: Lucky Order Display Logic --- */}
         {isLuckyOrder && (
-          <div className={`lucky-order-info ${shortfall > 0 ? "recharge-needed" : "sufficient-balance"}`}>
-            {shortfall > 0 ? (
+          <div className="lucky-order-warning">
+            {userBalance < luckyOrderCapital ? (
               <>
-                ⚠️ Lucky Order! You need to recharge{" "}
-                <strong>${shortfall.toFixed(2)}</strong> to proceed.
-                <button
-                  onClick={() =>
-                    navigate("/recharge", { state: { requiredAmount: shortfall } })
-                  }
-                >
+                ⚠️ Lucky Order! You need to recharge <strong>${shortfall.toFixed(2)}</strong> to proceed.
+                <button onClick={() => navigate("/recharge", { state: { requiredAmount: shortfall } })}>
                   Continue to Recharge
                 </button>
               </>
@@ -181,14 +131,11 @@ function ProductRatingPage() {
           </div>
         )}
 
-        <div className="rating-instruction">
-          Rate this product (5 stars to complete task)
-        </div>
+        <div className="rating-instruction">Rate this product (5 stars to complete task)</div>
         <div className="stars">
           {[...Array(5)].map((_, index) => (
             <FaStar
-              key={index}
-              className="star"
+              key={index} className="star"
               color={(hover || rating) > index ? "#ffc107" : "#ccc"}
               onClick={() => setRating(index + 1)}
               onMouseEnter={() => setHover(index + 1)}
@@ -207,9 +154,7 @@ function ProductRatingPage() {
         >
           Submit Rating
         </button>
-        <button className="back-button" onClick={() => navigate("/dashboard")}>
-          Back to Dashboard
-        </button>
+        <button className="back-button" onClick={() => navigate("/dashboard")}>Back to Dashboard</button>
       </div>
     </div>
   );
