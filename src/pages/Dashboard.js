@@ -2,13 +2,13 @@ import "../Dashboard.css";
 import {
   FaUser,
 } from "react-icons/fa";
-import { useEffect, useState, useCallback } from "react"; // Import useCallback
-import { useNavigate, useLocation } from "react-router-dom"; // Import useLocation
+import { useEffect, useState, useCallback } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const location = useLocation(); // Hook to detect navigation changes
+  const location = useLocation();
 
   const [user, setUser] = useState(null);
   const [products, setProducts] = useState([]);
@@ -36,7 +36,6 @@ export default function Dashboard() {
     navigate("/login");
   };
 
-  // Effect to load initial user data from localStorage (this is fine)
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
@@ -51,12 +50,11 @@ export default function Dashboard() {
     }
   }, [navigate]);
 
-  // --- MODIFIED: Wrap the data fetching logic in useCallback ---
   const fetchLiveBalance = useCallback(async () => {
     const token = localStorage.getItem('token');
     if (!token) return;
 
-    setLoadingBalance(true); // Set loading to true each time we fetch
+    setLoadingBalance(true);
     try {
       const userProfilePromise = axios.get(`${API_BASE_URL}/users/profile`, {
         headers: { Authorization: `Bearer ${token}` }
@@ -65,26 +63,28 @@ export default function Dashboard() {
       
       const [userResponse, priceResponse] = await Promise.all([userProfilePromise, pricePromise]);
       
-      const userData = userResponse.data;
+      // Access user data from userResponse.data.user
+      const userData = userResponse.data.user;
       const trxPrice = priceResponse.data.tron.usd;
 
       if (userData.wallet_balance && trxPrice) {
-        setRawTrxBalance(userData.wallet_balance);
-        setBalanceInUsd(userData.wallet_balance * trxPrice);
+        setRawTrxBalance(parseFloat(userData.wallet_balance)); // Ensure it's parsed as a float
+        setBalanceInUsd(parseFloat(userData.wallet_balance) * trxPrice);
+      } else {
+        setRawTrxBalance(0);
+        setBalanceInUsd(0);
       }
     } catch (error) {
       console.error("Failed to fetch live balance:", error);
     } finally {
       setLoadingBalance(false);
     }
-  }, [API_BASE_URL]); // useCallback dependency
+  }, [API_BASE_URL]);
 
-  // --- MODIFIED: This useEffect now re-runs whenever you navigate to the dashboard ---
   useEffect(() => {
     fetchLiveBalance();
-  }, [location, fetchLiveBalance]); // It depends on location and the fetch function itself
+  }, [location, fetchLiveBalance]);
 
-  // Effect to fetch products (this can remain as is)
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -102,7 +102,6 @@ export default function Dashboard() {
     fetchProducts();
   }, [API_BASE_URL]);
 
-  // Effect for banner (unchanged)
   useEffect(() => {
     const t = setInterval(() => setIdx((prev) => (prev + 1) % phones.length), 1000);
     return () => clearInterval(t);
@@ -115,6 +114,8 @@ export default function Dashboard() {
           <FaUser className="icon" />
           {user && <span className="username">{user.username}</span>}
           <button onClick={handleLogout} className="logout-button">Logout</button>
+          {/* ADDED: Settings Button */}
+          <button onClick={() => navigate("/settings")} className="settings-button">Settings</button>
         </div>
 
         <div className="balance">
@@ -169,7 +170,7 @@ export default function Dashboard() {
               <div className="faq-question" onClick={() => toggleFaq(index)}>{faq.question}</div>
               <div className="faq-answer">{faq.answer}</div>
             </div>
-          ))}
+          ))}\
         </div>
         <section className="partnered-section">
           <h2>Partnered With</h2>
