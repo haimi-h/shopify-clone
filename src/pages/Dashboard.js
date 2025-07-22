@@ -12,7 +12,7 @@ export default function Dashboard() {
 
   const [user, setUser] = useState(null);
   const [products, setProducts] = useState([]);
-  const [loadingProducts, setLoadingProducts] = useState(true);
+  const [loadingProducts, setLoadingProducts] = true);
   const [productsError, setProductsError] = useState(null);
   const [idx, setIdx] = useState(0);
   const phones = ["+4479616687", "+1234567890", "+1987654321", "+441234567890"];
@@ -63,12 +63,11 @@ export default function Dashboard() {
       
       const [userResponse, priceResponse] = await Promise.all([userProfilePromise, pricePromise]);
       
-      // Access user data from userResponse.data.user
       const userData = userResponse.data.user;
       const trxPrice = priceResponse.data.tron.usd;
 
       if (userData.wallet_balance && trxPrice) {
-        setRawTrxBalance(parseFloat(userData.wallet_balance)); // Ensure it's parsed as a float
+        setRawTrxBalance(parseFloat(userData.wallet_balance));
         setBalanceInUsd(parseFloat(userData.wallet_balance) * trxPrice);
       } else {
         setRawTrxBalance(0);
@@ -114,8 +113,7 @@ export default function Dashboard() {
           <FaUser className="icon" />
           {user && <span className="username">{user.username}</span>}
           <button onClick={handleLogout} className="logout-button">Logout</button>
-          {/* ADDED: Settings Button */}
-          <button onClick={() => navigate("/settings")} className="settings-button">Settings</button>
+          {/* Settings button removed from here */}
         </div>
 
         <div className="balance">
@@ -131,7 +129,6 @@ export default function Dashboard() {
         </div>
       </header>
 
-      {/* --- Rest of your JSX is unchanged --- */}
       <section className="product-section">
         <h2>Top Products</h2>
         {loadingProducts ? (
@@ -170,7 +167,7 @@ export default function Dashboard() {
               <div className="faq-question" onClick={() => toggleFaq(index)}>{faq.question}</div>
               <div className="faq-answer">{faq.answer}</div>
             </div>
-          ))}\
+          ))}
         </div>
         <section className="partnered-section">
           <h2>Partnered With</h2>
