@@ -12,7 +12,7 @@ export default function Dashboard() {
 
   const [user, setUser] = useState(null);
   const [products, setProducts] = useState([]);
-  const [loadingProducts, setLoadingProducts] = true);
+  const [loadingProducts, setLoadingProducts] = true;
   const [productsError, setProductsError] = useState(null);
   const [idx, setIdx] = useState(0);
   const phones = ["+4479616687", "+1234567890", "+1987654321", "+441234567890"];
