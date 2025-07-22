@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import './UserSettingsPage.css'; // Use the same CSS file as before, or create a new one for simpler styling
+import '../UserSettingsPage.css'; // Use the same CSS file as before, or create a new one for simpler styling
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
 
