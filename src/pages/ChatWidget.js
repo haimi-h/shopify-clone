@@ -8,7 +8,9 @@ const BotIcon = () => <span className="icon bot-icon">A</span>;
 const ChatIcon = () => '💬';
 const CloseIcon = () => '✖️';
 
+// const API_BASE_URL = 'http://localhost:5000/api';
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
+// const SOCKET_SERVER_URL = 'http://localhost:5000';
 const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || 'http://localhost:5000';
 
 const ChatWidget = () => {
@@ -21,164 +23,158 @@ const ChatWidget = () => {
   const socketRef = useRef(null);
   const optimisticMessageIds = useRef(new Set());
 
-  // --- START MODIFICATION ---
-  // REMOVED: walletAddress state and setUserWalletAddress setter
-  // const [userWalletAddress, setUserWalletAddress] = useState('');
-  // --- END MODIFICATION ---
-
   const currentUser = JSON.parse(localStorage.getItem('user'));
   const currentUserId = currentUser ? currentUser.id : null;
 
-  const initialMessagesLoaded = useRef(false);
-
-  const scrollToBottom = () => {
+  useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  };
+  }, [messages]);
 
-  // --- START MODIFICATION ---
-  // REMOVED: useEffect hook for fetching user wallet address
-  // useEffect(() => {
-  //   const fetchUserWalletAddress = async () => {
-  //     if (!currentUserId) {
-  //       console.log("No current user ID, skipping wallet address fetch.");
-  //       return;
-  //     }
-  //     const token = localStorage.getItem('token');
-  //     if (!token) {
-  //       console.warn("No token found, cannot fetch wallet address.");
-  //       return;
-  //     }
-  //     try {
-  //       const response = await axios.get(`${API_BASE_URL}/users/me`, {
-  //         headers: {
-  //           Authorization: `Bearer ${token}`,
-  //         },
-  //       });
-  //       if (response.data && response.data.user && response.data.user.walletAddress) {
-  //         setUserWalletAddress(response.data.user.walletAddress);
-  //       } else {
-  //         console.log("Wallet address not found in user data.");
-  //         setUserWalletAddress('Not available');
-  //       }
-  //     } catch (error) {
-  //       console.error("Error fetching user wallet address:", error);
-  //       setUserWalletAddress('Error fetching');
-  //       setChatError("Failed to load user info.");
-  //     }
-  //   };
+  const handleReceiveMessage = useCallback((message) => {
+    console.log('CLIENT RECEIVED MESSAGE:', JSON.stringify(message, null, 2));
 
-  //   if (isChatOpen) {
-  //     fetchUserWalletAddress();
-  //   }
-  // }, [isChatOpen, currentUserId]);
-  // --- END MODIFICATION ---
+    setMessages((prevMessages) => {
+      if (
+        message.sender_role === 'user' &&
+        message.tempId &&
+        optimisticMessageIds.current.has(message.tempId)
+      ) {
+        console.log(`Replacing optimistic message with tempId: ${message.tempId}`);
+        optimisticMessageIds.current.delete(message.tempId);
 
+        return prevMessages.map((msg) =>
+          msg.tempId === message.tempId
+            ? {
+                id: message.id,
+                sender: message.sender_role,
+                text: message.message_text,
+                timestamp: message.timestamp,
+              }
+            : msg
+        );
+      }
+
+      const isDuplicate = prevMessages.some(
+        (msg) => msg.id === message.id || msg.tempId === message.tempId
+      );
+
+      if (!isDuplicate) {
+        console.log(`Adding new message from other user/admin with id: ${message.id}`);
+        return [
+          ...prevMessages,
+          {
+            id: message.id,
+            sender: message.sender_role,
+            text: message.message_text,
+            timestamp: message.timestamp,
+          },
+        ];
+      }
+
+      console.log(`Ignoring already present message with id: ${message.id}`);
+      return prevMessages;
+    });
+  }, []);
 
   useEffect(() => {
-    if (isChatOpen && currentUserId) {
-      socketRef.current = io(SOCKET_URL, {
-        query: { userId: currentUserId },
-        extraHeaders: {
-          Authorization: `Bearer ${localStorage.getItem('token')}`,
-        },
-      });
-
-      socketRef.current.on('message', (message) => {
-        console.log('Received message:', message);
-        if (!optimisticMessageIds.current.has(message.id)) {
-          setMessages((prevMessages) => [...prevMessages, { ...message, sender: message.senderId === currentUserId ? 'user' : 'bot' }]);
-        } else {
-          setMessages((prevMessages) =>
-            prevMessages.map((msg) =>
-              msg.id === message.id ? { ...message, sender: message.senderId === currentUserId ? 'user' : 'bot' } : msg
-            )
-          );
-          optimisticMessageIds.current.delete(message.id);
-        }
-      });
-
-      // Event listener for welcome message (triggered on successful connection)
-      socketRef.current.on('welcome', (message) => {
-        console.log('Received welcome message:', message);
-        if (!initialMessagesLoaded.current) {
-          // This ensures the welcome message is the first and only initial message.
-          setMessages([{ id: Date.now(), text: message, sender: 'bot' }]);
-          initialMessagesLoaded.current = true;
-        }
-      });
-
-      socketRef.current.on('connect_error', (error) => {
-        console.error('Socket connection error:', error);
-        setChatError('Failed to connect to chat. Please try again.');
-        setLoadingChat(false);
-      });
-
-      socketRef.current.on('disconnect', () => {
-        console.log('Disconnected from socket server.');
-        setChatError('Disconnected. Please reopen chat to reconnect.');
-        initialMessagesLoaded.current = false;
-      });
-
-      return () => {
-        socketRef.current.disconnect();
-        socketRef.current = null;
-        initialMessagesLoaded.current = false;
-      };
-    } else if (!isChatOpen) {
+    if (!currentUserId || !isChatOpen) {
       if (socketRef.current) {
         socketRef.current.disconnect();
         socketRef.current = null;
       }
-      setMessages([]);
-      initialMessagesLoaded.current = false;
+      return;
     }
-  }, [isChatOpen, currentUserId]);
+
+    if (!socketRef.current) {
+      socketRef.current = io(SOCKET_URL);
+
+      socketRef.current.on('connect', () => {
+        socketRef.current.emit('joinRoom', `user-${currentUserId}`);
+      });
+
+      socketRef.current.on('receiveMessage', handleReceiveMessage);
+    }
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
+    };
+  }, [isChatOpen, currentUserId, handleReceiveMessage]);
+
+  const fetchChatHistory = useCallback(async () => {
+    if (!currentUserId) return;
+    setLoadingChat(true);
+    try {
+      const token = localStorage.getItem('token');
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      const response = await axios.get(
+        `${API_BASE_URL}/chat/messages/${currentUserId}`,
+        config
+      );
+
+      setMessages(
+        response.data.map((msg) => ({
+          id: msg.id,
+          sender: msg.sender_role,
+          text: msg.message_text,
+          timestamp: msg.timestamp,
+        }))
+      );
+    } catch (err) {
+      setChatError('Failed to load chat history.');
+    } finally {
+      setLoadingChat(false);
+    }
+  }, [currentUserId]);
 
   useEffect(() => {
-    scrollToBottom();
-  }, [messages]);
+    if (isChatOpen) {
+      fetchChatHistory();
+    }
+  }, [isChatOpen, fetchChatHistory]);
 
-  const handleSendMessage = useCallback(async (e) => {
+  const handleSendMessage = (e) => {
     e.preventDefault();
-    if (inputValue.trim() && currentUserId && socketRef.current) {
-      const messageText = inputValue.trim();
-      setInputValue('');
+    if (inputValue.trim() === '' || !socketRef.current) return;
 
-      const optimisticId = `optimistic-${Date.now()}`;
-      optimisticMessageIds.current.add(optimisticId);
+    const tempMessageId = `optimistic-user-${Date.now()}`;
+    const messageToSend = {
+      userId: currentUserId,
+      senderId: currentUserId,
+      senderRole: 'user',
+      messageText: inputValue.trim(),
+      tempId: tempMessageId,
+    };
 
-      setMessages((prevMessages) => [
-        ...prevMessages,
-        { id: optimisticId, text: messageText, sender: 'user', timestamp: new Date().toISOString() },
-      ]);
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: tempMessageId,
+        tempId: tempMessageId, // This is required to match later
+        sender: 'user',
+        text: messageToSend.messageText,
+        timestamp: new Date().toISOString(),
+      },
+    ]);
+    optimisticMessageIds.current.add(tempMessageId);
+    setInputValue('');
 
-      socketRef.current.emit('message', {
-        senderId: currentUserId,
-        text: messageText,
-        optimisticId: optimisticId
-      });
-    }
-  }, [inputValue, currentUserId]);
-
-  const toggleChat = () => {
-    setIsChatOpen((prev) => !prev);
-    if (!isChatOpen && !initialMessagesLoaded.current) {
-      setMessages([]);
-    }
+    socketRef.current.emit('sendMessage', messageToSend);
   };
+
+  const toggleChat = () => setIsChatOpen(!isChatOpen);
 
   return (
     <>
-      {!isChatOpen && (
-        <button className="chat-toggle-button" onClick={toggleChat}>
-          <ChatIcon /> Customer Service
-        </button>
-      )}
-
-      <div className={`chat-window ${isChatOpen ? 'open' : ''}`}>
+      <button onClick={toggleChat} className="chat-toggle-button" aria-label="Toggle chat">
+        <ChatIcon />
+      </button>
+      <div className={`chat-popup ${isChatOpen ? 'active' : ''}`}>
         <header className="chat-header">
-          <h2>Customer Service</h2>
-          <button className="close-chat-button" onClick={toggleChat}>
+          <h1>Customer Service</h1>
+          <button onClick={toggleChat} className="chat-close-button">
             <CloseIcon />
           </button>
         </header>
@@ -189,17 +185,6 @@ const ChatWidget = () => {
           ) : chatError ? (
             <div className="error-message">{chatError}</div>
           ) : (
-            // --- START MODIFICATION ---
-            // REMOVED: Conditional rendering of wallet address block
-            // {userWalletAddress && (
-            //   <div className="message-container bot-message">
-            //     <BotIcon />
-            //     <div className="message-bubble">
-            //       <p>Your wallet address: {userWalletAddress}</p>
-            //     </div>
-            //   </div>
-            // )}
-            // --- END MODIFICATION ---
             messages.map((message) => (
               <div
                 key={message.id}
