@@ -124,6 +124,7 @@ export default function Dashboard() {
               <span className="amount">{balanceInUsd.toFixed(2)}</span>
               <span className="currency">$</span>
               <small className="raw-balance">{rawTrxBalance.toFixed(2)} TRX</small>
+              <button onClick={() => navigate("/recharge")} className="add-balance-button" title="Add Funds">+</button>
             </>
           )}
         </div>

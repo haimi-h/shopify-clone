@@ -105,7 +105,7 @@ function ProductRatingPage() {
         <p className="rating-price">Price: ${product.price}</p>
 
         <div className="rating-financials">
-          <p><strong>💰 Your Balance:</strong> ${userBalance.toFixed(2)} <button onClick={() => navigate("/recharge")} className="add-balance-button" title="Add Funds">+</button></p>
+          <p><strong>💰 Your Balance:</strong> ${userBalance.toFixed(2)} </p>
           <p><strong>📈 Profit if you rate:</strong> ${product.profit?.toFixed(2)}</p>
         </div>
 
