@@ -59,7 +59,7 @@ const UserSettingsPage = () => {
 
   return (
     <div className="settings-container">
-      <button onClick={() => navigate(-1)} className="back-button">
+      <button onClick={() => navigate(-1)} className="back-btn">
         &larr; Back to Dashboard
       </button>
       <h2>Your Profile Settings</h2>

@@ -12,7 +12,7 @@
     position: relative; /* For the back button positioning */
 }
 
-.back-button {
+.back-btn {
     position: absolute;
     top: 20px;
     left: 20px;
