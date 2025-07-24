@@ -81,10 +81,10 @@ export default function WithdrawalPage() {
             navigate('/login');
             return;
         }
-         console.log('Backend URL for set-withdrawal-address:', `${process.env.REACT_APP_BACKEND_URL}/api/users/set-withdrawal-address`);
+        //  console.log('Backend URL for set-withdrawal-address:', `${process.env.REACT_APP_BACKEND_URL}/api/users/set-withdrawal-address`);
 
         try {
-            const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/users/set-withdrawal-address`, {
+            const response = await axios.post(`${process.env.REACT_APP_API_BASE_URL}/users/set-withdrawal-address`, {
                 new_address: inputAddress,
                 withdrawal_password: inputPassword
             }, {
