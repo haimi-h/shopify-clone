@@ -1,0 +1,139 @@
+.withdrawal-page-container {
+    padding: 20px;
+    max-width: 500px;
+    margin: 20px auto;
+    background-color: #f8f8f8;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    font-family: Arial, sans-serif;
+}
+
+.withdrawal-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.back-button {
+    background: none;
+    border: none;
+    font-size: 24px;
+    cursor: pointer;
+    margin-right: 15px;
+    color: #333;
+}
+
+.withdrawal-header h1 {
+    font-size: 24px;
+    color: #333;
+    margin: 0;
+}
+
+.current-balance {
+    background-color: #e0f7fa;
+    padding: 15px;
+    border-radius: 5px;
+    margin-bottom: 20px;
+    font-size: 1.1em;
+    color: #00796b;
+    text-align: center;
+    font-weight: bold;
+}
+
+.current-balance span {
+    color: #e65100; /* A distinct color for the balance amount */
+}
+
+.withdrawal-form .form-group {
+    margin-bottom: 15px;
+}
+
+.withdrawal-form label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: bold;
+    color: #555;
+}
+
+.withdrawal-form input[type="number"],
+.withdrawal-form input[type="text"],
+.withdrawal-form input[type="password"] {
+    width: calc(100% - 20px);
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1em;
+}
+
+.read-only-field {
+    background-color: #eee;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 1em;
+    color: #777;
+}
+
+.confirm-withdrawal-button {
+    width: 100%;
+    padding: 12px;
+    background-color: #4CAF50; /* Green */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.confirm-withdrawal-button:hover:not(:disabled) {
+    background-color: #45a049;
+}
+
+.confirm-withdrawal-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+.error-message {
+    color: #d32f2f; /* Red for errors */
+    background-color: #ffebee;
+    border: 1px solid #d32f2f;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.success-message {
+    color: #388e3c; /* Green for success */
+    background-color: #e8f5e9;
+    border: 1px solid #388e3c;
+    padding: 10px;
+    border-radius: 4px;
+    margin-bottom: 15px;
+    text-align: center;
+}
+
+.withdrawal-notes {
+    margin-top: 30px;
+    padding-top: 20px;
+    border-top: 1px solid #eee;
+}
+
+.withdrawal-notes h3 {
+    color: #333;
+    font-size: 1.1em;
+    margin-bottom: 10px;
+}
+
+.withdrawal-notes ul {
+    list-style: disc;
+    padding-left: 20px;
+    color: #666;
+    font-size: 0.95em;
+}
+
+.withdrawal-notes li {
+    margin-bottom: 8px;
+}

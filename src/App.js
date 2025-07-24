@@ -32,6 +32,7 @@ import UserTable from './pages/UserTable'; // UserTable is in src/pages
 import InjectionPlan from './pages/InjectionPlan'; // FIX: InjectionPlan is in src/pages/admin
 import ManualPayment from './pages/ManualPayment'; 
 import UserSettingsPage from './pages/UserSettingsPage';
+import WithdrawalPage from './pages/WithdrawalPage';
 
 // HistoryModal and SettingModal are typically rendered as components, not direct routes.
 // They are imported and used within UserTable.js
@@ -63,6 +64,7 @@ function App() {
           <Route path="/selector" element={<LanguageSelector />} /> {/* Or wherever LanguageSelector is used */}
           <Route path="/payment" element={<ManualPayment />} /> {/* Or wherever LanguageSelector is used */}
           <Route path="/settings" element={<UserSettingsPage />} />
+          <Route path="/withdraw" element={<WithdrawalPage />} />
 
           {/* Admin Routes - NOW NESTED INSIDE LAYOUT */}
           <Route path="/admin" element={<AdminDashboard />} /> {/* Admin landing page */}
