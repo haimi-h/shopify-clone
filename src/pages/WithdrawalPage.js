@@ -31,7 +31,7 @@ export default function WithdrawalPage() {
         }
 
         try {
-            const response = await axios.get(`${process.env.REACT_APP_BACKEND_URL}/api/users/profile`, {
+            const response = await axios.post(`${process.env.REACT_APP_API_BASE_URL}/users/profile`, {
                 headers: {
                     Authorization: `Bearer ${token}`
                 }
@@ -139,7 +139,7 @@ export default function WithdrawalPage() {
         }
 
         try {
-            const response = await axios.post(`${process.env.REACT_APP_BACKEND_URL}/api/users/withdraw`, {
+            const response = await axios.post(`${process.env.REACT_APP_API_BASE_URL}/users/withdraw`, {
                 amount: parseFloat(withdrawalAmount),
                 // DO NOT send to_address here; backend will fetch the saved address
                 withdrawal_password: withdrawalPassword,
