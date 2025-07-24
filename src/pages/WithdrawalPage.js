@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import './WithdrawalPage.css'; // Make sure your CSS file is correctly linked
+import '../WithdrawalPage.css'; // Make sure your CSS file is correctly linked
 
 export default function WithdrawalPage() {
     const navigate = useNavigate();
