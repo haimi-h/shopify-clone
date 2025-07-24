@@ -137,3 +137,54 @@
 .withdrawal-notes li {
     margin-bottom: 8px;
 }
+.withdrawal-form h2 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 25px;
+    font-size: 1.3em;
+}
+
+.form-description {
+    text-align: center;
+    color: #666;
+    margin-bottom: 20px;
+    font-size: 0.9em;
+}
+
+.skip-button {
+    width: 100%;
+    padding: 12px;
+    background-color: #6c757d; /* Grey */
+    color: white;
+    border: none;
+    border-radius: 5px;
+    font-size: 1.1em;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    margin-top: 10px; /* Space from confirm button */
+}
+
+.skip-button:hover:not(:disabled) {
+    background-color: #5a6268;
+}
+
+.skip-button:disabled {
+    background-color: #cccccc;
+    cursor: not-allowed;
+}
+
+/* Make sure .edit-address-button is styled well for "Change" button */
+.edit-address-button {
+    background-color: #f0ad4e; /* Orange/Yellow for edit */
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 0.85em;
+    transition: background-color 0.3s ease;
+}
+
+.edit-address-button:hover {
+    background-color: #ec971f;
+}
