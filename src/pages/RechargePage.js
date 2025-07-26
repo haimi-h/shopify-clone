@@ -3,7 +3,7 @@ import { useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
 import '../RechargePage.css'; // Make sure this CSS file exists and is styled
 
-// Define your API base URL
+// Define your API base URL using environment variable
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
 
 const RechargePage = () => {
@@ -13,9 +13,11 @@ const RechargePage = () => {
   const { requiredAmount } = location.state || {};
 
   const [amount, setAmount] = useState(requiredAmount ? String(requiredAmount) : '');
+  const [receiptImageUrl, setReceiptImageUrl] = useState(''); // New state for receipt image URL
+  const [whatsappNumber, setWhatsappNumber] = useState(''); // New state for WhatsApp number
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
-  const [depositInfo, setDepositInfo] = useState(null);
+  const [depositInfo, setDepositInfo] = useState(null); // This might not be needed as much for manual approval
 
   const quickAmounts = [300, 500, 1000, 3000, 5000, 10000];
 
@@ -31,6 +33,15 @@ const RechargePage = () => {
       setMessage('❌ Please enter a valid amount (minimum $7).');
       return;
     }
+    if (!receiptImageUrl) {
+      setMessage('❌ Please provide the URL of your payment receipt image.');
+      return;
+    }
+    if (!whatsappNumber) {
+      setMessage('❌ Please provide your WhatsApp number for communication.');
+      return;
+    }
+
     setLoading(true);
     setMessage('');
     try {
@@ -39,57 +50,37 @@ const RechargePage = () => {
         navigate('/login');
         return;
       }
-      const response = await axios.post(`${API_BASE_URL}/payment/recharge`, {
+
+      // Instead of an automatic payment method, we now submit a manual request
+      const response = await axios.post(`${API_BASE_URL}/recharge/submit`, {
         amount: numericAmount,
-        paymentMethod: 'TRX',
+        currency: 'USDT', // Assuming USDT for now, or make it dynamic if needed
+        receipt_image_url: receiptImageUrl,
+        whatsapp_number: whatsappNumber,
       }, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setDepositInfo(response.data);
+
+      setMessage(`✅ ${response.data.message}`);
+      // Clear form fields after successful submission
+      setAmount('');
+      setReceiptImageUrl('');
+      setWhatsappNumber('');
+
+      // Optionally, you might navigate the user to a "Recharge History" or "Pending Recharges" page
+      // navigate('/user/recharge-history');
+
     } catch (error) {
       const errorMsg = error.response?.data?.message || 'An unexpected error occurred.';
-      console.error('Recharge failed:', errorMsg);
+      console.error('Recharge submission failed:', errorMsg);
       setMessage(`❌ Recharge failed: ${errorMsg}`);
     } finally {
       setLoading(false);
     }
   };
 
-  if (depositInfo) {
-    return (
-      <div className="recharge-container">
-        <div className="recharge-header">
-            <button className="back-button" onClick={() => navigate(-1)}>←</button>
-            <div className="icons">
-              <span className="home-icon" onClick={() => navigate('/dashboard')}>🏠</span>
-            </div>
-        </div>
-        
-        {/* CORRECTED LINE HERE */}
-        <h3>Complete Your Recharge of ${depositInfo.originalUsdAmount?.toFixed(2) ?? '...'}</h3>
-        
-        <div className="deposit-instructions">
-          <p>Please send exactly:</p>
-          <div className="deposit-amount">
-            <strong>{depositInfo.amount} {depositInfo.currency}</strong>
-          </div>
-          <p>To the following address:</p>
-          <div className="deposit-address-box">
-            <p>{depositInfo.depositAddress}</p>
-            <button onClick={() => navigator.clipboard.writeText(depositInfo.depositAddress)}>
-              Copy Address
-            </button>
-          </div>
-          <p className="warning">
-            The TRX amount has been calculated based on the current exchange rate. You must send this exact amount for the transaction to be confirmed automatically.
-          </p>
-          <button className="recharge-button" onClick={() => setDepositInfo(null)}>
-            Make Another Recharge
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // If depositInfo was used for automatic crypto payments, it might not be relevant here.
+  // We'll remove the depositInfo display block as the flow is now manual approval.
 
   return (
     <div className="recharge-container">
@@ -99,7 +90,7 @@ const RechargePage = () => {
           <span className="home-icon" onClick={() => navigate('/dashboard')}>🏠</span>
         </div>
       </div>
-      <h2>Recharge Amount (USD)</h2>
+      <h2>Submit Recharge Request (USD)</h2>
       <input
         type="number"
         className="recharge-input"
@@ -113,10 +104,25 @@ const RechargePage = () => {
           <button key={amt} onClick={() => setAmount(String(amt))}>${amt.toFixed(2)}</button>
         ))}
       </div>
-      <p className="select-method">Payment via TRX Network</p>
+
+      <p className="select-method">Payment Receipt & Contact</p>
       <div className="payment-box">
+        <input
+          type="text"
+          className="recharge-input"
+          value={receiptImageUrl}
+          placeholder="Receipt Image URL (e.g., from Imgur, Cloudinary)"
+          onChange={(e) => setReceiptImageUrl(e.target.value)}
+        />
+        <input
+          type="text"
+          className="recharge-input"
+          value={whatsappNumber}
+          placeholder="Your WhatsApp Number (e.g., +1234567890)"
+          onChange={(e) => setWhatsappNumber(e.target.value)}
+        />
         <button className="recharge-button" onClick={handleRecharge} disabled={loading}>
-          {loading ? 'Processing...' : 'Proceed to Deposit'}
+          {loading ? 'Submitting...' : 'Submit Recharge Request'}
         </button>
         <small>$7 ~ $7,777,777</small>
       </div>
@@ -126,7 +132,8 @@ const RechargePage = () => {
         </div>
       )}
       <div className="recharge-footer">
-        <p>* The payment amount must be the same as the order amount, otherwise it will not arrive automatically</p>
+        <p>* After payment, please send the receipt image and your WhatsApp number here.</p>
+        <p>* Your request will be reviewed by an administrator. Funds will be credited upon approval.</p>
         <p>* If you do not receive recharge and withdrawal, please consult your supervisor to solve other problems.</p>
       </div>
     </div>
