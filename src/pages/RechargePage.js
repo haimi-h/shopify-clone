@@ -13,11 +13,10 @@ const RechargePage = () => {
   const { requiredAmount } = location.state || {};
 
   const [amount, setAmount] = useState(requiredAmount ? String(requiredAmount) : '');
-  const [receiptImageUrl, setReceiptImageUrl] = useState(''); // New state for receipt image URL
-  const [whatsappNumber, setWhatsappNumber] = useState(''); // New state for WhatsApp number
+  // Removed: receiptImageUrl and whatsappNumber states
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
-  const [depositInfo, setDepositInfo] = useState(null); // This might not be needed as much for manual approval
+  // depositInfo is no longer relevant for this flow, so it can be removed or ignored.
 
   const quickAmounts = [300, 500, 1000, 3000, 5000, 10000];
 
@@ -33,14 +32,7 @@ const RechargePage = () => {
       setMessage('❌ Please enter a valid amount (minimum $7).');
       return;
     }
-    if (!receiptImageUrl) {
-      setMessage('❌ Please provide the URL of your payment receipt image.');
-      return;
-    }
-    if (!whatsappNumber) {
-      setMessage('❌ Please provide your WhatsApp number for communication.');
-      return;
-    }
+    // Removed validation for receiptImageUrl and whatsappNumber
 
     setLoading(true);
     setMessage('');
@@ -51,25 +43,24 @@ const RechargePage = () => {
         return;
       }
 
-      // Instead of an automatic payment method, we now submit a manual request
+      // Submit only amount and currency
       const response = await axios.post(`${API_BASE_URL}/recharge/submit`, {
         amount: numericAmount,
         currency: 'USDT', // Assuming USDT for now, or make it dynamic if needed
-        receipt_image_url: receiptImageUrl,
-        whatsapp_number: whatsappNumber,
       }, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
       setMessage(`✅ ${response.data.message}`);
-      // Clear form fields after successful submission
+      // Clear form field after successful submission
       setAmount('');
-      setReceiptImageUrl('');
-      setWhatsappNumber('');
 
-      // Optionally, you might navigate the user to a "Recharge History" or "Pending Recharges" page
-      // navigate('/user/recharge-history');
-      
+      // *** IMPORTANT: Redirect to chat after successful submission ***
+      // Assuming your chat page route is '/chat'
+      // Add a small delay so the user can see the success message before redirection
+      setTimeout(() => {
+        navigate('/chat'); // Redirect to the user's chat page
+      }, 2000); // Redirect after 2 seconds
 
     } catch (error) {
       const errorMsg = error.response?.data?.message || 'An unexpected error occurred.';
@@ -79,9 +70,6 @@ const RechargePage = () => {
       setLoading(false);
     }
   };
-
-  // If depositInfo was used for automatic crypto payments, it might not be relevant here.
-  // We'll remove the depositInfo display block as the flow is now manual approval.
 
   return (
     <div className="recharge-container">
@@ -106,24 +94,11 @@ const RechargePage = () => {
         ))}
       </div>
 
-      <p className="select-method">Payment Receipt & Contact</p>
+      <p className="select-method">Proceed to Customer Support</p>
       <div className="payment-box">
-        <input
-          type="text"
-          className="recharge-input"
-          value={receiptImageUrl}
-          placeholder="Receipt Image URL (e.g., from Imgur, Cloudinary)"
-          onChange={(e) => setReceiptImageUrl(e.target.value)}
-        />
-        <input
-          type="text"
-          className="recharge-input"
-          value={whatsappNumber}
-          placeholder="Your WhatsApp Number (e.g., +1234567890)"
-          onChange={(e) => setWhatsappNumber(e.target.value)}
-        />
+        {/* Removed: Receipt Image URL and WhatsApp Number inputs */}
         <button className="recharge-button" onClick={handleRecharge} disabled={loading}>
-          {loading ? 'Submitting...' : 'Submit Recharge Request'}
+          {loading ? 'Submitting...' : 'Submit Request & Go to Chat'}
         </button>
         <small>$7 ~ $7,777,777</small>
       </div>
@@ -133,8 +108,8 @@ const RechargePage = () => {
         </div>
       )}
       <div className="recharge-footer">
-        <p>* After payment, please send the receipt image and your WhatsApp number here.</p>
-        <p>* Your request will be reviewed by an administrator. Funds will be credited upon approval.</p>
+        <p>* Your request will be reviewed by an administrator via chat. Funds will be credited upon approval.</p>
+        <p>* Please discuss payment details and provide receipts directly in the chat.</p>
         <p>* If you do not receive recharge and withdrawal, please consult your supervisor to solve other problems.</p>
       </div>
     </div>
