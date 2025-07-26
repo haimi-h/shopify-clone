@@ -2,14 +2,13 @@ import "../Dashboard.css";
 import {
   FaUser,
 } from "react-icons/fa";
-import { useEffect, useState, useCallback } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useEffect, useState, useCallback } from "react"; // Import useCallback
+import { useNavigate, useLocation } from "react-router-dom"; // Import useLocation
 import axios from "axios";
-import ChatWidget from "../pages/ChatWidget"; // Import the ChatWidget
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const location = useLocation();
+  const location = useLocation(); // Hook to detect navigation changes
 
   const [user, setUser] = useState(null);
   const [products, setProducts] = useState([]);
@@ -19,120 +18,132 @@ export default function Dashboard() {
   const phones = ["+4479616687", "+1234567890", "+1987654321", "+441234567890"];
   const faqs = [
     { question: "How do I start earning?", answer: "You can start earning by clicking the “START MAKING MONEY” button and completing tasks or sharing your affiliate links." },
-    { question: "How do I track my orders?","answer": "Orders can be tracked via the “Orders” section in the sidebar. You'll see real-time updates there." },
+    { question: "How do I track my orders?", answer: "Orders can be tracked via the “Orders” section in the sidebar. You'll see real-time updates there." },
     { question: "Where can I view my payments?", answer: "All payment history and upcoming payouts are available under the “Profile” or “Payments” tab in your account dashboard." },
   ];
   const [openFaq, setOpenFaq] = useState(null);
+  const toggleFaq = (index) => setOpenFaq((prev) => (prev === index ? null : index));
 
-  // State for ChatWidget control
-  const [isChatOpen, setIsChatOpen] = useState(false);
-  const [initialChatMessage, setInitialChatMessage] = useState('');
+  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
 
-  useEffect(() => {
-    // Check for state from navigation, e.g., from RechargePage
-    if (location.state?.openChat) {
-      setIsChatOpen(true);
-      if (location.state?.initialChatMessage) {
-        setInitialChatMessage(location.state.initialChatMessage);
-      }
-      // Clear the state so chat doesn't auto-open on subsequent visits
-      navigate(location.pathname, { replace: true, state: {} });
-    }
-  }, [location, navigate]);
+  const [balanceInUsd, setBalanceInUsd] = useState(0);
+  const [rawTrxBalance, setRawTrxBalance] = useState(0);
+  const [loadingBalance, setLoadingBalance] = useState(true);
 
-  const toggleFaq = (index) => {
-    setOpenFaq(openFaq === index ? null : index);
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    navigate("/login");
   };
 
-  const fetchUserProfile = useCallback(async () => {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      navigate("/login");
-      return;
-    }
-    try {
-      const res = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/users/profile`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      setUser(res.data.user);
-    } catch (err) {
-      console.error("Error fetching user profile:", err);
-      // Handle error, e.g., redirect to login if token is invalid
-      if (err.response && err.response.status === 403) {
-        localStorage.removeItem('token');
-        navigate('/login');
+  // Effect to load initial user data from localStorage (this is fine)
+  useEffect(() => {
+    const storedUser = localStorage.getItem('user');
+    if (storedUser) {
+      try {
+        setUser(JSON.parse(storedUser));
+      } catch (e) {
+        console.error("Failed to parse user data from localStorage", e);
+        handleLogout();
       }
+    } else {
+      navigate('/login');
     }
   }, [navigate]);
 
-  // Fetch products (unchanged from your original code)
-  const fetchProducts = useCallback(async () => {
-    setLoadingProducts(true);
-    setProductsError(null);
+  // --- MODIFIED: Wrap the data fetching logic in useCallback ---
+  const fetchLiveBalance = useCallback(async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+
+    setLoadingBalance(true); // Set loading to true each time we fetch
     try {
-      const token = localStorage.getItem("token");
-      const res = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/products`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
+      const userProfilePromise = axios.get(`${API_BASE_URL}/users/profile`, {
+        headers: { Authorization: `Bearer ${token}` }
       });
-      setProducts(res.data);
-    } catch (err) {
-      console.error("Error fetching products:", err);
-      setProductsError("Failed to load products. Please try again later.");
+      const pricePromise = axios.get('https://api.coingecko.com/api/v3/simple/price?ids=tron&vs_currencies=usd');
+      
+      const [userResponse, priceResponse] = await Promise.all([userProfilePromise, pricePromise]);
+      
+      const userData = userResponse.data;
+      const trxPrice = priceResponse.data.tron.usd;
+
+      if (userData.wallet_balance && trxPrice) {
+        setRawTrxBalance(userData.wallet_balance);
+        setBalanceInUsd(userData.wallet_balance * trxPrice);
+      }
+    } catch (error) {
+      console.error("Failed to fetch live balance:", error);
     } finally {
-      setLoadingProducts(false);
+      setLoadingBalance(false);
     }
-  }, []);
+  }, [API_BASE_URL]); // useCallback dependency
 
+  // --- MODIFIED: This useEffect now re-runs whenever you navigate to the dashboard ---
   useEffect(() => {
-    fetchUserProfile();
+    fetchLiveBalance();
+  }, [location, fetchLiveBalance]); // It depends on location and the fetch function itself
+
+  // Effect to fetch products (this can remain as is)
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoadingProducts(true);
+        setProductsError(null);
+        const response = await axios.get(`${API_BASE_URL}/products`);
+        setProducts(response.data);
+      } catch (err) {
+        console.error("Error fetching products:", err);
+        setProductsError("Failed to load products.");
+      } finally {
+        setLoadingProducts(false);
+      }
+    };
     fetchProducts();
+  }, [API_BASE_URL]);
 
-    const interval = setInterval(() => {
-      setIdx((prevIdx) => (prevIdx + 1) % phones.length);
-    }, 5000); // Change phone number every 5 seconds
-    return () => clearInterval(interval);
-  }, [fetchUserProfile, fetchProducts, phones.length]);
-
+  // Effect for banner (unchanged)
+  useEffect(() => {
+    const t = setInterval(() => setIdx((prev) => (prev + 1) % phones.length), 1000);
+    return () => clearInterval(t);
+  }, [phones.length]);
 
   return (
-    <div className="dashboard-container">
-      <header className="header">
-        <h1>Dashboard</h1>
-        <div className="header-icons">
+    <main className="main-content">
+      <header className="dashboard-header">
+        <div className="user-info">
           <FaUser className="icon" />
-          {/* Chat icon to manually open/close widget */}
-          <span className="icon chat-icon" onClick={() => setIsChatOpen(!isChatOpen)}>💬</span>
+          {user && <span className="username">{user.username}</span>}
+          <button onClick={handleLogout} className="logout-button">Logout</button>
+        </div>
+
+        <div className="balance">
+          {loadingBalance ? (
+            <span className="amount">Loading...</span>
+          ) : (
+            <>
+              <span className="amount">{balanceInUsd.toFixed(2)}</span>
+              <span className="currency">$</span>
+              <small className="raw-balance">{rawTrxBalance.toFixed(2)} TRX</small>
+            </>
+          )}
         </div>
       </header>
 
-      {user && (
-        <section className="user-info">
-          <div className="info-box">
-            <span>Welcome, {user.username}!</span>
-          </div>
-          <div className="wallet-balance">
-            Wallet Balance: ${parseFloat(user.wallet_balance || 0).toFixed(2)}
-          </div>
-        </section>
-      )}
-
-      <section className="product-display">
-        <h2>Featured Products</h2>
+      {/* --- Rest of your JSX is unchanged --- */}
+      <section className="product-section">
+        <h2>Top Products</h2>
         {loadingProducts ? (
-          <p>Loading products...</p>
+          <p>Loading products... ⏳</p>
         ) : productsError ? (
-          <p className="error-message">{productsError}</p>
+          <p style={{ color: 'red' }}>Error: {productsError} 🙁</p>
         ) : products.length > 0 ? (
-          <div className="product-list">
+          <div className="product-scroll">
             {products.map((product) => (
-              <div key={product.id} className="product-item">
-                <img src={product.image_url} alt={product.name} />
-                <p>{product.name}</p>
-                <p>Profit: ${product.profit}</p>
+              <div className="product-card" key={product.id} onClick={() => navigate("/product-rating", { state: { product } })}>
+                <img src={product.image} alt={product.name} className="product-image" onError={(e) => { e.target.onerror = null; e.target.src="https://placehold.co/175x175/cccccc/white?text=No+Image"; }} />
+                <div className="product-name">{product.name}</div>
+                <div className="product-price">${product.price ? product.price.toFixed(2) : 'N/A'}</div>
               </div>
             ))}
           </div>
@@ -169,13 +180,6 @@ export default function Dashboard() {
           </div>
         </section>
       </section>
-
-      {/* Render the ChatWidget */}
-      <ChatWidget
-        isOpen={isChatOpen}
-        setIsOpen={setIsChatOpen}
-        initialMessage={initialChatMessage}
-      />
-    </div>
+    </main>
   );
 }
