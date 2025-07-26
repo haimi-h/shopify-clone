@@ -13,10 +13,8 @@ const RechargePage = () => {
   const { requiredAmount } = location.state || {};
 
   const [amount, setAmount] = useState(requiredAmount ? String(requiredAmount) : '');
-  // Removed: receiptImageUrl and whatsappNumber states
   const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
-  // depositInfo is no longer relevant for this flow, so it can be removed or ignored.
 
   const quickAmounts = [300, 500, 1000, 3000, 5000, 10000];
 
@@ -32,10 +30,9 @@ const RechargePage = () => {
       setMessage('❌ Please enter a valid amount (minimum $7).');
       return;
     }
-    // Removed validation for receiptImageUrl and whatsappNumber
 
     setLoading(true);
-    setMessage('');
+    setMessage(''); // Clear previous messages
     try {
       const token = localStorage.getItem('token');
       if (!token) {
@@ -43,40 +40,45 @@ const RechargePage = () => {
         return;
       }
 
-      // Submit only amount and currency
-      const response = await axios.post(`${API_BASE_URL}/recharge/submit`, {
-        amount: numericAmount,
-        currency: 'USDT', // Assuming USDT for now, or make it dynamic if needed
-      }, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const config = {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      };
 
-      setMessage(`✅ ${response.data.message}`);
-      // Clear form field after successful submission
-      setAmount('');
+      const response = await axios.post(
+        `${API_BASE_URL}/recharge/submit`,
+        { amount: numericAmount, currency: 'USDT' }, // Assuming USDT as default currency
+        config
+      );
 
-      // *** IMPORTANT: Redirect to chat after successful submission ***
-      // Assuming your chat page route is '/chat'
-      // Add a small delay so the user can see the success message before redirection
-      setTimeout(() => {
-        navigate('/chat'); // Redirect to the user's chat page
-      }, 2000); // Redirect after 2 seconds
+      setMessage(response.data.message + " Please use the chat widget on the dashboard for further assistance and to provide your receipt.");
+
+      // Instead of navigating to chat, we stay on this page or go back to the dashboard,
+      // and expect the user to use the chat widget.
+      // Optionally, you could navigate to the dashboard with a state to auto-open the chat widget.
+      navigate('/dashboard', { state: { openChat: true, initialChatMessage: `I have submitted a recharge request for $${numericAmount}.` } });
+
 
     } catch (error) {
-      const errorMsg = error.response?.data?.message || 'An unexpected error occurred.';
-      console.error('Recharge submission failed:', errorMsg);
-      setMessage(`❌ Recharge failed: ${errorMsg}`);
+      console.error('Recharge submission error:', error);
+      setMessage(
+        error.response?.data?.message || '❌ Failed to submit recharge request.'
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="recharge-container">
-      <div className="recharge-header">
-        <button className="back-button" onClick={() => navigate(-1)}>←</button>
-        <div className="icons">
-          <span className="home-icon" onClick={() => navigate('/dashboard')}>🏠</span>
+    <div className="recharge-page">
+      <div className="header-nav">
+        <div className="back-button" onClick={() => navigate(-1)}>
+          ← Back
+        </div>
+        <div className="page-title">Recharge</div>
+        <div className="home-button">
+          <span onClick={() => navigate('/dashboard')}>🏠</span>
         </div>
       </div>
       <h2>Submit Recharge Request (USD)</h2>
@@ -96,7 +98,6 @@ const RechargePage = () => {
 
       <p className="select-method">Proceed to Customer Support</p>
       <div className="payment-box">
-        {/* Removed: Receipt Image URL and WhatsApp Number inputs */}
         <button className="recharge-button" onClick={handleRecharge} disabled={loading}>
           {loading ? 'Submitting...' : 'Submit Request & Go to Chat'}
         </button>
@@ -110,7 +111,7 @@ const RechargePage = () => {
       <div className="recharge-footer">
         <p>* Your request will be reviewed by an administrator via chat. Funds will be credited upon approval.</p>
         <p>* Please discuss payment details and provide receipts directly in the chat.</p>
-        <p>* If you do not receive recharge and withdrawal, please consult your supervisor to solve other problems.</p>
+        <p>* If you do not have a wallet address yet, one will be assigned to you via chat.</p>
       </div>
     </div>
   );
