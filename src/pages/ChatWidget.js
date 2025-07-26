@@ -1,16 +1,15 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import io from 'socket.io-client';
+import { useNavigate } from 'react-router-dom'; // Import useNavigate
 import '../CustomerServicePage.css';
 
 const UserIcon = () => <span className="icon user-icon">U</span>;
 const BotIcon = () => <span className="icon bot-icon">A</span>;
-const ChatIcon = () => '💬';
+const ChatIcon = () => '�';
 const CloseIcon = () => '✖️';
 
-// const API_BASE_URL = 'http://localhost:5000/api';
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
-// const SOCKET_SERVER_URL = 'http://localhost:5000';
 const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || 'http://localhost:5000';
 
 const ChatWidget = () => {
@@ -25,6 +24,8 @@ const ChatWidget = () => {
 
   const currentUser = JSON.parse(localStorage.getItem('user'));
   const currentUserId = currentUser ? currentUser.id : null;
+
+  const navigate = useNavigate(); // Initialize navigate hook
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -86,13 +87,32 @@ const ChatWidget = () => {
     }
 
     if (!socketRef.current) {
-      socketRef.current = io(SOCKET_URL);
+      // Pass the token with the Socket.IO connection for authentication
+      const token = localStorage.getItem('token');
+      socketRef.current = io(SOCKET_URL, {
+        auth: {
+          token: token
+        }
+      });
 
       socketRef.current.on('connect', () => {
         socketRef.current.emit('joinRoom', `user-${currentUserId}`);
       });
 
       socketRef.current.on('receiveMessage', handleReceiveMessage);
+
+      // Handle Socket.IO disconnection (e.g., due to invalid token on server-side middleware)
+      socketRef.current.on('disconnect', (reason) => {
+        console.log('Socket disconnected:', reason);
+        if (reason === 'io server disconnect' || reason === 'transport close') {
+          // This might indicate a server-side authentication failure
+          console.warn('Server-side disconnect, potentially due to authentication. Redirecting to login.');
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          navigate('/login');
+        }
+      });
+
     }
 
     return () => {
@@ -101,7 +121,7 @@ const ChatWidget = () => {
         socketRef.current = null;
       }
     };
-  }, [isChatOpen, currentUserId, handleReceiveMessage]);
+  }, [isChatOpen, currentUserId, handleReceiveMessage, navigate]); // Add navigate to dependencies
 
   const fetchChatHistory = useCallback(async () => {
     if (!currentUserId) return;
@@ -123,11 +143,18 @@ const ChatWidget = () => {
         }))
       );
     } catch (err) {
+      console.error('Failed to load chat history:', err);
       setChatError('Failed to load chat history.');
+      // *** IMPORTANT: If fetching chat history fails due to authentication, redirect to login ***
+      if (err.response && (err.response.status === 401 || err.response.status === 403)) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        navigate('/login'); // Redirect to login page
+      }
     } finally {
       setLoadingChat(false);
     }
-  }, [currentUserId]);
+  }, [currentUserId, navigate]); // Add navigate to dependencies
 
   useEffect(() => {
     if (isChatOpen) {
