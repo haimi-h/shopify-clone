@@ -27,9 +27,14 @@ const ChatWidget = () => {
   const currentUserId = currentUser ? currentUser.id : null;
   const token = localStorage.getItem('token'); // Get the token here
 
-  useEffect(() => {
+  // Wrap scrollToBottom in useCallback
+  const scrollToBottom = useCallback(() => {
     chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages]);
+  }, []); // No dependencies needed as it only uses ref
+
+  useEffect(() => {
+    scrollToBottom();
+  }, [messages, scrollToBottom]); // Add scrollToBottom to dependencies
 
   const handleReceiveMessage = useCallback((message) => {
     console.log('CLIENT RECEIVED MESSAGE:', JSON.stringify(message, null, 2));
@@ -217,7 +222,7 @@ const ChatWidget = () => {
     ]);
     optimisticMessageIds.current.add(tempMessageId); // Add to set of optimistic IDs
     setInputValue(''); // Clear input immediately
-    scrollToBottom();
+    scrollToBottom(); // Call scrollToBottom here
 
     try {
       // Emit message via Socket.IO
