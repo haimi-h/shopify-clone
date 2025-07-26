@@ -1,17 +1,20 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import axios from 'axios';
 import io from 'socket.io-client';
-import '../CustomerServicePage.css'; // Make sure this CSS file exists
+import '../CustomerServicePage.css';
 
 const UserIcon = () => <span className="icon user-icon">U</span>;
 const BotIcon = () => <span className="icon bot-icon">A</span>;
 const ChatIcon = () => '💬';
 const CloseIcon = () => '✖️';
 
+// const API_BASE_URL = 'http://localhost:5000/api';
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
+// const SOCKET_SERVER_URL = 'http://localhost:5000';
 const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || 'http://localhost:5000';
 
-const ChatWidget = ({ isOpen, setIsOpen, initialMessage }) => {
+const ChatWidget = () => {
+  const [isChatOpen, setIsChatOpen] = useState(false);
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState('');
   const chatEndRef = useRef(null);
@@ -22,31 +25,104 @@ const ChatWidget = ({ isOpen, setIsOpen, initialMessage }) => {
 
   const currentUser = JSON.parse(localStorage.getItem('user'));
   const currentUserId = currentUser ? currentUser.id : null;
-  const currentUserRole = currentUser ? currentUser.role : null;
 
-  const fetchMessages = useCallback(async () => {
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const handleReceiveMessage = useCallback((message) => {
+    console.log('CLIENT RECEIVED MESSAGE:', JSON.stringify(message, null, 2));
+
+    setMessages((prevMessages) => {
+      if (
+        message.sender_role === 'user' &&
+        message.tempId &&
+        optimisticMessageIds.current.has(message.tempId)
+      ) {
+        console.log(`Replacing optimistic message with tempId: ${message.tempId}`);
+        optimisticMessageIds.current.delete(message.tempId);
+
+        return prevMessages.map((msg) =>
+          msg.tempId === message.tempId
+            ? {
+                id: message.id,
+                sender: message.sender_role,
+                text: message.message_text,
+                timestamp: message.timestamp,
+              }
+            : msg
+        );
+      }
+
+      const isDuplicate = prevMessages.some(
+        (msg) => msg.id === message.id || msg.tempId === message.tempId
+      );
+
+      if (!isDuplicate) {
+        console.log(`Adding new message from other user/admin with id: ${message.id}`);
+        return [
+          ...prevMessages,
+          {
+            id: message.id,
+            sender: message.sender_role,
+            text: message.message_text,
+            timestamp: message.timestamp,
+          },
+        ];
+      }
+
+      console.log(`Ignoring already present message with id: ${message.id}`);
+      return prevMessages;
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!currentUserId || !isChatOpen) {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
+      return;
+    }
+
+    if (!socketRef.current) {
+      socketRef.current = io(SOCKET_URL);
+
+      socketRef.current.on('connect', () => {
+        socketRef.current.emit('joinRoom', `user-${currentUserId}`);
+      });
+
+      socketRef.current.on('receiveMessage', handleReceiveMessage);
+    }
+
+    return () => {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
+    };
+  }, [isChatOpen, currentUserId, handleReceiveMessage]);
+
+  const fetchChatHistory = useCallback(async () => {
     if (!currentUserId) return;
-
     setLoadingChat(true);
-    setChatError(null);
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${API_BASE_URL}/chat/messages/${currentUserId}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      const formattedMessages = response.data.map(msg => ({
-        id: msg.id,
-        user_id: msg.user_id,
-        sender_id: msg.sender_id,
-        sender: msg.sender_role === 'user' ? 'user' : 'bot',
-        text: msg.message_text,
-        timestamp: msg.timestamp,
-      }));
-      setMessages(formattedMessages);
+      const config = { headers: { Authorization: `Bearer ${token}` } };
+      const response = await axios.get(
+        `${API_BASE_URL}/chat/messages/${currentUserId}`,
+        config
+      );
+
+      setMessages(
+        response.data.map((msg) => ({
+          id: msg.id,
+          sender: msg.sender_role,
+          text: msg.message_text,
+          timestamp: msg.timestamp,
+        }))
+      );
     } catch (err) {
-      console.error('Error fetching chat messages:', err);
       setChatError('Failed to load chat history.');
     } finally {
       setLoadingChat(false);
@@ -54,128 +130,51 @@ const ChatWidget = ({ isOpen, setIsOpen, initialMessage }) => {
   }, [currentUserId]);
 
   useEffect(() => {
-    if (isOpen && currentUserId) {
-      fetchMessages();
-
-      socketRef.current = io(SOCKET_URL, {
-        query: { token: localStorage.getItem('token') },
-      });
-
-      socketRef.current.on('connect', () => {
-        console.log('Socket connected:', socketRef.current.id);
-        socketRef.current.emit('joinRoom', `user-${currentUserId}`);
-        if (currentUserRole === 'admin') {
-          socketRef.current.emit('identifyAdmin', currentUserId);
-        }
-      });
-
-      socketRef.current.on('receiveMessage', (message) => {
-        console.log('Received message:', message);
-        if (!optimisticMessageIds.current.has(message.tempId)) {
-          setMessages((prevMessages) => [
-            ...prevMessages,
-            {
-              id: message.id,
-              user_id: message.user_id,
-              sender_id: message.sender_id,
-              sender: message.sender_role === 'user' ? 'user' : 'bot',
-              text: message.message_text,
-              timestamp: message.timestamp,
-            },
-          ]);
-        }
-        optimisticMessageIds.current.delete(message.tempId);
-      });
-
-      socketRef.current.on('disconnect', () => {
-        console.log('Socket disconnected');
-      });
-
-      return () => {
-        if (socketRef.current) {
-          socketRef.current.disconnect();
-        }
-      };
+    if (isChatOpen) {
+      fetchChatHistory();
     }
-  }, [isOpen, currentUserId, currentUserRole, fetchMessages]);
+  }, [isChatOpen, fetchChatHistory]);
 
-  useEffect(() => {
-    if (chatEndRef.current) {
-      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-  }, [messages]);
+  const handleSendMessage = (e) => {
+    e.preventDefault();
+    if (inputValue.trim() === '' || !socketRef.current) return;
 
-  useEffect(() => {
-    if (
-      isOpen &&
-      initialMessage &&
-      socketRef.current &&
-      currentUserId &&
-      messages.length === 0
-    ) {
-      const timer = setTimeout(() => {
-        handleSendMessage(null, initialMessage);
-        // Removed setInitialChatMessage to prevent error
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [isOpen, initialMessage, currentUserId, messages.length]);
+    const tempMessageId = `optimistic-user-${Date.now()}`;
+    const messageToSend = {
+      userId: currentUserId,
+      senderId: currentUserId,
+      senderRole: 'user',
+      messageText: inputValue.trim(),
+      tempId: tempMessageId,
+    };
 
-  const handleSendMessage = async (e, predefinedMessage = null) => {
-    if (e) e.preventDefault();
-
-    const messageToSend = predefinedMessage || inputValue.trim();
-
-    if (!messageToSend || !currentUserId) return;
-
-    const tempId = Date.now().toString();
-
-    setMessages((prevMessages) => [
-      ...prevMessages,
+    setMessages((prev) => [
+      ...prev,
       {
-        id: tempId,
-        user_id: currentUserId,
-        sender_id: currentUserId,
+        id: tempMessageId,
+        tempId: tempMessageId, // This is required to match later
         sender: 'user',
-        text: messageToSend,
+        text: messageToSend.messageText,
         timestamp: new Date().toISOString(),
-        tempId: tempId,
       },
     ]);
+    optimisticMessageIds.current.add(tempMessageId);
     setInputValue('');
 
-    if (chatEndRef.current) {
-      chatEndRef.current.scrollIntoView({ behavior: 'smooth' });
-    }
-
-    try {
-      const token = localStorage.getItem('token');
-      socketRef.current.emit('sendMessage', {
-        userId: currentUserId,
-        senderId: currentUserId,
-        senderRole: 'user',
-        messageText: messageToSend,
-        tempId: tempId,
-      });
-    } catch (err) {
-      console.error('Error sending message:', err);
-      setChatError('Failed to send message.');
-      setMessages((prevMessages) =>
-        prevMessages.filter((msg) => msg.id !== tempId)
-      );
-    }
+    socketRef.current.emit('sendMessage', messageToSend);
   };
+
+  const toggleChat = () => setIsChatOpen(!isChatOpen);
 
   return (
     <>
-      <div className="chat-bubble-icon" onClick={() => setIsOpen(!isOpen)}>
+      <button onClick={toggleChat} className="chat-toggle-button" aria-label="Toggle chat">
         <ChatIcon />
-      </div>
-
-      <div className={`chat-widget-container ${isOpen ? 'open' : 'closed'}`}>
+      </button>
+      <div className={`chat-popup ${isChatOpen ? 'active' : ''}`}>
         <header className="chat-header">
-          <h3>Customer Support</h3>
-          <button className="close-button" onClick={() => setIsOpen(false)}>
+          <h1>Customer Service</h1>
+          <button onClick={toggleChat} className="chat-close-button">
             <CloseIcon />
           </button>
         </header>
@@ -210,9 +209,7 @@ const ChatWidget = ({ isOpen, setIsOpen, initialMessage }) => {
               type="text"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
-              placeholder={
-                currentUserId ? 'Type your message...' : 'Please log in to chat'
-              }
+              placeholder={currentUserId ? 'Type your message...' : 'Please log in to chat'}
               className="message-input"
               disabled={!currentUserId}
             />
