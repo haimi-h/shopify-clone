@@ -36,6 +36,7 @@ const RechargePage = () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
+        // If there's no token, redirect to login. This is a safeguard.
         navigate('/login');
         return;
       }
@@ -52,19 +53,42 @@ const RechargePage = () => {
         config
       );
 
+      // Check if the token still exists after the API call, right before navigation
+      const tokenAfterRecharge = localStorage.getItem('token');
+      if (!tokenAfterRecharge) {
+          // If the token is gone, it was likely an API-side issue.
+          console.error("User token was cleared after recharge submission.");
+          setMessage("Your session has expired. Please log in again.");
+          // We can navigate to login or just show the message.
+          navigate('/login');
+          return;
+      }
+
+
       setMessage(response.data.message + " Please use the chat widget on the dashboard for further assistance and to provide your receipt.");
 
-      // Instead of navigating to chat, we stay on this page or go back to the dashboard,
-      // and expect the user to use the chat widget.
-      // Optionally, you could navigate to the dashboard with a state to auto-open the chat widget.
-      navigate('/dashboard', { state: { openChat: true, initialChatMessage: `I have submitted a recharge request for $${numericAmount}.` } });
+      // Navigate to the dashboard with state to auto-open the chat widget.
+      navigate('/dashboard', { 
+          state: { 
+              openChat: true, 
+              initialChatMessage: `I have submitted a recharge request for $${numericAmount}.` 
+          } 
+      });
 
 
     } catch (error) {
       console.error('Recharge submission error:', error);
-      setMessage(
-        error.response?.data?.message || '❌ Failed to submit recharge request.'
-      );
+      
+      let errorMessage = '❌ Failed to submit recharge request.';
+      if (error.response?.status === 401 || error.response?.status === 403) {
+          errorMessage = 'Your session has expired. Please log in again.';
+          // Redirect to login if unauthorized
+          navigate('/login');
+      } else {
+          errorMessage = error.response?.data?.message || errorMessage;
+      }
+
+      setMessage(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -101,6 +125,7 @@ const RechargePage = () => {
         <button className="recharge-button" onClick={handleRecharge} disabled={loading}>
           {loading ? 'Submitting...' : 'Submit Request & Go to Chat'}
         </button>
+        
         <small>$7 ~ $7,777,777</small>
       </div>
       {message && (

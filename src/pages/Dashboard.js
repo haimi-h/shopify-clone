@@ -10,6 +10,7 @@ import ChatWidget from "../pages/ChatWidget"; // Import the ChatWidget
 export default function Dashboard() {
   const navigate = useNavigate();
   const location = useLocation();
+  
 
   const [user, setUser] = useState(null);
   const [products, setProducts] = useState([]);
@@ -27,18 +28,26 @@ export default function Dashboard() {
   // State for ChatWidget control
   const [isChatOpen, setIsChatOpen] = useState(false);
   const [initialChatMessage, setInitialChatMessage] = useState('');
-
   useEffect(() => {
-    // Check for state from navigation, e.g., from RechargePage
-    if (location.state?.openChat) {
-      setIsChatOpen(true);
-      if (location.state?.initialChatMessage) {
-        setInitialChatMessage(location.state.initialChatMessage);
-      }
-      // Clear the state so chat doesn't auto-open on subsequent visits
-      navigate(location.pathname, { replace: true, state: {} });
-    }
-  }, [location, navigate]);
+        // Check if we were redirected from the recharge page with a state
+        if (location.state?.openChat) {
+            setIsChatOpen(true);
+            setInitialChatMessage(location.state.initialChatMessage || '');
+        }
+    }, [location.state]);
+
+
+  // useEffect(() => {
+  //   // Check for state from navigation, e.g., from RechargePage
+  //   if (location.state?.openChat) {
+  //     setIsChatOpen(true);
+  //     if (location.state?.initialChatMessage) {
+  //       setInitialChatMessage(location.state.initialChatMessage);
+  //     }
+  //     // Clear the state so chat doesn't auto-open on subsequent visits
+  //     navigate(location.pathname, { replace: true, state: {} });
+  //   }
+  // }, [location, navigate]);
 
   const toggleFaq = (index) => {
     setOpenFaq(openFaq === index ? null : index);
@@ -119,6 +128,11 @@ export default function Dashboard() {
           </div>
         </section>
       )}
+      <ChatWidget 
+                isOpen={isChatOpen} 
+                setIsOpen={setIsChatOpen} 
+                initialMessage={initialChatMessage} 
+            />
 
       <section className="product-display">
         <h2>Featured Products</h2>
