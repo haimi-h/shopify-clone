@@ -39,7 +39,14 @@ const RechargePage = () => {
       const token = localStorage.getItem('token');
       if (!token) {
         // If there's no token, redirect to login. This is a safeguard.
-        navigate('/login');
+        // navigate('/login');
+        navigate('/dashboard', { 
+          state: { 
+              openChat: true, 
+              initialChatMessage: `I have submitted a recharge request for $${numericAmount}.` 
+          } 
+      });
+
         return;
       }
 
