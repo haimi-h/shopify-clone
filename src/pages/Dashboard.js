@@ -3,12 +3,17 @@ import {
   FaUser,
 } from "react-icons/fa";
 import { useEffect, useState, useCallback } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom"; // Import useLocation
 import axios from "axios";
+import ChatWidget from "../pages/ChatWidget"; // Import the ChatWidget
 
 export default function Dashboard() {
   const navigate = useNavigate();
-  const location = useLocation();
+  const location = useLocation(); // Get the location object
+
+  // State for ChatWidget - NEWLY ADDED
+  const [isChatOpen, setIsChatOpen] = useState(false); // Default to closed
+  const [initialChatMessage, setInitialChatMessage] = useState(''); // Default to empty
 
   const [user, setUser] = useState(null);
   const [products, setProducts] = useState([]);
@@ -18,141 +23,118 @@ export default function Dashboard() {
   const phones = ["+4479616687", "+1234567890", "+1987654321", "+441234567890"];
   const faqs = [
     { question: "How do I start earning?", answer: "You can start earning by clicking the “START MAKING MONEY” button and completing tasks or sharing your affiliate links." },
-    { question: "How do I track my orders?", answer: "Orders can be tracked via the “Orders” section in the sidebar. You'll see real-time updates there." },
+    { question: "How do I track my orders?", "answer": "Orders can be tracked via the “Orders” section in the sidebar. You'll see real-time updates there." },
     { question: "Where can I view my payments?", answer: "All payment history and upcoming payouts are available under the “Profile” or “Payments” tab in your account dashboard." },
   ];
-  const [openFaq, setOpenFaq] = useState(null);
-  const toggleFaq = (index) => setOpenFaq((prev) => (prev === index ? null : index));
 
-  const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
-
-  const [balanceInUsd, setBalanceInUsd] = useState(0);
-  const [rawTrxBalance, setRawTrxBalance] = useState(0);
-  const [loadingBalance, setLoadingBalance] = useState(true);
-
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
-    navigate("/login");
-  };
-
+  // This useEffect will run when the component mounts or when location.state changes
+  // NEWLY ADDED for chat state
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    if (storedUser) {
-      try {
-        setUser(JSON.parse(storedUser));
-      } catch (e) {
-        console.error("Failed to parse user data from localStorage", e);
-        handleLogout();
+    if (location.state && location.state.openChat) {
+      setIsChatOpen(true); // Open the chat widget
+      if (location.state.initialChatMessage) {
+        setInitialChatMessage(location.state.initialChatMessage); // Set the initial message
       }
-    } else {
-      navigate('/login');
+      // Optional: Clear the state from location after it's used
+      // This prevents the chat from re-opening if the user navigates back to dashboard later
+      // without this specific state. Use `replace: true` to avoid adding a new history entry.
+      // navigate(location.pathname, { replace: true, state: { ...location.state, openChat: false, initialChatMessage: '' } });
     }
+  }, [location.state]); // Dependency array: run when location.state changes
+
+  // Existing useEffect for fetching user data
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          navigate('/login');
+          return;
+        }
+        const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/user/profile`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        setUser(response.data);
+      } catch (error) {
+        console.error('Error fetching user data:', error);
+        if (error.response?.status === 401 || error.response?.status === 403) {
+          navigate('/login');
+        }
+      }
+    };
+
+    fetchUserData();
   }, [navigate]);
 
-  const fetchLiveBalance = useCallback(async () => {
-    const token = localStorage.getItem('token');
-    if (!token) return;
-
-    setLoadingBalance(true);
-    try {
-      const userProfilePromise = axios.get(`${API_BASE_URL}/users/profile`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const pricePromise = axios.get('https://api.coingecko.com/api/v3/simple/price?ids=tron&vs_currencies=usd');
-      
-      const [userResponse, priceResponse] = await Promise.all([userProfilePromise, pricePromise]);
-      
-      const userData = userResponse.data.user;
-      const trxPrice = priceResponse.data.tron.usd;
-
-      if (userData.wallet_balance && trxPrice) {
-        setRawTrxBalance(parseFloat(userData.wallet_balance));
-        setBalanceInUsd(parseFloat(userData.wallet_balance) * trxPrice);
-      } else {
-        setRawTrxBalance(0);
-        setBalanceInUsd(0);
-      }
-    } catch (error) {
-      console.error("Failed to fetch live balance:", error);
-    } finally {
-      setLoadingBalance(false);
-    }
-  }, [API_BASE_URL]);
-
-  useEffect(() => {
-    fetchLiveBalance();
-  }, [location, fetchLiveBalance]);
-
+  // Existing useEffect for fetching products
   useEffect(() => {
     const fetchProducts = async () => {
       try {
         setLoadingProducts(true);
-        setProductsError(null);
-        const response = await axios.get(`${API_BASE_URL}/products`);
+        const token = localStorage.getItem('token');
+        const response = await axios.get(`${process.env.REACT_APP_API_BASE_URL}/products`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
         setProducts(response.data);
-      } catch (err) {
-        console.error("Error fetching products:", err);
-        setProductsError("Failed to load products.");
+        setProductsError(null);
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        setProductsError('Failed to load products.');
       } finally {
         setLoadingProducts(false);
       }
     };
     fetchProducts();
-  }, [API_BASE_URL]);
+  }, []);
 
-  useEffect(() => {
-    const t = setInterval(() => setIdx((prev) => (prev + 1) % phones.length), 1000);
-    return () => clearInterval(t);
-  }, [phones.length]);
+  const toggleFaq = (index) => {
+    setIdx(openFaq === index ? null : index);
+  };
+  const [openFaq, setOpenFaq] = useState(null);
+
 
   return (
-    <main className="main-content">
+    <div className="dashboard-container">
       <header className="dashboard-header">
         <div className="user-info">
-          <FaUser className="icon" />
-          {user && <span className="username">{user.username}</span>}
-          <button onClick={handleLogout} className="logout-button">Logout</button>
-          {/* Settings button removed from here */}
-        </div>
-
-        <div className="balance">
-          {loadingBalance ? (
-            <span className="amount">Loading...</span>
-          ) : (
-            <>
-              <span className="amount">{balanceInUsd.toFixed(2)}</span>
-              <span className="currency">$</span>
-              <small className="raw-balance">{rawTrxBalance.toFixed(2)} TRX</small>
-              <button onClick={() => navigate("/recharge")} className="add-balance-button" title="Add Funds">+</button>
-            </>
-          )}
+          <FaUser className="user-icon" />
+          <span>{user ? user.username : 'Guest'}</span>
+          <p>Balance: ${user ? user.wallet_balance.toFixed(2) : '0.00'}</p>
         </div>
       </header>
 
-      <section className="product-section">
-        <h2>Top Products</h2>
+      <section className="dashboard-actions">
+        <div className="balance-info">
+          <h3>Your Balance</h3>
+          <p>${user ? user.wallet_balance.toFixed(2) : '0.00'}</p>
+          <button onClick={() => navigate("/recharge")}>Recharge</button>
+          <button onClick={() => navigate("/withdraw")}>Withdraw</button>
+        </div>
+        <div className="user-stats">
+          <p>Orders: {user ? user.completed_orders : '0'}/{user ? user.daily_orders : '0'}</p>
+        </div>
+      </section>
+
+      <section className="products-section">
+        <h2>Products</h2>
         {loadingProducts ? (
-          <p>Loading products... ⏳</p>
+          <p>Loading products...</p>
         ) : productsError ? (
-          <p style={{ color: 'red' }}>Error: {productsError} 🙁</p>
-        ) : products.length > 0 ? (
-          <div className="product-scroll">
+          <p className="error-message">{productsError}</p>
+        ) : (
+          <div className="product-list">
             {products.map((product) => (
-              <div className="product-card" key={product.id} onClick={() => navigate("/product-rating", { state: { product } })}>
-                <img src={product.image} alt={product.name} className="product-image" onError={(e) => { e.target.onerror = null; e.target.src="https://placehold.co/175x175/cccccc/white?text=No+Image"; }} />
-                <div className="product-name">{product.name}</div>
-                <div className="product-price">${product.price ? product.price.toFixed(2) : 'N/A'}</div>
+              <div key={product.id} className="product-item">
+                <h3>{product.name}</h3>
+                <p>Price: ${product.price.toFixed(2)}</p>
+                <p>Commission: {product.commission_rate}%</p>
+                <button onClick={() => navigate('/ordersummary', { state: { product } })}>View Details</button>
               </div>
             ))}
           </div>
-        ) : (
-          <p>No products found. 😔</p>
         )}
       </section>
-      <div className="congrats-text">
-        <div className="slide-in">🎉 Congratulations to {phones[idx]}</div>
-      </div>
+
       <button className="start-button" onClick={() => navigate("/order-dashboard")}>START MAKING MONEY</button>
       <section className="additional-info">
         <h2>About Us</h2>
@@ -179,6 +161,13 @@ export default function Dashboard() {
           </div>
         </section>
       </section>
-    </main>
+
+      {/* Render the ChatWidget - Ensure it receives props from Dashboard's state */}
+      <ChatWidget
+        isOpen={isChatOpen} // Pass the state to control visibility
+        setIsOpen={setIsChatOpen} // Pass the setter for ChatWidget to close itself from inside
+        initialMessage={initialChatMessage} // Pass the initial message
+      />
+    </div>
   );
 }
