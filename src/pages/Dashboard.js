@@ -1,14 +1,15 @@
 import "../Dashboard.css";
 import {
   FaUser,
-  FaCog, // FaCog was unused, it's good practice to remove if not needed.
 } from "react-icons/fa";
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useEffect, useState, useCallback } from "react";
+import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 
 export default function Dashboard() {
   const navigate = useNavigate();
+  const location = useLocation();
+
   const [user, setUser] = useState(null);
   const [products, setProducts] = useState([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
@@ -25,12 +26,16 @@ export default function Dashboard() {
 
   const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
 
-  // --- NEW: State for live balance calculation ---
   const [balanceInUsd, setBalanceInUsd] = useState(0);
   const [rawTrxBalance, setRawTrxBalance] = useState(0);
   const [loadingBalance, setLoadingBalance] = useState(true);
 
-  // Effect to load initial user data from localStorage
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    navigate("/login");
+  };
+
   useEffect(() => {
     const storedUser = localStorage.getItem('user');
     if (storedUser) {
@@ -38,49 +43,47 @@ export default function Dashboard() {
         setUser(JSON.parse(storedUser));
       } catch (e) {
         console.error("Failed to parse user data from localStorage", e);
-        handleLogout(); // Log out if data is corrupted
+        handleLogout();
       }
     } else {
       navigate('/login');
     }
   }, [navigate]);
 
-  // --- NEW: Effect to fetch LIVE user profile and TRX price ---
-  useEffect(() => {
-    const fetchLiveBalance = async () => {
-      const token = localStorage.getItem('token');
-      if (!token) return; // No need to fetch if not logged in
+  const fetchLiveBalance = useCallback(async () => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
 
-      try {
-        // Create two promises to run requests in parallel
-        const userProfilePromise = axios.get(`${API_BASE_URL}/users/profile`, {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        const pricePromise = axios.get('https://api.coingecko.com/api/v3/simple/price?ids=tron&vs_currencies=usd');
+    setLoadingBalance(true);
+    try {
+      const userProfilePromise = axios.get(`${API_BASE_URL}/users/profile`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      const pricePromise = axios.get('https://api.coingecko.com/api/v3/simple/price?ids=tron&vs_currencies=usd');
+      
+      const [userResponse, priceResponse] = await Promise.all([userProfilePromise, pricePromise]);
+      
+      const userData = userResponse.data.user;
+      const trxPrice = priceResponse.data.tron.usd;
 
-        // Wait for both promises to resolve
-        const [userResponse, priceResponse] = await Promise.all([userProfilePromise, pricePromise]);
-
-        const userData = userResponse.data;
-        const trxPrice = priceResponse.data.tron.usd;
-
-        if (userData.wallet_balance && trxPrice) {
-          setRawTrxBalance(userData.wallet_balance);
-          setBalanceInUsd(userData.wallet_balance * trxPrice);
-        }
-
-      } catch (error) {
-        console.error("Failed to fetch live balance:", error);
-        // You could set an error state here if needed
-      } finally {
-        setLoadingBalance(false);
+      if (userData.wallet_balance && trxPrice) {
+        setRawTrxBalance(parseFloat(userData.wallet_balance));
+        setBalanceInUsd(parseFloat(userData.wallet_balance) * trxPrice);
+      } else {
+        setRawTrxBalance(0);
+        setBalanceInUsd(0);
       }
-    };
+    } catch (error) {
+      console.error("Failed to fetch live balance:", error);
+    } finally {
+      setLoadingBalance(false);
+    }
+  }, [API_BASE_URL]);
 
+  useEffect(() => {
     fetchLiveBalance();
-  }, [API_BASE_URL]); // Runs once on mount
+  }, [location, fetchLiveBalance]);
 
-  // Effect to fetch products
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -98,17 +101,10 @@ export default function Dashboard() {
     fetchProducts();
   }, [API_BASE_URL]);
 
-  // Effect for banner
   useEffect(() => {
     const t = setInterval(() => setIdx((prev) => (prev + 1) % phones.length), 1000);
     return () => clearInterval(t);
   }, [phones.length]);
-
-  const handleLogout = () => {
-    localStorage.removeItem("user");
-    localStorage.removeItem("token");
-    navigate("/login");
-  };
 
   return (
     <main className="main-content">
@@ -117,9 +113,9 @@ export default function Dashboard() {
           <FaUser className="icon" />
           {user && <span className="username">{user.username}</span>}
           <button onClick={handleLogout} className="logout-button">Logout</button>
+          {/* Settings button removed from here */}
         </div>
 
-        {/* --- MODIFIED: Live Balance Display --- */}
         <div className="balance">
           {loadingBalance ? (
             <span className="amount">Loading...</span>
@@ -128,6 +124,7 @@ export default function Dashboard() {
               <span className="amount">{balanceInUsd.toFixed(2)}</span>
               <span className="currency">$</span>
               <small className="raw-balance">{rawTrxBalance.toFixed(2)} TRX</small>
+              <button onClick={() => navigate("/recharge")} className="add-balance-button" title="Add Funds">+</button>
             </>
           )}
         </div>
@@ -153,8 +150,6 @@ export default function Dashboard() {
           <p>No products found. 😔</p>
         )}
       </section>
-
-      {/* --- Rest of your JSX is unchanged --- */}
       <div className="congrats-text">
         <div className="slide-in">🎉 Congratulations to {phones[idx]}</div>
       </div>
