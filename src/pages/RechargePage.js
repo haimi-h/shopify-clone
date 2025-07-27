@@ -9,6 +9,8 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:500
 const RechargePage = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { openChat, initialChatMessage } = location.state || {};
+
 
   const { requiredAmount } = location.state || {};
 
