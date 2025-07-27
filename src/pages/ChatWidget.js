@@ -239,9 +239,9 @@ const ChatWidget = () => {
                 }`}
               >
                 {message.sender !== "user" && <BotIcon />}
-                <div className="message-bubble">
+                {/* <div className="message-bubble">
                   <p>{message.text}</p>
-                </div>
+                </div> */}
                 <div className="message-bubble">
                   {message.text && <p>{message.text}</p>}
                   {message.imageUrl && (
