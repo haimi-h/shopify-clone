@@ -5,6 +5,7 @@ import axios from "axios";
 import "../ProductRating.css";
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000/api";
+const MIN_REQUIRED_BALANCE_FOR_TASK = 2;
 
 function ProductRatingPage() {
   const navigate = useNavigate();
@@ -19,38 +20,50 @@ function ProductRatingPage() {
   const [luckyOrderCapital, setLuckyOrderCapital] = useState(0);
 
   const fetchTask = async () => {
-    setLoading(true);
-    setError("");
-    setMessage("");
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) { navigate("/login"); return; }
+  setLoading(true);
+  setError("");
+  setMessage("");
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) { navigate("/login"); return; }
 
-      const res = await axios.get(`${API_BASE_URL}/tasks/task`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+    const res = await axios.get(`${API_BASE_URL}/tasks/task`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-      setProduct(res.data.task);
-      setRating(0);
-      setUserBalance(res.data.balance || 0);
-      
-      const isLucky = res.data.isLuckyOrder || false;
-      const luckyCapital = res.data.luckyOrderCapitalRequired || 0;
-      setIsLuckyOrder(isLucky);
-      setLuckyOrderCapital(luckyCapital);
+    setProduct(res.data.task);
+    setRating(0);
+    setUserBalance(res.data.balance || 0);
 
-    } catch (err) {
-      console.error("Error fetching task:", err);
-      setError(err.response?.data?.message || "Failed to load task.");
-      setProduct(null);
-      if ([401, 403].includes(err.response?.status)) {
-        localStorage.removeItem("token");
-        navigate("/login");
-      }
-    } finally {
-      setLoading(false);
+    const isLucky = res.data.isLuckyOrder || false;
+    const luckyCapital = res.data.luckyOrderCapitalRequired || 0;
+    setIsLuckyOrder(isLucky);
+    setLuckyOrderCapital(luckyCapital);
+
+    // NEW LOGIC START: Check for minimum balance for regular tasks
+    // If it's not a lucky order AND balance is below minimum
+    if (!isLucky && (res.data.balance || 0) < MIN_REQUIRED_BALANCE_FOR_TASK) {
+      setError(
+        `You can't evaluate products with your current balance. Please recharge at least $${MIN_REQUIRED_BALANCE_FOR_TASK.toFixed(2)} to start tasks.`
+      );
+      setProduct(null); // Ensure no product is displayed if balance is too low
+      setLoading(false); // Stop loading state
+      return; // Stop further execution of fetchTask
     }
-  };
+    // NEW LOGIC END
+
+  } catch (err) {
+    console.error("Error fetching task:", err);
+    setError(err.response?.data?.message || "Failed to load task.");
+    setProduct(null);
+    if ([401, 403].includes(err.response?.status)) {
+      localStorage.removeItem("token");
+      navigate("/login");
+    }
+  } finally {
+    // setLoading(false); // This will be handled inside the new logic or after try/catch
+  }
+};
 
   const handleSubmitRating = async () => {
     setError("");
@@ -99,6 +112,25 @@ function ProductRatingPage() {
   
   return (
     <div className="rating-wrapper">
+        {error && (
+      <div className="rating-wrapper">
+        <h2>Error: {error}</h2>
+        {error.includes("recharge at least") && ( // Check if the error message contains the specific phrase
+          <button onClick={() => navigate("/recharge", { state: { requiredAmount: MIN_REQUIRED_BALANCE_FOR_TASK } })}>
+            Recharge Now
+          </button>
+        )}
+        <button onClick={fetchTask}>Try Again</button>
+        <button onClick={() => navigate("/dashboard")}>Back to Dashboard</button>
+      </div>
+    )}
+        {!error && !product && (
+      <div className="rating-wrapper">
+        <h2>No new tasks available.</h2>
+        <button onClick={fetchTask}>Refresh Tasks</button>
+        <button onClick={() => navigate("/dashboard")}>Back to Dashboard</button>
+      </div>
+    )}
       <div className="rating-card">
         <img src={product.image_url} alt={product.name} className="rating-image" />
         <h2 className="rating-title">{product.name}</h2>
@@ -108,6 +140,7 @@ function ProductRatingPage() {
           <p><strong>💰 Your Balance:</strong> ${userBalance.toFixed(2)} </p>
           <p><strong>📈 Profit if you rate:</strong> ${product.profit?.toFixed(2)}</p>
         </div>
+        
 
         {isLuckyOrder && (
           <div className="lucky-order-warning">
