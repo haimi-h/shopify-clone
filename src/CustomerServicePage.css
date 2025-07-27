@@ -256,3 +256,14 @@ body.chat-open {
     display: flex;
     flex-direction: column;
 }
+.chat-image {
+  max-width: 100%;
+  border-radius: 8px;
+  margin-top: 5px;
+}
+
+.file-input-label {
+  cursor: pointer;
+  padding: 0 10px;
+  font-size: 1.2rem;
+}
