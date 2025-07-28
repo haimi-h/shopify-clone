@@ -8,16 +8,14 @@ const BotIcon = () => <span className="icon bot-icon">A</span>;
 const ChatIcon = () => "💬";
 const CloseIcon = () => "✖️";
 
-// const API_BASE_URL = 'http://localhost:5000/api';
 const API_BASE_URL =
   process.env.REACT_APP_API_BASE_URL || "http://localhost:5000/api";
-// const SOCKET_SERVER_URL = 'http://localhost:5000';
 const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || "http://localhost:5000";
 
-const ChatWidget = () => {
-  const [isChatOpen, setIsChatOpen] = useState(false);
+const ChatWidget = ({ isOpen, onClose, initialMessage }) => {
+  const [isChatOpen, setIsChatOpen] = useState(isOpen);
   const [messages, setMessages] = useState([]);
-  const [inputValue, setInputValue] = useState("");
+  const [inputValue, setInputValue] = useState(initialMessage || "");
   const chatEndRef = useRef(null);
   const [loadingChat, setLoadingChat] = useState(false);
   const [chatError, setChatError] = useState(null);
@@ -26,6 +24,17 @@ const ChatWidget = () => {
 
   const currentUser = JSON.parse(localStorage.getItem("user"));
   const currentUserId = currentUser ? currentUser.id : null;
+
+  useEffect(() => {
+    setIsChatOpen(isOpen);
+  }, [isOpen]);
+
+  useEffect(() => {
+    if (initialMessage) {
+      setInputValue(initialMessage);
+    }
+  }, [initialMessage]);
+
 
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -53,12 +62,11 @@ const ChatWidget = () => {
         config
       );
 
-      // Optionally, add the new image message to the chat optimistically
       const newMessage = {
         id: response.data.messageId,
         sender: "user",
         text: null,
-        imageUrl: response.data.imageUrl, // Use the returned URL
+        imageUrl: response.data.imageUrl,
         timestamp: new Date().toISOString(),
       };
 
@@ -69,17 +77,12 @@ const ChatWidget = () => {
   };
 
   const handleReceiveMessage = useCallback((message) => {
-    console.log("CLIENT RECEIVED MESSAGE:", JSON.stringify(message, null, 2));
-
     setMessages((prevMessages) => {
       if (
         message.sender_role === "user" &&
         message.tempId &&
         optimisticMessageIds.current.has(message.tempId)
       ) {
-        console.log(
-          `Replacing optimistic message with tempId: ${message.tempId}`
-        );
         optimisticMessageIds.current.delete(message.tempId);
 
         return prevMessages.map((msg) =>
@@ -99,9 +102,6 @@ const ChatWidget = () => {
       );
 
       if (!isDuplicate) {
-        console.log(
-          `Adding new message from other user/admin with id: ${message.id}`
-        );
         return [
           ...prevMessages,
           {
@@ -113,7 +113,6 @@ const ChatWidget = () => {
         ];
       }
 
-      console.log(`Ignoring already present message with id: ${message.id}`);
       return prevMessages;
     });
   }, []);
@@ -194,7 +193,7 @@ const ChatWidget = () => {
       ...prev,
       {
         id: tempMessageId,
-        tempId: tempMessageId, // This is required to match later
+        tempId: tempMessageId,
         sender: "user",
         text: messageToSend.messageText,
         timestamp: new Date().toISOString(),
@@ -206,7 +205,14 @@ const ChatWidget = () => {
     socketRef.current.emit("sendMessage", messageToSend);
   };
 
-  const toggleChat = () => setIsChatOpen(!isChatOpen);
+  const toggleChat = () => {
+    const nextState = !isChatOpen;
+    setIsChatOpen(nextState);
+    if (!nextState && onClose) {
+      onClose();
+    }
+  };
+
 
   return (
     <>
@@ -239,9 +245,6 @@ const ChatWidget = () => {
                 }`}
               >
                 {message.sender !== "user" && <BotIcon />}
-                {/* <div className="message-bubble">
-                  <p>{message.text}</p>
-                </div> */}
                 <div className="message-bubble">
                   {message.text && <p>{message.text}</p>}
                   {message.imageUrl && (

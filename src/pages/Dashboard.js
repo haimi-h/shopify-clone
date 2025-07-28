@@ -5,6 +5,7 @@ import {
 import { useEffect, useState, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
+import ChatWidget from "../components/ChatWidget"; // Make sure to import ChatWidget
 
 export default function Dashboard() {
   const navigate = useNavigate();
@@ -30,6 +31,10 @@ export default function Dashboard() {
   const [rawTrxBalance, setRawTrxBalance] = useState(0);
   const [loadingBalance, setLoadingBalance] = useState(true);
 
+  // State to control chat widget visibility
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [initialChatMessage, setInitialChatMessage] = useState("");
+
   const handleLogout = () => {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
@@ -49,6 +54,15 @@ export default function Dashboard() {
       navigate('/login');
     }
   }, [navigate]);
+
+  useEffect(() => {
+    if (location.state?.openChat) {
+      setIsChatOpen(true);
+      if (location.state.initialChatMessage) {
+        setInitialChatMessage(location.state.initialChatMessage);
+      }
+    }
+  }, [location.state]);
 
   const fetchLiveBalance = useCallback(async () => {
     const token = localStorage.getItem('token');
@@ -113,7 +127,6 @@ export default function Dashboard() {
           <FaUser className="icon" />
           {user && <span className="username">{user.username}</span>}
           <button onClick={handleLogout} className="logout-button">Logout</button>
-          {/* Settings button removed from here */}
         </div>
 
         <div className="balance">
@@ -179,6 +192,11 @@ export default function Dashboard() {
           </div>
         </section>
       </section>
+      <ChatWidget
+        isOpen={isChatOpen}
+        onClose={() => setIsChatOpen(false)}
+        initialMessage={initialChatMessage}
+      />
     </main>
   );
 }
