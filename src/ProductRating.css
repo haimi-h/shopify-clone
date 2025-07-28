@@ -1,6 +1,3 @@
-/* ProductRating.css */
-
-/* General container for the page */
 .rating-wrapper {
   display: flex;
   justify-content: center;
@@ -8,10 +5,8 @@
   min-height: 100vh;
   background-color: #f8f9fa;
   padding: 20px;
-  box-sizing: border-box; /* Added for better box model handling */
 }
 
-/* Card style for the main content area */
 .rating-card {
   background: white;
   padding: 30px;
@@ -20,9 +15,6 @@
   text-align: center;
   max-width: 500px;
   width: 100%;
-  display: flex; /* Use flexbox for internal layout */
-  flex-direction: column; /* Stack items vertically */
-  gap: 15px; /* Space between flex items */
 }
 
 .rating-image {
@@ -30,7 +22,7 @@
   height: 200px;
   object-fit: cover;
   border-radius: 10px;
-  margin: 0 auto 20px auto; /* Center image and add space below */
+  margin-bottom: 20px;
 }
 
 .rating-title {
@@ -72,11 +64,6 @@
   transition: color 0.2s;
 }
 
-/* Make sure stars change color on hover/selection */
-.star.active, .star:hover {
-    color: #ffc107;
-}
-
 .success-message {
   font-size: 18px;
   color: green;
@@ -91,58 +78,22 @@
   font-weight: 500;
 }
 
-/* Base button styles */
-.submit-rating-button,
-.back-button,
-.recharge-button {
+.back-button {
+  background-color: #198754;
   color: white;
   border: none;
   padding: 12px 20px;
   font-size: 14px;
   border-radius: 8px;
   cursor: pointer;
-  transition: background-color 0.3s, transform 0.2s;
-  width: 100%; /* Make buttons full width */
-  box-sizing: border-box; /* Include padding in width */
-  margin-bottom: 10px; /* Space between stacked buttons */
+  transition: background-color 0.3s;
 }
 
-.submit-rating-button {
-  background-color: #007bff; /* Primary blue */
-}
-.submit-rating-button:hover {
-  background-color: #0056b3;
-  transform: translateY(-1px);
-}
-.submit-rating-button:disabled {
-  background-color: #cccccc;
-  cursor: not-allowed;
-}
-
-.back-button {
-  background-color: #6c757d; /* Grey for secondary action */
-}
 .back-button:hover {
-  background-color: #5a6268;
-  transform: translateY(-1px);
+  background-color: #157347;
 }
+/* ProductRating.css (example styling) */
 
-.recharge-button {
-  background-color: #007bff; /* Primary blue for recharge */
-  font-size: 16px; /* Slightly larger text for main action */
-  padding: 14px 25px; /* More prominent */
-  font-weight: 600;
-}
-.recharge-button:hover {
-  background-color: #0056b3;
-  transform: translateY(-1px);
-}
-.recharge-button:active {
-  transform: translateY(0);
-}
-
-
-/* Lucky Order Warning */
 .lucky-order-warning {
   background-color: #fff3cd; /* Light yellow background */
   color: #856404; /* Dark yellow text */
@@ -153,33 +104,23 @@
   text-align: center;
   font-weight: bold;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-  display: flex; /* Use flexbox to center content */
-  flex-direction: column;
-  gap: 10px; /* Space between text and button */
 }
 
 .lucky-order-warning button {
-  /* This button should inherit from .recharge-button for consistency, but if you want it different: */
-  background-color: #007bff; /* Primary blue for consistency */
+  background-color: #007bff; /* Blue button */
   color: white;
   border: none;
-  border-radius: 8px; /* Consistent with other buttons */
-  padding: 12px 20px;
-  margin-top: 5px; /* Adjust spacing */
+  border-radius: 5px;
+  padding: 10px 20px;
+  margin-top: 10px;
   cursor: pointer;
-  font-size: 1em;
+  font-size: 1rem;
   transition: background-color 0.3s ease;
-  font-weight: 600;
-  width: auto; /* Allow button to shrink */
-  align-self: center; /* Center the button within the flex container */
 }
 
 .lucky-order-warning button:hover {
   background-color: #0056b3;
 }
-
-/* --- NEW / MODIFIED STYLES FOR INSUFFICIENT BALANCE --- */
-
 /* This will be the main container for the insufficient balance state */
 .insufficient-balance-container {
   background: white;
