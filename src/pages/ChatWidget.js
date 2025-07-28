@@ -246,15 +246,10 @@ const ChatWidget = ({ isOpen, onClose, initialMessage }) => {
                 <div className="message-bubble">
                   {message.text && <p>{message.text}</p>}
                   {message.imageUrl && (
-                    // <img
-                    //   src={`${SOCKET_URL.replace("/api", "")}${
-                    //     message.imageUrl
-                    //   }`}
-                    //   alt="User upload"
-                    //   className="chat-image"
-                    // />
                     <img
-                      src={message.imageUrl} // Use directly if backend sends absolute URL
+                      src={`${SOCKET_URL.replace("/api", "")}${
+                        message.imageUrl
+                      }`}
                       alt="User upload"
                       className="chat-image"
                     />
