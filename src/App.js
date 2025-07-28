@@ -29,8 +29,8 @@ import UserTable from './pages/UserTable';
 import InjectionPlan from './pages/InjectionPlan';
 
 // Import LanguageProvider and LanguageSelector from the updated file
-import { LanguageProvider } from './components/LanguageProvider'; // <--- ADJUST PATH AS NEEDED
-import LanguageSelector from './components/LanguageProvider'; // <--- LanguageSelector is now the default export from that file
+import { LanguageProvider } from './pages/LanguageProvider'; // <--- ADJUST PATH AS NEEDED
+import LanguageSelector from './pages/LanguageProvider'; // <--- LanguageSelector is now the default export from that file
 
 function App() {
   return (
