@@ -6,6 +6,7 @@ import { LanguageContext } from './LanguageProvider'; // Assuming LanguageProvid
 import LanguageSelector from './LanguageProvider'; // Assuming LanguageSelector is default export from LanguageProvider
 import shopifyLogo from '../shopify-logo.png'; // Adjust path as needed
 import '../UserSettingsPage.css';
+
 // Define your API base URL
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
 
@@ -97,7 +98,8 @@ export default function UserSettingsPage() {
             <h1 className="text-2xl font-bold mb-1">{user.username}</h1>
             <p className="text-gray-600 dark:text-gray-400 text-sm">{user.phone}</p>
             <div className="flex items-center mt-4 bg-blue-100 dark:bg-blue-900 px-4 py-2 rounded-full">
-              <span className="text-xl font-semibold mr-2">{user.wallet_balance ? parseFloat(user.wallet_balance).toFixed(2) : '0.00'}</span>
+              {/* Balance amount made bolder and slightly larger */}
+              <span className="text-2xl font-bold mr-2">{user.wallet_balance ? parseFloat(user.wallet_balance).toFixed(2) : '0.00'}</span> {/* Changed text-xl font-semibold to text-2xl font-bold */}
               <span className="text-lg font-medium">{t('currencySymbol')}</span>
               <button
                 onClick={() => handleSettingClick('/recharge')}
@@ -116,7 +118,7 @@ export default function UserSettingsPage() {
         <ul className="divide-y divide-gray-200 dark:divide-gray-700">
           {/* Withdraw */}
           <li
-            className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+            className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 rounded-lg" /* Added rounded-lg */
             onClick={() => handleSettingClick('/withdraw')}
           >
             <div className="flex items-center">
@@ -126,7 +128,7 @@ export default function UserSettingsPage() {
           </li>
           {/* Change Password */}
           <li
-            className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+            className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 rounded-lg" /* Added rounded-lg */
             onClick={() => handleSettingClick('/settings')}
           >
             <div className="flex items-center">
@@ -136,7 +138,7 @@ export default function UserSettingsPage() {
           </li>
           {/* Change Language */}
           <li
-            className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+            className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 rounded-lg" /* Added rounded-lg */
             onClick={() => handleSettingClick('/selector')}
           >
             <div className="flex items-center">
@@ -146,7 +148,7 @@ export default function UserSettingsPage() {
           </li>
           {/* Choose Avatar (Placeholder) */}
           <li
-            className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+            className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 rounded-lg" /* Added rounded-lg */
             onClick={() => alert(t('chooseAvatarPlaceholder'))}
           >
             <div className="flex items-center">
@@ -156,7 +158,7 @@ export default function UserSettingsPage() {
           </li>
           {/* Customer Service */}
           <li
-            className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+            className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 rounded-lg" /* Added rounded-lg */
             onClick={() => handleSettingClick('/chat')}
           >
             <div className="flex items-center">
@@ -166,7 +168,7 @@ export default function UserSettingsPage() {
           </li>
           {/* About Us */}
           <li
-            className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+            className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 rounded-lg" /* Added rounded-lg */
             onClick={() => alert(t('aboutUsText'))}
           >
             <div className="flex items-center">
