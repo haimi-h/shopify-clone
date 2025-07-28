@@ -4,7 +4,7 @@ import { useState, useContext } from "react";
 import axios from "axios";
 import shopifyLogo from '../shopify-logo.png';
 // ADJUST THIS IMPORT PATH to where LanguageContext is now exported from
-import { LanguageContext } from '../components/LanguageProvider'; // <--- Corrected import
+import { LanguageContext } from '../pages/LanguageProvider'; // <--- Corrected import
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
 
