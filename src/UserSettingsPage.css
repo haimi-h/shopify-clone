@@ -1,11 +1,10 @@
 /* General Body and Page Container Styling */
-body {
-    font-family: 'Inter', sans-serif; /* Using Inter font as per guidelines */
-    margin: 0;
+/* body {
+    font-family: 'Inter', sans-serif; 
     padding: 0;
-    background-color: #f3f4f6; /* Light gray background */
-    color: #1f2937; /* Dark gray text */
-}
+    background-color: #f3f4f6; 
+    color: #1f2937; 
+} */
 
 /* Dark mode adjustments for the body */
 body.dark-mode { /* Apply this class to the <body> tag or a top-level container */
