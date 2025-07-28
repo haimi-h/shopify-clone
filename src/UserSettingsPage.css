@@ -1,5 +1,4 @@
-/* General Body and Container Styling (Consider if these conflict with global styles) */
-/* If you have global body styles in index.css or App.css, you might want to remove these */
+/* General Body and Page Container Styling */
 body {
     font-family: 'Inter', sans-serif; /* Using Inter font as per guidelines */
     margin: 0;
@@ -8,15 +7,76 @@ body {
     color: #1f2937; /* Dark gray text */
 }
 
-/* Dark mode adjustments */
-.dark body {
+/* Dark mode adjustments for the body */
+body.dark-mode { /* Apply this class to the <body> tag or a top-level container */
     background-color: #111827; /* Dark background */
     color: #f9fafb; /* Light text */
 }
 
-/* Main content padding and responsiveness */
-.min-h-screen {
+/* Main Page Container */
+.user-settings-page-container {
     min-height: 100vh;
+    padding: 1rem; /* p-4 */
+    box-sizing: border-box; /* Ensures padding doesn't add to total width */
+}
+
+/* Responsive adjustments for the main container */
+@media (min-width: 640px) { /* sm: */
+    .user-settings-page-container {
+        padding: 1.5rem; /* sm:p-6 */
+    }
+}
+
+@media (min-width: 768px) { /* md: */
+    .user-settings-page-container {
+        padding: 2rem; /* md:p-8 */
+    }
+}
+
+/* Loading and Error Message Styles */
+.loading-message-container,
+.error-message-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    text-align: center;
+}
+
+.loading-message-container p {
+    color: #4b5563; /* text-gray-700 */
+}
+
+body.dark-mode .loading-message-container p {
+    color: #d1d5db; /* dark:text-gray-300 */
+}
+
+.error-message-container {
+    flex-direction: column;
+    color: #ef4444; /* text-red-500 */
+}
+
+.retry-button {
+    margin-top: 1rem; /* mt-4 */
+    padding: 0.5rem 1rem; /* px-4 py-2 */
+    background-color: #3b82f6; /* bg-blue-500 */
+    color: #ffffff;
+    border-radius: 0.375rem; /* rounded-md */
+    transition: background-color 0.2s ease-in-out;
+    border: none;
+    cursor: pointer;
+}
+
+.retry-button:hover {
+    background-color: #2563eb; /* hover:bg-blue-600 */
+}
+
+/* Language Selector Position */
+.language-selector-position {
+    position: absolute;
+    top: 1rem; /* top-4 */
+    right: 1rem; /* right-4 */
+    z-index: 10; /* z-10 */
 }
 
 /* Header Section */
@@ -33,7 +93,7 @@ body {
     text-align: center;
 }
 
-.dark .user-settings-header {
+body.dark-mode .user-settings-header {
     background-color: #1f2937; /* dark:bg-gray-800 */
 }
 
@@ -48,48 +108,52 @@ body {
     font-size: 0.875rem; /* text-sm */
 }
 
-.dark .user-settings-header p {
+body.dark-mode .user-settings-header p {
     color: #9ca3af; /* dark:text-gray-400 */
 }
 
-.user-settings-header .flex.items-center {
+.balance-display {
+    display: flex;
+    align-items: center;
+    margin-top: 1rem; /* mt-4 */
     background-color: #dbeafe; /* bg-blue-100 */
     padding: 0.5rem 1rem; /* px-4 py-2 */
     border-radius: 9999px; /* rounded-full */
-    margin-top: 1rem; /* mt-4 */
 }
 
-.dark .user-settings-header .flex.items-center {
+body.dark-mode .balance-display {
     background-color: #1e3a8a; /* dark:bg-blue-900 */
 }
 
 /* Balance amount styling */
-.user-settings-header .balance-amount {
+.balance-amount {
     font-size: 1.875rem; /* text-3xl, slightly larger for emphasis */
     font-weight: 700; /* font-bold */
     margin-right: 0.5rem; /* mr-2 */
 }
 
-.user-settings-header .currency-symbol {
+.currency-symbol {
     font-size: 1.125rem; /* text-lg */
     font-weight: 500; /* font-medium */
 }
 
-.user-settings-header button {
+.add-funds-button {
+    margin-left: 1rem; /* ml-4 */
+    padding: 0.5rem; /* p-2 */
     background-color: #3b82f6; /* bg-blue-500 */
     color: #ffffff;
     border-radius: 9999px; /* rounded-full */
-    padding: 0.5rem; /* p-2 */
-    margin-left: 1rem; /* ml-4 */
     transition: background-color 0.2s ease-in-out; /* transition-colors duration-200 */
+    border: none;
+    cursor: pointer;
 }
 
-.user-settings-header button:hover {
+.add-funds-button:hover {
     background-color: #2563eb; /* hover:bg-blue-600 */
 }
 
 /* Settings Options List */
-.settings-list {
+.settings-options-list { /* Renamed from .settings-list for clarity */
     background-color: #ffffff;
     border-radius: 1rem; /* rounded-xl */
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
@@ -98,17 +162,17 @@ body {
     padding: 0.5rem; /* Added padding to the container for spacing around items */
 }
 
-.dark .settings-list {
+body.dark-mode .settings-options-list {
     background-color: #1f2937; /* dark:bg-gray-800 */
 }
 
-.settings-list ul {
+.settings-options-list ul {
     list-style: none;
     padding: 0;
     margin: 0;
 }
 
-.settings-list li {
+.settings-options-list li {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -121,45 +185,38 @@ body {
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.07); /* More pronounced shadow for each item */
 }
 
-.dark .settings-list li {
+body.dark-mode .settings-options-list li {
     background-color: #2d3748; /* Darker background for items in dark mode */
     box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
 }
 
-.settings-list li:last-child {
+.settings-options-list li:last-child {
     margin-bottom: 0; /* No margin after the last item */
 }
 
-.settings-list li:hover {
+.settings-options-list li:hover {
     background-color: #e0e7ee; /* Lighter hover for light mode */
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15); /* More pronounced shadow on hover */
     transform: translateY(-2px); /* Slight lift effect on hover */
 }
 
-.dark .settings-list li:hover {
+body.dark-mode .settings-options-list li:hover {
     background-color: #374151; /* dark:hover:bg-gray-700 */
     box-shadow: 0 6px 16px rgba(0, 0, 0, 0.3);
 }
 
-.settings-list li:not(:last-child) {
-    border-bottom: none; /* Removed border-bottom as margin provides separation */
-}
-
-.settings-list li .flex.items-center {
-    display: flex;
-    align-items: center;
-}
-
-.settings-list li .text-lg {
+.settings-options-list li .settings-item-text {
+    font-size: 1.125rem; /* text-lg */
     font-weight: 500; /* font-medium */
 }
 
-.settings-list li span:last-child {
+.settings-options-list li .settings-item-arrow {
     color: #6b7280; /* text-gray-500 */
     font-weight: bold; /* Make the arrow bold */
+    font-size: 1.25rem; /* Slightly larger arrow */
 }
 
-.dark .settings-list li span:last-child {
+body.dark-mode .settings-options-list li .settings-item-arrow {
     color: #9ca3af; /* dark:text-gray-400 */
 }
 
@@ -172,13 +229,13 @@ body {
     padding: 1rem; /* p-4 */
 }
 
-.user-settings-footer-section img {
+.user-settings-footer-section .shopify-logo-img {
     width: 8rem; /* w-32 */
     height: auto;
     margin-bottom: 1rem; /* mb-4 */
 }
 
-.user-settings-footer-section button {
+.user-settings-footer-section .logout-button {
     background-color: #dc2626; /* bg-red-600 */
     color: #ffffff;
     font-weight: 600; /* font-semibold */
@@ -186,30 +243,10 @@ body {
     box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-lg */
     padding: 0.75rem 1.5rem; /* px-6 py-3 */
     transition: background-color 0.2s ease-in-out; /* transition-colors duration-200 */
+    border: none;
+    cursor: pointer;
 }
 
-.user-settings-footer-section button:hover {
+.user-settings-footer-section .logout-button:hover {
     background-color: #b91c1c; /* hover:bg-red-700 */
 }
-
-/* Absolute positioned language selector */
-.absolute.top-4.right-4 {
-    position: absolute;
-    top: 1rem;
-    right: 1rem;
-}
-
-/* Utility classes for text and background colors (already in Tailwind) */
-/* These are just for reference and indicate Tailwind classes used in the component.
-   They should not be redefined here if Tailwind CSS is properly configured and imported in your project. */
-/* .bg-gray-100 { background-color: #f3f4f6; } */
-/* .dark .bg-gray-900 { background-color: #111827; } */
-/* .text-gray-900 { color: #111827; } */
-/* .dark .text-gray-100 { color: #f9fafb; } */
-/* .text-gray-700 { color: #374151; } */
-/* .dark .text-gray-300 { color: #d1d5db; } */
-/* .text-red-500 { color: #ef4444; } */
-/* .bg-blue-500 { background-color: #3b82f6; } */
-/* .text-white { color: #ffffff; } */
-/* .rounded-md { border-radius: 0.375rem; } */
-/* .hover\:bg-blue-600:hover { background-color: #2563eb; } */

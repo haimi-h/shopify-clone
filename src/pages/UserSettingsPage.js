@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useCallback, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-// Removed: import { User, Wallet, Lock, Globe, Image, LifeBuoy, Info, Plus } from 'lucide-react'; // Icons are not used
 import { LanguageContext } from './LanguageProvider'; // Assuming LanguageProvider is in the same directory or adjust path
 import LanguageSelector from './LanguageProvider'; // Assuming LanguageSelector is default export from LanguageProvider
 import shopifyLogo from '../shopify-logo.png'; // Adjust path as needed
-import '../UserSettingsPage.css';
+import '../UserSettingsPage.css'; // Import the custom CSS file
 
 // Define your API base URL
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
@@ -64,19 +63,19 @@ export default function UserSettingsPage() {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
-        <p className="text-gray-700 dark:text-gray-300">{t('loadingText')}</p>
+      <div className="loading-message-container"> {/* Custom class */}
+        <p>{t('loadingText')}</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 text-red-500">
+      <div className="error-message-container"> {/* Custom class */}
         <p>{error}</p>
         <button
           onClick={fetchUserProfile}
-          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+          className="retry-button" /* Custom class */
         >
           {t('retryButton')}
         </button>
@@ -85,28 +84,27 @@ export default function UserSettingsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 p-4 sm:p-6 md:p-8">
+    <div className="user-settings-page-container"> {/* Custom class */}
       {/* Top Right Language Selector */}
-      <div className="absolute top-4 right-4 z-10">
+      <div className="language-selector-position"> {/* Custom class */}
         <LanguageSelector />
       </div>
 
-      {/* Header Section - Using new class name: user-settings-header */}
-      <header className="user-settings-header"> {/* Changed class name from dashboard-header */}
+      {/* Header Section */}
+      <header className="user-settings-header">
         {user && (
           <>
-            <h1 className="text-2xl font-bold mb-1">{user.username}</h1>
-            <p className="text-gray-600 dark:text-gray-400 text-sm">{user.phone}</p>
-            <div className="flex items-center mt-4 bg-blue-100 dark:bg-blue-900 px-4 py-2 rounded-full">
-              {/* Balance amount made bolder and slightly larger */}
-              <span className="text-2xl font-bold mr-2">{user.wallet_balance ? parseFloat(user.wallet_balance).toFixed(2) : '0.00'}</span> {/* Changed text-xl font-semibold to text-2xl font-bold */}
-              <span className="text-lg font-medium">{t('currencySymbol')}</span>
+            <h1 className="user-name-heading">{user.username}</h1> {/* Custom class */}
+            <p className="user-phone-text">{user.phone}</p> {/* Custom class */}
+            <div className="balance-display"> {/* Custom class */}
+              <span className="balance-amount">{user.wallet_balance ? parseFloat(user.wallet_balance).toFixed(2) : '0.00'}</span> {/* Custom class */}
+              <span className="currency-symbol">{t('currencySymbol')}</span> {/* Custom class */}
               <button
                 onClick={() => handleSettingClick('/recharge')}
-                className="ml-4 p-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors duration-200"
+                className="add-funds-button" /* Custom class */
                 title={t('addFundsButton')}
               >
-                + {/* Replaced Plus icon with a simple '+' */}
+                +
               </button>
             </div>
           </>
@@ -114,77 +112,59 @@ export default function UserSettingsPage() {
       </header>
 
       {/* Settings Options List */}
-      <section className="bg-white dark:bg-gray-800 rounded-xl shadow-md mb-6 overflow-hidden">
-        <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+      <section className="settings-options-list"> {/* Custom class */}
+        <ul>
           {/* Withdraw */}
-          <li
-            className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 rounded-lg" /* Added rounded-lg */
-            onClick={() => handleSettingClick('/withdraw')}
-          >
-            <div className="flex items-center">
-              <span className="text-lg font-medium">{t('withdrawOption')}</span>
+          <li onClick={() => handleSettingClick('/withdraw')}>
+            <div className="settings-item-content">
+              <span className="settings-item-text">{t('withdrawOption')}</span>
             </div>
-            <span className="text-gray-500 dark:text-gray-400">&gt;</span>
+            <span className="settings-item-arrow">&gt;</span>
           </li>
           {/* Change Password */}
-          <li
-            className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 rounded-lg" /* Added rounded-lg */
-            onClick={() => handleSettingClick('/settings')}
-          >
-            <div className="flex items-center">
-              <span className="text-lg font-medium">{t('changePasswordOption')}</span>
+          <li onClick={() => handleSettingClick('/settings')}>
+            <div className="settings-item-content">
+              <span className="settings-item-text">{t('changePasswordOption')}</span>
             </div>
-            <span className="text-gray-500 dark:text-gray-400">&gt;</span>
+            <span className="settings-item-arrow">&gt;</span>
           </li>
           {/* Change Language */}
-          <li
-            className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 rounded-lg" /* Added rounded-lg */
-            onClick={() => handleSettingClick('/selector')}
-          >
-            <div className="flex items-center">
-              <span className="text-lg font-medium">{t('changeLanguageOption')}</span>
+          <li onClick={() => handleSettingClick('/selector')}>
+            <div className="settings-item-content">
+              <span className="settings-item-text">{t('changeLanguageOption')}</span>
             </div>
-            <span className="text-gray-500 dark:text-gray-400">&gt;</span>
+            <span className="settings-item-arrow">&gt;</span>
           </li>
           {/* Choose Avatar (Placeholder) */}
-          <li
-            className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 rounded-lg" /* Added rounded-lg */
-            onClick={() => alert(t('chooseAvatarPlaceholder'))}
-          >
-            <div className="flex items-center">
-              <span className="text-lg font-medium">{t('chooseAvatarOption')}</span>
+          <li onClick={() => console.log(t('chooseAvatarPlaceholder'))}>
+            <div className="settings-item-content">
+              <span className="settings-item-text">{t('chooseAvatarOption')}</span>
             </div>
-            <span className="text-gray-500 dark:text-gray-400">&gt;</span>
+            <span className="settings-item-arrow">&gt;</span>
           </li>
           {/* Customer Service */}
-          <li
-            className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 rounded-lg" /* Added rounded-lg */
-            onClick={() => handleSettingClick('/chat')}
-          >
-            <div className="flex items-center">
-              <span className="text-lg font-medium">{t('customerServiceOption')}</span>
+          <li onClick={() => handleSettingClick('/chat')}>
+            <div className="settings-item-content">
+              <span className="settings-item-text">{t('customerServiceOption')}</span>
             </div>
-            <span className="text-gray-500 dark:text-gray-400">&gt;</span>
+            <span className="settings-item-arrow">&gt;</span>
           </li>
           {/* About Us */}
-          <li
-            className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 rounded-lg" /* Added rounded-lg */
-            onClick={() => alert(t('aboutUsText'))}
-          >
-            <div className="flex items-center">
-              <span className="text-lg font-medium">{t('aboutUsHeading')}</span>
+          <li onClick={() => console.log(t('aboutUsText'))}>
+            <div className="settings-item-content">
+              <span className="settings-item-text">{t('aboutUsHeading')}</span>
             </div>
-            <span className="text-gray-500 dark:text-gray-400">&gt;</span>
+            <span className="settings-item-arrow">&gt;</span>
           </li>
         </ul>
       </section>
 
-      {/* Shopify Logo and Logout - Using new class name: user-settings-footer-section */}
-      <div className="user-settings-footer-section"> {/* Changed class name from logo-logout-section */}
-        <img src={shopifyLogo} alt="Shopify Logo" className="w-32 h-auto mb-4" />
+      {/* Shopify Logo and Logout */}
+      <div className="user-settings-footer-section">
+        <img src={shopifyLogo} alt="Shopify Logo" className="shopify-logo-img" />
         <button
           onClick={handleLogout}
-          className="px-6 py-3 bg-red-600 text-white font-semibold rounded-full shadow-lg hover:bg-red-700 transition-colors duration-200"
+          className="logout-button"
         >
           {t('logoutButton')}
         </button>
