@@ -5,6 +5,7 @@ import axios from 'axios';
 import { LanguageContext } from './LanguageProvider'; // Assuming LanguageProvider is in the same directory or adjust path
 import LanguageSelector from './LanguageProvider'; // Assuming LanguageSelector is default export from LanguageProvider
 import shopifyLogo from '../shopify-logo.png'; // Adjust path as needed
+import '../UserSettingsPage.css'
 
 // Define your API base URL
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
