@@ -35,7 +35,6 @@ const ChatWidget = ({ isOpen, onClose, initialMessage }) => {
     }
   }, [initialMessage]);
 
-
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -213,7 +212,6 @@ const ChatWidget = ({ isOpen, onClose, initialMessage }) => {
     }
   };
 
-
   return (
     <>
       <button
@@ -248,10 +246,15 @@ const ChatWidget = ({ isOpen, onClose, initialMessage }) => {
                 <div className="message-bubble">
                   {message.text && <p>{message.text}</p>}
                   {message.imageUrl && (
+                    // <img
+                    //   src={`${SOCKET_URL.replace("/api", "")}${
+                    //     message.imageUrl
+                    //   }`}
+                    //   alt="User upload"
+                    //   className="chat-image"
+                    // />
                     <img
-                      src={`${SOCKET_URL.replace("/api", "")}${
-                        message.imageUrl
-                      }`}
+                      src={message.imageUrl} // Use directly if backend sends absolute URL
                       alt="User upload"
                       className="chat-image"
                     />
