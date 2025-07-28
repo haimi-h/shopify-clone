@@ -108,10 +108,12 @@ function ProductRatingPage() {
   if (insufficientBalanceForTasks) {
     return (
       <div className="rating-wrapper">
-        <h2 className="error-message">{error}</h2>
-        <p>Your current balance is ${userBalance.toFixed(2)}. Please recharge to continue with tasks.</p>
-        <button className="recharge-button" onClick={() => navigate("/recharge", { state: { requiredAmount: 2.00 - userBalance } })}>Recharge Now</button> {/* Suggest recharge for the minimum amount */}
-        <button onClick={() => navigate("/dashboard")}>Back to Dashboard</button>
+        <div className="insufficient-balance-container"> {/* <-- Add this new div */}
+          <h2 className="error-message">{error}</h2>
+          <p>Your current balance is ${userBalance.toFixed(2)}. Please recharge to continue with tasks.</p>
+          <button className="recharge-button" onClick={() => navigate("/recharge", { state: { requiredAmount: 2.00 - userBalance } })}>Recharge Now</button>
+          <button className="back-button" onClick={() => navigate("/dashboard")}>Back to Dashboard</button>
+        </div> {/* <-- Close the new div */}
       </div>
     );
   }
