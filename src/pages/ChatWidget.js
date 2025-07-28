@@ -61,6 +61,9 @@ const ChatWidget = ({ isOpen, onClose, initialMessage }) => {
         config
       );
 
+      // DEBUG: Check what the backend is sending
+      console.log('Backend response for image upload:', response.data);
+
       const newMessage = {
         id: response.data.messageId,
         sender: "user",
@@ -71,6 +74,7 @@ const ChatWidget = ({ isOpen, onClose, initialMessage }) => {
 
       setMessages((prev) => [...prev, newMessage]);
     } catch (err) {
+      console.error("Failed to send image:", err);
       setChatError("Failed to send image.");
     }
   };
@@ -90,6 +94,7 @@ const ChatWidget = ({ isOpen, onClose, initialMessage }) => {
                 id: message.id,
                 sender: message.sender_role,
                 text: message.message_text,
+                imageUrl: message.image_url || message.imageUrl,
                 timestamp: message.timestamp,
               }
             : msg
@@ -107,6 +112,7 @@ const ChatWidget = ({ isOpen, onClose, initialMessage }) => {
             id: message.id,
             sender: message.sender_role,
             text: message.message_text,
+            imageUrl: message.image_url || message.imageUrl,
             timestamp: message.timestamp,
           },
         ];
@@ -153,13 +159,15 @@ const ChatWidget = ({ isOpen, onClose, initialMessage }) => {
         `${API_BASE_URL}/chat/messages/${currentUserId}`,
         config
       );
-
+      
+      // FIXED: Ensure imageUrl is mapped from the history response
       setMessages(
         response.data.map((msg) => ({
           id: msg.id,
           sender: msg.sender_role,
           text: msg.message_text,
           timestamp: msg.timestamp,
+          imageUrl: msg.image_url || msg.imageUrl,
         }))
       );
     } catch (err) {
