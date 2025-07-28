@@ -1,11 +1,10 @@
 import React, { useState, useEffect, useCallback, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-// Removed: import { User, Wallet, Lock, Globe, Image, LifeBuoy, Info, Plus } from 'lucide-react';
+// Removed: import { User, Wallet, Lock, Globe, Image, LifeBuoy, Info, Plus } from 'lucide-react'; // Icons are not used
 import { LanguageContext } from './LanguageProvider'; // Assuming LanguageProvider is in the same directory or adjust path
 import LanguageSelector from './LanguageProvider'; // Assuming LanguageSelector is default export from LanguageProvider
 import shopifyLogo from '../shopify-logo.png'; // Adjust path as needed
-import '../UserSettingsPage.css'
 
 // Define your API base URL
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
@@ -91,9 +90,8 @@ export default function UserSettingsPage() {
         <LanguageSelector />
       </div>
 
-      {/* Header Section */}
-      <header className="flex flex-col items-center justify-center bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 mb-6">
-        {/* Removed User icon */}
+      {/* Header Section - Using new class name: user-settings-header */}
+      <header className="user-settings-header"> {/* Changed class name from dashboard-header */}
         {user && (
           <>
             <h1 className="text-2xl font-bold mb-1">{user.username}</h1>
@@ -106,8 +104,7 @@ export default function UserSettingsPage() {
                 className="ml-4 p-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors duration-200"
                 title={t('addFundsButton')}
               >
-                {/* Removed Plus icon */}
-                +
+                + {/* Replaced Plus icon with a simple '+' */}
               </button>
             </div>
           </>
@@ -123,7 +120,6 @@ export default function UserSettingsPage() {
             onClick={() => handleSettingClick('/withdraw')}
           >
             <div className="flex items-center">
-              {/* Removed Wallet icon */}
               <span className="text-lg font-medium">{t('withdrawOption')}</span>
             </div>
             <span className="text-gray-500 dark:text-gray-400">&gt;</span>
@@ -134,7 +130,6 @@ export default function UserSettingsPage() {
             onClick={() => handleSettingClick('/settings')}
           >
             <div className="flex items-center">
-              {/* Removed Lock icon */}
               <span className="text-lg font-medium">{t('changePasswordOption')}</span>
             </div>
             <span className="text-gray-500 dark:text-gray-400">&gt;</span>
@@ -145,7 +140,6 @@ export default function UserSettingsPage() {
             onClick={() => handleSettingClick('/selector')}
           >
             <div className="flex items-center">
-              {/* Removed Globe icon */}
               <span className="text-lg font-medium">{t('changeLanguageOption')}</span>
             </div>
             <span className="text-gray-500 dark:text-gray-400">&gt;</span>
@@ -156,7 +150,6 @@ export default function UserSettingsPage() {
             onClick={() => alert(t('chooseAvatarPlaceholder'))}
           >
             <div className="flex items-center">
-              {/* Removed Image icon */}
               <span className="text-lg font-medium">{t('chooseAvatarOption')}</span>
             </div>
             <span className="text-gray-500 dark:text-gray-400">&gt;</span>
@@ -167,7 +160,6 @@ export default function UserSettingsPage() {
             onClick={() => handleSettingClick('/chat')}
           >
             <div className="flex items-center">
-              {/* Removed LifeBuoy icon */}
               <span className="text-lg font-medium">{t('customerServiceOption')}</span>
             </div>
             <span className="text-gray-500 dark:text-gray-400">&gt;</span>
@@ -178,7 +170,6 @@ export default function UserSettingsPage() {
             onClick={() => alert(t('aboutUsText'))}
           >
             <div className="flex items-center">
-              {/* Removed Info icon */}
               <span className="text-lg font-medium">{t('aboutUsHeading')}</span>
             </div>
             <span className="text-gray-500 dark:text-gray-400">&gt;</span>
@@ -186,8 +177,8 @@ export default function UserSettingsPage() {
         </ul>
       </section>
 
-      {/* Shopify Logo and Logout */}
-      <div className="flex flex-col items-center justify-center p-4">
+      {/* Shopify Logo and Logout - Using new class name: user-settings-footer-section */}
+      <div className="user-settings-footer-section"> {/* Changed class name from logo-logout-section */}
         <img src={shopifyLogo} alt="Shopify Logo" className="w-32 h-auto mb-4" />
         <button
           onClick={handleLogout}
