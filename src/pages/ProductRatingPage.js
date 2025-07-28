@@ -17,11 +17,13 @@ function ProductRatingPage() {
   const [userBalance, setUserBalance] = useState(0);
   const [isLuckyOrder, setIsLuckyOrder] = useState(false);
   const [luckyOrderCapital, setLuckyOrderCapital] = useState(0);
+  const [insufficientBalanceForTasks, setInsufficientBalanceForTasks] = useState(false); // New state
 
   const fetchTask = async () => {
     setLoading(true);
     setError("");
     setMessage("");
+    setInsufficientBalanceForTasks(false); // Reset this state on new fetch
     try {
       const token = localStorage.getItem("token");
       if (!token) { navigate("/login"); return; }
@@ -29,6 +31,15 @@ function ProductRatingPage() {
       const res = await axios.get(`${API_BASE_URL}/tasks/task`, {
         headers: { Authorization: `Bearer ${token}` },
       });
+
+      // Check for the specific error code from the backend
+      if (res.data.errorCode === 'INSUFFICIENT_BALANCE_FOR_TASKS') {
+        setError(res.data.message);
+        setInsufficientBalanceForTasks(true);
+        setProduct(null); // Ensure no product is displayed
+        setUserBalance(res.data.balance || 0); // Update balance even if task is null
+        return; 
+      }
 
       setProduct(res.data.task);
       setRating(0);
@@ -92,6 +103,20 @@ function ProductRatingPage() {
   }, []);
 
   if (loading) return <div className="rating-wrapper"><h2>Loading task...</h2></div>;
+  
+  // Display specific message for insufficient balance
+  if (insufficientBalanceForTasks) {
+    return (
+      <div className="rating-wrapper">
+        <h2 className="error-message">{error}</h2>
+        <p>Your current balance is ${userBalance.toFixed(2)}. Please recharge to continue with tasks.</p>
+        <button onClick={() => navigate("/recharge", { state: { requiredAmount: 2.00 - userBalance } })}>Recharge Now</button> {/* Suggest recharge for the minimum amount */}
+        <button onClick={() => navigate("/dashboard")}>Back to Dashboard</button>
+      </div>
+    );
+  }
+
+  // Existing error display for other errors
   if (error) return <div className="rating-wrapper"><h2>Error: {error}</h2><button onClick={fetchTask}>Try Again</button><button onClick={() => navigate("/dashboard")}>Back to Dashboard</button></div>;
   if (!product) return <div className="rating-wrapper"><h2>No new tasks available.</h2><button onClick={fetchTask}>Refresh Tasks</button><button onClick={() => navigate("/dashboard")}>Back to Dashboard</button></div>;
 
