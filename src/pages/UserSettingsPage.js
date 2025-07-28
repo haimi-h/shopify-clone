@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-// import { User, Wallet, Lock, Globe, Image, LifeBuoy, Info, Plus } from 'lucide-react'; // Importing icons
+// Removed: import { User, Wallet, Lock, Globe, Image, LifeBuoy, Info, Plus } from 'lucide-react';
 import { LanguageContext } from './LanguageProvider'; // Assuming LanguageProvider is in the same directory or adjust path
 import LanguageSelector from './LanguageProvider'; // Assuming LanguageSelector is default export from LanguageProvider
 import shopifyLogo from '../shopify-logo.png'; // Adjust path as needed
@@ -92,7 +92,7 @@ export default function UserSettingsPage() {
 
       {/* Header Section */}
       <header className="flex flex-col items-center justify-center bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 mb-6">
-        <User className="w-16 h-16 text-blue-500 mb-4" />
+        {/* Removed User icon */}
         {user && (
           <>
             <h1 className="text-2xl font-bold mb-1">{user.username}</h1>
@@ -105,7 +105,8 @@ export default function UserSettingsPage() {
                 className="ml-4 p-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors duration-200"
                 title={t('addFundsButton')}
               >
-                <Plus className="w-5 h-5" />
+                {/* Removed Plus icon */}
+                +
               </button>
             </div>
           </>
@@ -121,7 +122,7 @@ export default function UserSettingsPage() {
             onClick={() => handleSettingClick('/withdraw')}
           >
             <div className="flex items-center">
-              <Wallet className="w-6 h-6 text-green-500 mr-4" />
+              {/* Removed Wallet icon */}
               <span className="text-lg font-medium">{t('withdrawOption')}</span>
             </div>
             <span className="text-gray-500 dark:text-gray-400">&gt;</span>
@@ -129,10 +130,10 @@ export default function UserSettingsPage() {
           {/* Change Password */}
           <li
             className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
-            onClick={() => handleSettingClick('/settings')} // Assuming /settings leads to a page for password change
+            onClick={() => handleSettingClick('/settings')}
           >
             <div className="flex items-center">
-              <Lock className="w-6 h-6 text-purple-500 mr-4" />
+              {/* Removed Lock icon */}
               <span className="text-lg font-medium">{t('changePasswordOption')}</span>
             </div>
             <span className="text-gray-500 dark:text-gray-400">&gt;</span>
@@ -140,10 +141,10 @@ export default function UserSettingsPage() {
           {/* Change Language */}
           <li
             className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
-            onClick={() => handleSettingClick('/selector')} // Assuming /selector opens the language modal
+            onClick={() => handleSettingClick('/selector')}
           >
             <div className="flex items-center">
-              <Globe className="w-6 h-6 text-blue-500 mr-4" />
+              {/* Removed Globe icon */}
               <span className="text-lg font-medium">{t('changeLanguageOption')}</span>
             </div>
             <span className="text-gray-500 dark:text-gray-400">&gt;</span>
@@ -151,10 +152,10 @@ export default function UserSettingsPage() {
           {/* Choose Avatar (Placeholder) */}
           <li
             className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
-            onClick={() => alert(t('chooseAvatarPlaceholder'))} // Simple alert for now
+            onClick={() => alert(t('chooseAvatarPlaceholder'))}
           >
             <div className="flex items-center">
-              <Image className="w-6 h-6 text-yellow-500 mr-4" />
+              {/* Removed Image icon */}
               <span className="text-lg font-medium">{t('chooseAvatarOption')}</span>
             </div>
             <span className="text-gray-500 dark:text-gray-400">&gt;</span>
@@ -162,10 +163,10 @@ export default function UserSettingsPage() {
           {/* Customer Service */}
           <li
             className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
-            onClick={() => handleSettingClick('/chat')} // Assuming /chat navigates to ChatWidget or similar
+            onClick={() => handleSettingClick('/chat')}
           >
             <div className="flex items-center">
-              <LifeBuoy className="w-6 h-6 text-red-500 mr-4" />
+              {/* Removed LifeBuoy icon */}
               <span className="text-lg font-medium">{t('customerServiceOption')}</span>
             </div>
             <span className="text-gray-500 dark:text-gray-400">&gt;</span>
@@ -173,10 +174,10 @@ export default function UserSettingsPage() {
           {/* About Us */}
           <li
             className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
-            onClick={() => alert(t('aboutUsText'))} // Simple alert for now, or navigate to /about-us
+            onClick={() => alert(t('aboutUsText'))}
           >
             <div className="flex items-center">
-              <Info className="w-6 h-6 text-gray-500 mr-4" />
+              {/* Removed Info icon */}
               <span className="text-lg font-medium">{t('aboutUsHeading')}</span>
             </div>
             <span className="text-gray-500 dark:text-gray-400">&gt;</span>
