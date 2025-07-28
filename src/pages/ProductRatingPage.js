@@ -17,13 +17,13 @@ function ProductRatingPage() {
   const [userBalance, setUserBalance] = useState(0);
   const [isLuckyOrder, setIsLuckyOrder] = useState(false);
   const [luckyOrderCapital, setLuckyOrderCapital] = useState(0);
-  const [insufficientBalanceForTasks, setInsufficientBalanceForTasks] = useState(false); // New state
+  const [insufficientBalanceForTasks, setInsufficientBalanceForTasks] = useState(false);
 
   const fetchTask = async () => {
     setLoading(true);
     setError("");
     setMessage("");
-    setInsufficientBalanceForTasks(false); // Reset this state on new fetch
+    setInsufficientBalanceForTasks(false);
     try {
       const token = localStorage.getItem("token");
       if (!token) { navigate("/login"); return; }
@@ -32,12 +32,11 @@ function ProductRatingPage() {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      // Check for the specific error code from the backend
       if (res.data.errorCode === 'INSUFFICIENT_BALANCE_FOR_TASKS') {
         setError(res.data.message);
         setInsufficientBalanceForTasks(true);
-        setProduct(null); // Ensure no product is displayed
-        setUserBalance(res.data.balance || 0); // Update balance even if task is null
+        setProduct(null);
+        setUserBalance(res.data.balance || 0);
         return; 
       }
 
@@ -83,7 +82,6 @@ function ProductRatingPage() {
 
     try {
       const token = localStorage.getItem("token");
-      // Simplified body, as server now determines profit/capital
       const res = await axios.post(
         `${API_BASE_URL}/tasks/submit-rating`,
         { productId: product.id, rating },
@@ -91,7 +89,7 @@ function ProductRatingPage() {
       );
       setMessage(res.data.message);
       if (res.data.isCompleted) {
-        setTimeout(fetchTask, 1500); // Fetch a new task after success
+        setTimeout(fetchTask, 1500);
       }
     } catch (err) {
       setError(err.response?.data?.message || "Failed to submit rating.");
@@ -104,21 +102,19 @@ function ProductRatingPage() {
 
   if (loading) return <div className="rating-wrapper"><h2>Loading task...</h2></div>;
   
-  // Display specific message for insufficient balance
   if (insufficientBalanceForTasks) {
     return (
       <div className="rating-wrapper">
-        <div className="insufficient-balance-container"> {/* <-- Add this new div */}
+        <div className="insufficient-balance-container">
           <h2 className="error-message">{error}</h2>
           <p>Your current balance is ${userBalance.toFixed(2)}. Please recharge to continue with tasks.</p>
           <button className="recharge-button" onClick={() => navigate("/recharge", { state: { requiredAmount: 2.00 - userBalance } })}>Recharge Now</button>
           <button className="back-button" onClick={() => navigate("/dashboard")}>Back to Dashboard</button>
-        </div> {/* <-- Close the new div */}
+        </div>
       </div>
     );
   }
 
-  // Existing error display for other errors
   if (error) return <div className="rating-wrapper"><h2>Error: {error}</h2><button onClick={fetchTask}>Try Again</button><button onClick={() => navigate("/dashboard")}>Back to Dashboard</button></div>;
   if (!product) return <div className="rating-wrapper"><h2>No new tasks available.</h2><button onClick={fetchTask}>Refresh Tasks</button><button onClick={() => navigate("/dashboard")}>Back to Dashboard</button></div>;
 
@@ -133,7 +129,7 @@ function ProductRatingPage() {
 
         <div className="rating-financials">
           <p><strong>💰 Your Balance:</strong> ${userBalance.toFixed(2)} </p>
-          <p><strong>📈 Profit if you rate:</strong> ${product.profit?.toFixed(2)}</p>
+          {/* Profit display has been removed as requested */}
         </div>
 
         {isLuckyOrder && (
