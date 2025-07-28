@@ -1,118 +1,225 @@
-import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import React, { useState, useEffect, useCallback, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
-import '../UserSettingsPage.css'; // Use the same CSS file as before, or create a new one for simpler styling
+import axios from 'axios';
+import { User, Wallet, Lock, Globe, Image, LifeBuoy, Info, Plus } from 'lucide-react'; // Importing icons
+import { LanguageContext } from './LanguageProvider'; // Assuming LanguageProvider is in the same directory or adjust path
+import LanguageSelector from './LanguageProvider'; // Assuming LanguageSelector is default export from LanguageProvider
+import shopifyLogo from '../shopify-logo.png'; // Adjust path as needed
 
+// Define your API base URL
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
 
-const UserSettingsPage = () => {
+export default function UserSettingsPage() {
   const navigate = useNavigate();
+  const { t } = useContext(LanguageContext); // Consume the translation function from context
+
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Fetch user data on component mount
+  // Function to fetch user profile data
+  const fetchUserProfile = useCallback(async () => {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      navigate('/login');
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axios.get(`${API_BASE_URL}/users/profile`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setUser(response.data.user);
+    } catch (err) {
+      console.error("Failed to fetch user profile:", err);
+      setError(t('failedToLoadProfile')); // Translated error message
+      // If unauthorized, clear token and redirect to login
+      if (err.response && (err.response.status === 401 || err.response.status === 403)) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        navigate('/login');
+      }
+    } finally {
+      setLoading(false);
+    }
+  }, [navigate, t]);
+
   useEffect(() => {
-    const fetchUserData = async () => {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        navigate('/login'); // Redirect to login if no token
-        return;
-      }
+    fetchUserProfile();
+  }, [fetchUserProfile]);
 
-      try {
-        const response = await axios.get(`${API_BASE_URL}/users/profile`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        // Assuming response.data has a 'user' object with details including walletAddress
-        setUser(response.data.user);
-      } catch (err) {
-        console.error('Error fetching user data for settings:', err);
-        setError(err.response?.data?.message || 'Failed to load user settings. Please try again.');
-        if (err.response?.status === 401 || err.response?.status === 403) {
-          // If token is invalid or expired, clear storage and redirect
-          localStorage.removeItem('user');
-          localStorage.removeItem('token');
-          navigate('/login');
-        }
-      } finally {
-        setLoading(false);
-      }
-    };
+  const handleLogout = () => {
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
+    navigate("/login");
+  };
 
-    fetchUserData();
-  }, [navigate]); // navigate is a stable function, so no issues here.
+  // Function to handle navigation to different setting sections
+  const handleSettingClick = (path) => {
+    navigate(path);
+  };
 
   if (loading) {
-    return <div className="settings-container">Loading your settings...</div>;
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900">
+        <p className="text-gray-700 dark:text-gray-300">{t('loadingText')}</p>
+      </div>
+    );
   }
 
   if (error) {
-    return <div className="settings-container error-message">{error}</div>;
-  }
-
-  if (!user) {
-    return <div className="settings-container">User data not available. Please log in.</div>;
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen bg-gray-100 dark:bg-gray-900 text-red-500">
+        <p>{error}</p>
+        <button
+          onClick={fetchUserProfile}
+          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+        >
+          {t('retryButton')}
+        </button>
+      </div>
+    );
   }
 
   return (
-    <div className="settings-container">
-      <button onClick={() => navigate(-1)} className="back-btn">
-        &larr; Back to Dashboard
-      </button>
-      <h2>Your Profile Settings</h2>
-
-      <div className="setting-item">
-        <label>Username:</label>
-        <p>{user.username}</p>
+    <div className="min-h-screen bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-gray-100 p-4 sm:p-6 md:p-8">
+      {/* Top Right Language Selector */}
+      <div className="absolute top-4 right-4 z-10">
+        <LanguageSelector />
       </div>
 
-      <div className="setting-item">
-        <label>Phone Number:</label>
-        <p>{user.phone}</p>
+      {/* Header Section */}
+      <header className="flex flex-col items-center justify-center bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 mb-6">
+        <User className="w-16 h-16 text-blue-500 mb-4" />
+        {user && (
+          <>
+            <h1 className="text-2xl font-bold mb-1">{user.username}</h1>
+            <p className="text-gray-600 dark:text-gray-400 text-sm">{user.phone}</p>
+            <div className="flex items-center mt-4 bg-blue-100 dark:bg-blue-900 px-4 py-2 rounded-full">
+              <span className="text-xl font-semibold mr-2">{user.wallet_balance ? parseFloat(user.wallet_balance).toFixed(2) : '0.00'}</span>
+              <span className="text-lg font-medium">{t('currencySymbol')}</span>
+              <button
+                onClick={() => handleSettingClick('/recharge')}
+                className="ml-4 p-2 bg-blue-500 text-white rounded-full hover:bg-blue-600 transition-colors duration-200"
+                title={t('addFundsButton')}
+              >
+                <Plus className="w-5 h-5" />
+              </button>
+            </div>
+          </>
+        )}
+      </header>
+
+      {/* Settings Options List */}
+      <section className="bg-white dark:bg-gray-800 rounded-xl shadow-md mb-6 overflow-hidden">
+        <ul className="divide-y divide-gray-200 dark:divide-gray-700">
+          {/* Withdraw */}
+          <li
+            className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+            onClick={() => handleSettingClick('/withdraw')}
+          >
+            <div className="flex items-center">
+              <Wallet className="w-6 h-6 text-green-500 mr-4" />
+              <span className="text-lg font-medium">{t('withdrawOption')}</span>
+            </div>
+            <span className="text-gray-500 dark:text-gray-400">&gt;</span>
+          </li>
+          {/* Change Password */}
+          <li
+            className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+            onClick={() => handleSettingClick('/settings')} // Assuming /settings leads to a page for password change
+          >
+            <div className="flex items-center">
+              <Lock className="w-6 h-6 text-purple-500 mr-4" />
+              <span className="text-lg font-medium">{t('changePasswordOption')}</span>
+            </div>
+            <span className="text-gray-500 dark:text-gray-400">&gt;</span>
+          </li>
+          {/* Change Language */}
+          <li
+            className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+            onClick={() => handleSettingClick('/selector')} // Assuming /selector opens the language modal
+          >
+            <div className="flex items-center">
+              <Globe className="w-6 h-6 text-blue-500 mr-4" />
+              <span className="text-lg font-medium">{t('changeLanguageOption')}</span>
+            </div>
+            <span className="text-gray-500 dark:text-gray-400">&gt;</span>
+          </li>
+          {/* Choose Avatar (Placeholder) */}
+          <li
+            className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+            onClick={() => alert(t('chooseAvatarPlaceholder'))} // Simple alert for now
+          >
+            <div className="flex items-center">
+              <Image className="w-6 h-6 text-yellow-500 mr-4" />
+              <span className="text-lg font-medium">{t('chooseAvatarOption')}</span>
+            </div>
+            <span className="text-gray-500 dark:text-gray-400">&gt;</span>
+          </li>
+          {/* Customer Service */}
+          <li
+            className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+            onClick={() => handleSettingClick('/chat')} // Assuming /chat navigates to ChatWidget or similar
+          >
+            <div className="flex items-center">
+              <LifeBuoy className="w-6 h-6 text-red-500 mr-4" />
+              <span className="text-lg font-medium">{t('customerServiceOption')}</span>
+            </div>
+            <span className="text-gray-500 dark:text-gray-400">&gt;</span>
+          </li>
+          {/* About Us */}
+          <li
+            className="flex items-center justify-between p-4 cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
+            onClick={() => alert(t('aboutUsText'))} // Simple alert for now, or navigate to /about-us
+          >
+            <div className="flex items-center">
+              <Info className="w-6 h-6 text-gray-500 mr-4" />
+              <span className="text-lg font-medium">{t('aboutUsHeading')}</span>
+            </div>
+            <span className="text-gray-500 dark:text-gray-400">&gt;</span>
+          </li>
+        </ul>
+      </section>
+
+      {/* Shopify Logo and Logout */}
+      <div className="flex flex-col items-center justify-center p-4">
+        <img src={shopifyLogo} alt="Shopify Logo" className="w-32 h-auto mb-4" />
+        <button
+          onClick={handleLogout}
+          className="px-6 py-3 bg-red-600 text-white font-semibold rounded-full shadow-lg hover:bg-red-700 transition-colors duration-200"
+        >
+          {t('logoutButton')}
+        </button>
       </div>
 
-      <div className="setting-item wallet-info">
-        <label>Your Wallet Address:</label>
-        <p className="wallet-address-display">
-          {user.walletAddress || 'No wallet address assigned.'}
-        </p>
-        <small className="wallet-note">
-          This is your personal wallet address for transactions.
-          Changes to this or other account details must be requested from administration.
-        </small>
-      </div>
-
-      <div className="setting-item">
-        <label>Login Password:</label>
-        <p>******</p> {/* Always display obfuscated */}
-        <small className="password-note">
-          To change your login password, please contact support or an administrator.
-        </small>
-      </div>
-
-      <div className="setting-item">
-        <label>Withdrawal Password:</label>
-        <p>******</p> {/* Always display obfuscated */}
-        <small className="password-note">
-          To change your withdrawal password, please contact support or an administrator.
-        </small>
-      </div>
-
-      {/* You can add more view-only information here if needed, e.g., VIP level, invitation code */}
-       <div className="setting-item">
-        <label>Your Invitation Code:</label>
-        <p>{user.invitation_code || 'N/A'}</p>
-      </div>
-      <div className="setting-item">
-        <label>VIP Level:</label>
-        <p>{user.vip_level || 'Bronze'}</p>
-      </div>
-
+      {/* Bottom Navigation (Placeholder as per sketch) */}
+      {/* This would typically be a separate component rendered outside or within Layout */}
+      <footer className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 shadow-lg rounded-t-xl p-4 flex justify-around items-center sm:hidden">
+        {/* These would be actual navigation links/buttons */}
+        <div className="flex flex-col items-center text-gray-600 dark:text-gray-400">
+          <Home className="w-6 h-6" />
+          <span className="text-xs">{t('home')}</span>
+        </div>
+        <div className="flex flex-col items-center text-gray-600 dark:text-gray-400">
+          <List className="w-6 h-6" />
+          <span className="text-xs">{t('orders')}</span>
+        </div>
+        <div className="flex flex-col items-center text-gray-600 dark:text-gray-400">
+          <Clipboard className="w-6 h-6" />
+          <span className="text-xs">{t('task')}</span>
+        </div>
+        <div className="flex flex-col items-center text-gray-600 dark:text-gray-400">
+          <User className="w-6 h-6" />
+          <span className="text-xs">{t('profile')}</span>
+        </div>
+        <div className="flex flex-col items-center text-blue-500"> {/* Highlight current page */}
+          <Settings className="w-6 h-6" />
+          <span className="text-xs">{t('settings')}</span>
+        </div>
+      </footer>
     </div>
   );
-};
-
-export default UserSettingsPage;
+}

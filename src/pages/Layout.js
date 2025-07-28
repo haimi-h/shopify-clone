@@ -29,8 +29,8 @@ function Layout() {
                     <FaUserCircle title="Profile" onClick={() => navigate('/account')} />
                     {/* 3. Remove the headset icon since the widget has its own button */}
                     {/* <FaCog title="Settings" /> */}
-                    {/* <FaCog title="Settings" onClick={() => navigate('/settings')} /> */}
-                    <FaCog title="Settings" onClick={() => navigate('/withdraw')} />
+                    <FaCog title="Settings" onClick={() => navigate('/settings')} />
+                    {/* <FaCog title="Settings" onClick={() => navigate('/withdraw')} /> */}
                 </nav>
             </aside>
 
