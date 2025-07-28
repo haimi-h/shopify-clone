@@ -2,14 +2,16 @@ import "../Dashboard.css";
 import {
   FaUser,
 } from "react-icons/fa";
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useContext } from "react"; // Import useContext
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import ChatWidget from "../pages/ChatWidget"; // Make sure to import ChatWidget
+import { LanguageContext } from './LanguageGlobe'; // Import LanguageContext
 
 export default function Dashboard() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useContext(LanguageContext); // Consume the translation function from context
 
   const [user, setUser] = useState(null);
   const [products, setProducts] = useState([]);
@@ -17,10 +19,11 @@ export default function Dashboard() {
   const [productsError, setProductsError] = useState(null);
   const [idx, setIdx] = useState(0);
   const phones = ["+4479616687", "+1234567890", "+1987654321", "+441234567890"];
+  // Use translation keys for FAQ questions and answers
   const faqs = [
-    { question: "How do I start earning?", answer: "You can start earning by clicking the “START MAKING MONEY” button and completing tasks or sharing your affiliate links." },
-    { question: "How do I track my orders?", answer: "Orders can be tracked via the “Orders” section in the sidebar. You'll see real-time updates there." },
-    { question: "Where can I view my payments?", answer: "All payment history and upcoming payouts are available under the “Profile” or “Payments” tab in your account dashboard." },
+    { question: t('faq1Question'), answer: t('faq1Answer') },
+    { question: t('faq2Question'), answer: t('faq2Answer') },
+    { question: t('faq3Question'), answer: t('faq3Answer') },
   ];
   const [openFaq, setOpenFaq] = useState(null);
   const toggleFaq = (index) => setOpenFaq((prev) => (prev === index ? null : index));
@@ -74,9 +77,9 @@ export default function Dashboard() {
         headers: { Authorization: `Bearer ${token}` }
       });
       const pricePromise = axios.get('https://api.coingecko.com/api/v3/simple/price?ids=tron&vs_currencies=usd');
-      
+
       const [userResponse, priceResponse] = await Promise.all([userProfilePromise, pricePromise]);
-      
+
       const userData = userResponse.data.user;
       const trxPrice = priceResponse.data.tron.usd;
 
@@ -107,13 +110,13 @@ export default function Dashboard() {
         setProducts(response.data);
       } catch (err) {
         console.error("Error fetching products:", err);
-        setProductsError("Failed to load products.");
+        setProductsError(t('errorLoadingProducts')); // Translated
       } finally {
         setLoadingProducts(false);
       }
     };
     fetchProducts();
-  }, [API_BASE_URL]);
+  }, [API_BASE_URL, t]); // Add t to dependency array
 
   useEffect(() => {
     const t = setInterval(() => setIdx((prev) => (prev + 1) % phones.length), 1000);
@@ -126,55 +129,55 @@ export default function Dashboard() {
         <div className="user-info">
           <FaUser className="icon" />
           {user && <span className="username">{user.username}</span>}
-          <button onClick={handleLogout} className="logout-button">Logout</button>
+          <button onClick={handleLogout} className="logout-button">{t('logoutButton')}</button> 
         </div>
 
         <div className="balance">
           {loadingBalance ? (
-            <span className="amount">Loading...</span>
+            <span className="amount">{t('loadingText')}</span> 
           ) : (
             <>
               <span className="amount">{balanceInUsd.toFixed(2)}</span>
-              <span className="currency">$</span>
+              <span className="currency">{t('currencySymbol')}</span> 
               <small className="raw-balance">{rawTrxBalance.toFixed(2)} TRX</small>
-              <button onClick={() => navigate("/recharge")} className="add-balance-button" title="Add Funds">+</button>
+              <button onClick={() => navigate("/recharge")} className="add-balance-button" title={t('addFundsButton')}>+</button> {/* Translated title */}
             </>
           )}
         </div>
       </header>
 
       <section className="product-section">
-        <h2>Top Products</h2>
+        <h2>{t('topProductsHeading')}</h2> 
         {loadingProducts ? (
-          <p>Loading products... ⏳</p>
+          <p>{t('loadingProductsText')}</p> 
         ) : productsError ? (
-          <p style={{ color: 'red' }}>Error: {productsError} 🙁</p>
+          <p style={{ color: 'red' }}>{productsError} 🙁</p>
         ) : products.length > 0 ? (
           <div className="product-scroll">
             {products.map((product) => (
               <div className="product-card" key={product.id} onClick={() => navigate("/product-rating", { state: { product } })}>
                 <img src={product.image} alt={product.name} className="product-image" onError={(e) => { e.target.onerror = null; e.target.src="https://placehold.co/175x175/cccccc/white?text=No+Image"; }} />
                 <div className="product-name">{product.name}</div>
-                <div className="product-price">${product.price ? product.price.toFixed(2) : 'N/A'}</div>
+                <div className="product-price">{t('currencySymbol')}{product.price ? product.price.toFixed(2) : 'N/A'}</div> {/* Translated currency symbol */}
               </div>
             ))}
           </div>
         ) : (
-          <p>No products found. 😔</p>
+          <p>{t('noProductsFound')}</p> 
         )}
       </section>
       <div className="congrats-text">
-        <div className="slide-in">🎉 Congratulations to {phones[idx]}</div>
+        <div className="slide-in">{t('congratulationsPrefix')} {phones[idx]}</div> 
       </div>
-      <button className="start-button" onClick={() => navigate("/order-dashboard")}>START MAKING MONEY</button>
+      <button className="start-button" onClick={() => navigate("/order-dashboard")}>{t('startMakingMoneyButton')}</button> 
       <section className="additional-info">
-        <h2>About Us</h2>
-        <p>We are committed to offering curated, trending, and premium products through our platform.</p>
-        <h3>Latest Incident</h3>
-        <p>No reported incidents at this time.</p>
-        <h3>TRC</h3>
-        <p>Transparency Reporting Center - All transactions and activity are monitored for your security.</p>
-        <h3>FAQ</h3>
+        <h2>{t('aboutUsHeading')}</h2> 
+        <p>{t('aboutUsText')}</p> 
+        <h3>{t('latestIncidentHeading')}</h3> 
+        <p>{t('noReportedIncidents')}</p> 
+        <h3>{t('trcHeading')}</h3> 
+        <p>{t('trcText')}</p> 
+        <h3>{t('faqHeading')}</h3> 
         <div className="faq-list">
           {faqs.map((faq, index) => (
             <div className={`faq-item ${openFaq === index ? "active" : ""}`} key={index}>
@@ -184,11 +187,11 @@ export default function Dashboard() {
           ))}
         </div>
         <section className="partnered-section">
-          <h2>Partnered With</h2>
+          <h2>{t('partneredWithHeading')}</h2> 
           <div className="partners-logos">
-            <div className="partner-logo-placeholder">Partner 1</div>
-            <div className="partner-logo-placeholder">Partner 2</div>
-            <div className="partner-logo-placeholder">Partner 3</div>
+            <div className="partner-logo-placeholder">{t('partnerPlaceholder')} 1</div> 
+            <div className="partner-logo-placeholder">{t('partnerPlaceholder')} 2</div> 
+            <div className="partner-logo-placeholder">{t('partnerPlaceholder')} 3</div> 
           </div>
         </section>
       </section>
