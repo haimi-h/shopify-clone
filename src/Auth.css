@@ -1,404 +1,156 @@
-/* General Body and Container Setup */
-body {
-    margin: 0;
-    font-family: 'Inter', sans-serif; /* A modern, clean font */
-    background-color: #f0f2f5; /* Light grey background for a soft feel */
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    min-height: 100vh;
-    overflow: hidden; /* Prevent scrollbar from animations */
+/* Container setup */
+/* Top-right globe icon */
+.top-right {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+}
+
+.globe-icon {
+  width: 20px;
+  height: 20px;
+  cursor: pointer;
+  opacity: 0.8;
+}
+
+.globe-icon:hover {
+  opacity: 1;
 }
 
 .auth-container {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    height: 100vh;
-    width: 100%;
-    background: linear-gradient(135deg, #ffffff, #ffffff); /* Subtle gradient background */
-    animation: backgroundShift 15s ease infinite alternate; /* Gentle background animation */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-color: #f5f5f5;
+  font-family: 'Arial', sans-serif;
 }
 
-/* Keyframe for background animation */
-@keyframes backgroundShift {
-    0% { background-position: 0% 50%; }
-    50% { background-position: 100% 50%; }
-    100% { background-position: 0% 50%; }
-}
-
-/* Card Styling */
+/* Card */
 .auth-card {
-    background-color: #ffffff;
-    width: 90%;
-    max-width: 400px; /* Slightly increased max-width for better content display */
-    padding: 2.5rem;
-    border-radius: 20px; /* More rounded corners */
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15), 0 4px 12px rgba(0, 0, 0, 0.08); /* Deeper, layered shadow */
-    text-align: center;
-    position: relative; /* For positioning the globe icon */
-    overflow: hidden; /* Ensure shadows/borders are within bounds */
-    transition: transform 0.3s ease-in-out; /* Smooth hover effect */
-}
-
-.auth-card:hover {
-    transform: translateY(-5px); /* Slight lift on hover */
+  background-color: white;
+  width: 90%;
+  max-width: 360px;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  text-align: center;
 }
 
 /* Logo */
 .logo {
-    width: 120px; /* Slightly larger logo */
-    height: auto;
-    margin-bottom: 1.5rem; /* More space below logo */
-    filter: drop-shadow(0 2px 5px rgba(0, 0, 0, 0.1)); /* Subtle shadow for the logo */
+  width: 100px;
+  height: auto;
+  /* margin-bottom: 1rem; */
 }
 
-/* Brand Name and Tagline */
+/* Brand name and tagline */
 .brand-name {
-    font-size: 2.2rem; /* Larger brand name */
-    font-weight: 700; /* Bolder font */
-    color: #333; /* Darker text for contrast */
-    margin-top: 0.5rem; /* Adjust margin */
-    margin-bottom: 0.5rem;
-    letter-spacing: -0.02em; /* Tighter letter spacing */
+  font-size: 1.5rem;
+  font-weight: bold;
+  /* margin-top: 1 rem; */
+  margin-bottom: 0.25rem;
 }
 
 .tagline {
-    font-size: 1.05rem; /* Slightly larger tagline */
-    color: #666; /* Softer grey */
-    margin-bottom: 2rem; /* More space below tagline */
-    line-height: 1.4;
+  font-size: 0.9rem;
+  color: #777;
+  margin-bottom: 1.5rem;
 }
 
-/* Input Fields */
+/* Input fields */
 .auth-input {
-    width: calc(100% - 20px); /* Adjust for padding */
-    padding: 1rem 15px; /* More vertical padding */
-    margin-bottom: 1.2rem; /* Consistent spacing */
-    border: 1px solid #e0e0e0; /* Lighter border */
-    border-radius: 10px; /* Rounded input fields */
-    font-size: 1rem;
-    color: #333;
-    background-color: #f9f9f9; /* Slightly off-white background */
-    transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  width: 100%;
+  padding: 0.75rem;
+  margin-bottom: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 0.95rem;
 }
 
-.auth-input::placeholder {
-    color: #a0a0a0; /* Lighter placeholder text */
-}
-
-.auth-input:focus {
-    outline: none;
-    border-color: #6a7ee7; /* Highlight on focus */
-    box-shadow: 0 0 0 3px rgba(106, 126, 231, 0.2); /* Soft focus ring */
-    background-color: #ffffff;
-}
-
-/* Buttons */
+/* Login button */
 .auth-button {
-    width: 100%;
-    padding: 1rem;
-    background: linear-gradient(45deg, #6a7ee7, #5c6ac4); /* Gradient button */
-    color: white;
-    border: none;
-    border-radius: 10px;
-    font-weight: 600; /* Slightly less bold than brand name */
-    font-size: 1.1rem;
-    cursor: pointer;
-    box-shadow: 0 4px 15px rgba(92, 106, 196, 0.3); /* Button shadow */
-    transition: all 0.3s ease;
-    letter-spacing: 0.05em; /* Spaced out text */
-    text-transform: uppercase; /* Uppercase text */
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #5c6ac4;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.3s;
 }
 
 .auth-button:hover {
-    background: linear-gradient(45deg, #5c6ac4, #6a7ee7); /* Reverse gradient on hover */
-    box-shadow: 0 6px 20px rgba(92, 106, 196, 0.4);
-    transform: translateY(-2px); /* Slight lift */
+  background-color: #3f4ab8;
 }
 
-.auth-button:disabled {
-    background: #ccc;
-    cursor: not-allowed;
-    box-shadow: none;
-    transform: none;
-}
-
-/* Links */
+/* Register link */
 .auth-link {
-    display: inline-block;
-    margin-top: 1.5rem; /* More space above link */
-    font-size: 0.95rem;
-    color: #6a7ee7; /* Primary brand color for links */
-    text-decoration: none;
-    font-weight: 500;
-    transition: color 0.3s ease;
+  display: inline-block;
+  margin-top: 1rem;
+  font-size: 0.9rem;
+  color: #5c6ac4;
+  text-decoration: none;
 }
 
 .auth-link:hover {
-    color: #5c6ac4; /* Darker shade on hover */
-    text-decoration: underline;
+  text-decoration: underline;
 }
 
-/* Footer Text */
+/* Optional: footer */
 .footer-text {
-    margin-top: 2.5rem; /* More space above footer */
-    font-size: 0.85rem;
-    color: #888;
-    opacity: 0.9;
+  margin-top: 2rem;
+  font-size: 0.8rem;
+  color: #999;
 }
 
-/* Error/Success Messages */
-.error-message {
-    color: #e74c3c; /* Red for errors */
-    background-color: #fdeded;
-    border: 1px solid #e74c3c;
-    padding: 0.75rem;
-    border-radius: 8px;
-    margin-bottom: 1rem;
-    font-size: 0.9rem;
-    animation: fadeIn 0.5s ease-out;
-}
-
-.success-message {
-    color: #27ae60; /* Green for success */
-    background-color: #e6ffe6;
-    border: 1px solid #27ae60;
-    padding: 0.75rem;
-    border-radius: 8px;
-    margin-bottom: 1rem;
-    font-size: 0.9rem;
-    animation: fadeIn 0.5s ease-out;
-}
-
-/* Globe Icon (from LanguageGlobe.js) */
-.top-right {
-    position: absolute;
-    top: 20px; /* Adjusted for better spacing */
-    right: 20px; /* Adjusted for better spacing */
-    z-index: 10; /* Ensure it's above other elements */
-}
-
-.globe-icon {
-    width: 32px; /* Larger icon */
-    height: 32px;
-    cursor: pointer;
-    opacity: 0.8;
-    transition: opacity 0.2s ease, transform 0.2s ease;
-}
-
-.globe-icon:hover {
-    opacity: 1;
-    transform: scale(1.1); /* Slight zoom on hover */
-}
-
-/* Responsive Adjustments */
 @media (min-width: 600px) {
-    .auth-card {
-        max-width: 480px; /* Wider card on tablet */
-        padding: 3rem;
-        border-radius: 25px;
-        box-shadow: 0 15px 40px rgba(0, 0, 0, 0.18), 0 6px 18px rgba(0, 0, 0, 0.1);
-    }
+  .auth-card {
+    max-width: 420px;
+    padding: 2.5rem 2.5rem 2rem 2.5rem;
+    border-radius: 16px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
+  }
 
-    .logo {
-        width: 140px;
-    }
+  .logo {
+    width: 120px;
+  }
 
-    .brand-name {
-        font-size: 2.5rem;
-    }
+  .brand-name {
+    font-size: 2rem;
+  }
 
-    .tagline {
-        font-size: 1.15rem;
-    }
-
-    .auth-input {
-        padding: 1.1rem 18px;
-        font-size: 1.05rem;
-    }
-
-    .auth-button {
-        padding: 1.1rem;
-        font-size: 1.15rem;
-    }
-
-    .auth-link {
-        font-size: 1rem;
-    }
-
-    .footer-text {
-        font-size: 0.9rem;
-    }
-
-  
+  .tagline {
+    font-size: 1.1rem;
+  }
 }
 
 @media (min-width: 900px) {
-    .auth-container {
-        /* Background already has a gradient, no need for linear-gradient here */
-    }
+  .auth-container {
+    min-height: 100vh;
+    background: linear-gradient(120deg, #f5f5f5 60%, #e3e9f7 100%);
+  }
 
-    .auth-card {
-        max-width: 520px; /* Even wider on desktop */
-        padding: 3.5rem;
-        border-radius: 30px;
-        box-shadow: 0 20px 50px rgba(0, 0, 0, 0.2), 0 8px 24px rgba(0, 0, 0, 0.12);
-    }
+  .auth-card {
+    max-width: 480px;
+    padding: 3rem 3rem 2.5rem 3rem;
+    border-radius: 20px;
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.13);
+  }
 
-    .logo {
-        width: 160px;
-    }
-
-    .brand-name {
-        font-size: 2.8rem;
-    }
-
-    .tagline {
-        font-size: 1.25rem;
-    }
-
-    .auth-input {
-        padding: 1.2rem 20px;
-        font-size: 1.1rem;
-    }
-
-    .auth-button {
-        padding: 1.2rem;
-        font-size: 1.2rem;
-    }
-
-    .auth-link {
-        font-size: 1.05rem;
-    }
-
-    .footer-text {
-        font-size: 0.95rem;
-    }
-
-  
-}
-
-/* Basic Fade-in Animation (for messages, etc.) */
-@keyframes fadeIn {
-    from { opacity: 0; }
-    to { opacity: 1; }
-}
-
-/* Language Selector Specific CSS (assuming LanguageSelector.css is imported for LanguageGlobe) */
-/* These classes are expected by LanguageGlobe.js if you are not using Tailwind */
-.language-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: rgba(0, 0, 0, 0.6); /* Darker overlay */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    z-index: 1000; /* Ensure it's on top */
-    animation: fadeIn 0.3s ease-out forwards;
-}
-
-.language-selector {
-    background-color: #ffffff;
-    padding: 25px;
-    border-radius: 15px;
-    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-    width: 90%;
-    max-width: 350px;
-    position: relative;
-    animation: slideUp 0.3s ease-out forwards;
-}
-
-@keyframes slideUp {
-    from { transform: translateY(20px); opacity: 0; }
-    to { transform: translateY(0); opacity: 1; }
-}
-
-.close-button {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    background: none;
-    border: none;
-    font-size: 24px;
-    cursor: pointer;
-    color: #888;
-    transition: color 0.2s ease;
-}
-
-.close-button:hover {
-    color: #333;
-}
-
-.language-dropdown {
-    margin-top: 15px;
-}
-
-.choose-label {
-    font-size: 1.2rem;
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 15px;
-}
-
-.language-dropdown ul {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    max-height: 200px; /* Fixed height for scroll */
-    overflow-y: auto; /* Enable scrolling */
-    border: 1px solid #eee;
-    border-radius: 8px;
-    background-color: #fdfdfd;
-}
-
-.language-dropdown li {
-    padding: 12px 15px;
-    cursor: pointer;
-    transition: background-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
-    border-bottom: 1px solid #f0f0f0;
-    font-size: 1rem;
-    color: #555;
-}
-
-.language-dropdown li:last-child {
-    border-bottom: none;
-}
-
-.language-dropdown li:hover {
-    background-color: #eef2f7;
-    transform: translateX(5px);
-}
-
-.language-dropdown li.active {
-    background-color: #6a7ee7; /* Active background color */
-    color: white;
-    font-weight: 600;
-    transform: scale(1.02); /* Slight scale for active item */
-}
-
-.submit-button {
-    width: 100%;
-    padding: 1rem;
-    margin-top: 20px;
-    background: linear-gradient(45deg, #27ae60, #2ecc71); /* Green gradient for submit */
-    color: white;
-    border: none;
-    border-radius: 10px;
-    font-weight: 600;
+  .auth-input {
     font-size: 1.1rem;
-    cursor: pointer;
-    box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
-    transition: all 0.3s ease;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-}
+    padding: 1rem;
+  }
 
-.submit-button:hover {
-    background: linear-gradient(45deg, #2ecc71, #27ae60);
-    box-shadow: 0 6px 20px rgba(46, 204, 113, 0.4);
-    transform: translateY(-2px);
+  .auth-button {
+    font-size: 1.1rem;
+    padding: 1rem;
+  }
+
+  .footer-text {
+    font-size: 1rem;
+  }
 }

@@ -1,14 +1,12 @@
 // src/pages/Register.js
-import React, { useState, useEffect, useContext } from 'react'; // Import useContext
+import React, { useState, useEffect } from 'react';
 import '../Auth.css';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import axios from 'axios';
-import { LanguageContext } from './LanguageGlobe'; // Import LanguageContext
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
 
 function Register() {
-  const { t } = useContext(LanguageContext); // Consume the translation function
   const [formData, setFormData] = useState({
     username: '',
     phone: '',
@@ -57,17 +55,17 @@ function Register() {
     } = formData;
 
     if (!username || !phone || !password || !confirm_password || !withdrawal_password) {
-      setError(t('fillAllFields')); // Translated
+      setError('Please fill all required fields.');
       return;
     }
 
     if (password !== confirm_password) {
-      setError(t('passwordsMismatch')); // Translated
+      setError('Passwords do not match.');
       return;
     }
 
     if (!referralCodeInput) {
-        setError(t('referralCodeRequired')); // Translated
+        setError('Referral code is required for registration.');
         return;
     }
 
@@ -81,36 +79,33 @@ function Register() {
         referralCode: referralCodeInput,
       });
 
-      setMessage(res.data.message || t('registrationSuccessful')); // Translated
-      // Using a custom message box instead of alert()
-      // You would typically have a modal component for this
-      // For now, console log and navigate
-      console.log(t('registrationSuccessful')); // Translated
+      setMessage(res.data.message || 'Registration successful!');
+      alert('Registered successfully!');
       navigate('/login');
     } catch (err) {
       console.error("Registration failed:", err.response?.data?.message || err.message);
-      setError(err.response?.data?.message || t('registrationFailed')); // Translated
+      setError(err.response?.data?.message || 'Registration failed. Please try again.');
     }
   };
 
   return (
     <div className="auth-container">
       <div className="auth-card">
-        <h2 className="brand-name">{t('registrationTo')}</h2> 
-        <p className="tagline">{t('createYourAccount')}</p> 
+        <h2 className="brand-name">Registration to</h2>
+        <p className="tagline">Create your account</p>
 
         {error && <p className="error-message">{error}</p>}
         {message && <p className="success-message">{message}</p>}
 
-        <input type="text" placeholder={t('usernamePlaceholder')} name="username" value={formData.username} onChange={handleChange} className="auth-input" required /> 
-        <input type="text" placeholder={t('phoneNumberPlaceholder')} name="phone" value={formData.phone} onChange={handleChange} className="auth-input" required /> 
-        <input type="password" placeholder={t('passwordPlaceholder')} name="password" value={formData.password} onChange={handleChange} className="auth-input" required /> 
-        <input type="password" placeholder={t('confirmPasswordPlaceholder')} name="confirm_password" value={formData.confirm_password} onChange={handleChange} className="auth-input" required /> 
-        <input type="password" placeholder={t('withdrawalPasswordPlaceholder')} name="withdrawal_password" value={formData.withdrawal_password} onChange={handleChange} className="auth-input" required /> 
+        <input type="text" placeholder="Username" name="username" value={formData.username} onChange={handleChange} className="auth-input" required />
+        <input type="text" placeholder="Phone number" name="phone" value={formData.phone} onChange={handleChange} className="auth-input" required />
+        <input type="password" placeholder="Password" name="password" value={formData.password} onChange={handleChange} className="auth-input" required />
+        <input type="password" placeholder="Confirm password" name="confirm_password" value={formData.confirm_password} onChange={handleChange} className="auth-input" required />
+        <input type="password" placeholder="Withdrawal password" name="withdrawal_password" value={formData.withdrawal_password} onChange={handleChange} className="auth-input" required />
 
         <input
           type="text"
-          placeholder={t('referralCodePlaceholder')} 
+          placeholder="Referral Code (Required)"
           name="referralCode"
           value={referralCodeInput}
           onChange={handleChange}
@@ -119,8 +114,8 @@ function Register() {
           readOnly={!!referralCodeInput}
         />
 
-        <button className="auth-button" onClick={handleSubmit}>{t('registerButton')}</button> 
-        <Link to="/login" className="auth-link">{t('backToLoginLink')}</Link> 
+        <button className="auth-button" onClick={handleSubmit}>REGISTER</button>
+        <Link to="/login" className="auth-link">Back to Login</Link>
       </div>
     </div>
   );
