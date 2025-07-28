@@ -256,12 +256,18 @@ body.chat-open {
     display: flex;
     flex-direction: column;
 }
-.chat-image {
+/* .chat-image {
   max-width: 100%;
   border-radius: 8px;
   margin-top: 5px;
+} */
+.chat-image {
+    max-width: 100%; /* Keep this */
+    height: auto; /* This is CRUCIAL: allows height to adjust proportionally */
+    max-height: 200px; /* Set a reasonable maximum height */
+    display: block; /* Make it a block element to prevent extra spacing issues */
+    object-fit: contain; /* Ensures the whole image is visible within its box */
 }
-
 .file-input-label {
   cursor: pointer;
   padding: 0 10px;
