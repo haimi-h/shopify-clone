@@ -110,7 +110,7 @@ function ProductRatingPage() {
       <div className="rating-wrapper">
         <h2 className="error-message">{error}</h2>
         <p>Your current balance is ${userBalance.toFixed(2)}. Please recharge to continue with tasks.</p>
-        <button onClick={() => navigate("/recharge", { state: { requiredAmount: 2.00 - userBalance } })}>Recharge Now</button> {/* Suggest recharge for the minimum amount */}
+        <button className="recharge-button" onClick={() => navigate("/recharge", { state: { requiredAmount: 2.00 - userBalance } })}>Recharge Now</button> {/* Suggest recharge for the minimum amount */}
         <button onClick={() => navigate("/dashboard")}>Back to Dashboard</button>
       </div>
     );
