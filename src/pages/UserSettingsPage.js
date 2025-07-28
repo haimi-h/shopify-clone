@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, useContext } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { User, Wallet, Lock, Globe, Image, LifeBuoy, Info, Plus } from 'lucide-react'; // Importing icons
+// import { User, Wallet, Lock, Globe, Image, LifeBuoy, Info, Plus } from 'lucide-react'; // Importing icons
 import { LanguageContext } from './LanguageProvider'; // Assuming LanguageProvider is in the same directory or adjust path
 import LanguageSelector from './LanguageProvider'; // Assuming LanguageSelector is default export from LanguageProvider
 import shopifyLogo from '../shopify-logo.png'; // Adjust path as needed
