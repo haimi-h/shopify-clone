@@ -1,6 +1,7 @@
 import React, { useState, createContext, useEffect, useCallback, useContext} from 'react';
 // You might want to move Auth.css import to a more global CSS or specific components
 // import '../Auth.css';
+import '../LanguageSelector.css'
 
 // 1. Define LanguageContext
 export const LanguageContext = createContext();
