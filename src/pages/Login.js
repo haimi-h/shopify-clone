@@ -1,16 +1,16 @@
 import "../Auth.css";
 import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useState, useContext } from "react";
 import axios from "axios";
 import shopifyLogo from '../shopify-logo.png';
-import LanguageGlobe from './LanguageGlobe';
+// ADJUST THIS IMPORT PATH to where LanguageContext is now exported from
+import { LanguageContext } from '../components/LanguageProvider'; // <--- Corrected import
 
-// const API = 'http://localhost:5000/api/auth';
-// const API_URL = process.env.REACT_APP_API_URL;
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:5000/api';
 
 function Login() {
   const navigate = useNavigate();
+  const { t } = useContext(LanguageContext); // This will now correctly receive 't'
 
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');

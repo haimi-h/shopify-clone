@@ -6,7 +6,7 @@ import Login from './pages/Login';
 import Register from './pages/Register';
 
 // Layout component
-import Layout from './pages/Layout'; // Assuming Layout.js is in src/pages/Layout.js
+import Layout from './pages/Layout';
 
 // User-facing pages (will be inside Layout)
 import Dashboard from './pages/Dashboard';
@@ -16,76 +16,61 @@ import OrderSummary from './pages/OrderSummary';
 import RechargePage from './pages/RechargePage';
 import RecordsPage from './pages/RecordsPage';
 import OrderDashboard from './pages/OrderDashboard';
-import LanguageSelector from './pages/LanguageGlobe';
 import AccountPage from './pages/AccountPage';
 import ReferralCode from './pages/ReferralCode';
 import ProductRatingPage from './pages/ProductRatingPage';
-
-// Admin pages (will be inside Layout)
-import AdminPage from './pages/admin/AdminPage'; // If used as a general admin landing
-import AdminDashboard from './pages/admin/AdminDashboard'; // Specific admin dashboard
-import UserManagement from './pages/admin/UserManagement'; // If used
-import VIPSettings from './pages/admin/VIPSettings'; // If used
-import ReferralManagement from './pages/admin/ReferralManagement'; // If used
-import TransactionManagement from './pages/admin/TransactionManagement'; // If used
-import UserTable from './pages/UserTable'; // UserTable is in src/pages
-import InjectionPlan from './pages/InjectionPlan'; // FIX: InjectionPlan is in src/pages/admin
-import ManualPayment from './pages/ManualPayment'; 
+import ManualPayment from './pages/ManualPayment';
 import UserSettingsPage from './pages/UserSettingsPage';
 import WithdrawalPage from './pages/WithdrawalPage';
 
-// HistoryModal and SettingModal are typically rendered as components, not direct routes.
-// They are imported and used within UserTable.js
-// import HistoryModal from './pages/admin/HistoryModal';
-// import SettingModal from './pages/admin/SettingModal';
+// Admin pages (will be inside Layout)
+import AdminDashboard from './pages/admin/AdminDashboard';
+import UserTable from './pages/UserTable';
+import InjectionPlan from './pages/InjectionPlan';
+
+// Import LanguageProvider and LanguageSelector from the updated file
+import { LanguageProvider } from './components/LanguageProvider'; // <--- ADJUST PATH AS NEEDED
+import LanguageSelector from './components/LanguageProvider'; // <--- LanguageSelector is now the default export from that file
 
 function App() {
   return (
     <Router>
-      <Routes>
-        {/* Routes without the main layout (e.g., login, register) */}
-        <Route path="/login" element={<Login />} />
-        <Route path="/register" element={<Register />} />
-        <Route path="/" element={<Login />} /> {/* Default landing page */}
+      <LanguageProvider> {/* <--- Wrap your entire application with LanguageProvider */}
+        <Routes>
+          {/* Routes without the main layout (e.g., login, register) */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+          <Route path="/" element={<Login />} /> {/* Default landing page */}
 
-        {/* All routes that should use the shared Layout (with responsive sidebar/bottom navbar) */}
-        <Route element={<Layout />}>
-          {/* User Routes */}
-          <Route path="/dashboard" element={<Dashboard />} />
-          <Route path="/orders" element={<OrdersPage />} />
-          <Route path="/order-dashboard" element={<OrderDashboard />} />
-          <Route path="/vip" element={<VIPPage />} />
-          <Route path="/ordersummary" element={<OrderSummary />} />
-          <Route path="/recharge" element={<RechargePage />} />
-          <Route path="/referral" element={<ReferralCode />} />
-          <Route path="/records" element={<RecordsPage />} />
-          <Route path="/account" element={<AccountPage />} />
-          <Route path="/product-rating" element={<ProductRatingPage />} />
-          <Route path="/selector" element={<LanguageSelector />} /> {/* Or wherever LanguageSelector is used */}
-          <Route path="/payment" element={<ManualPayment />} /> {/* Or wherever LanguageSelector is used */}
-          <Route path="/settings" element={<UserSettingsPage />} />
-          <Route path="/withdraw" element={<WithdrawalPage />} />
+          {/* All routes that should use the shared Layout (with responsive sidebar/bottom navbar) */}
+          <Route element={<Layout />}>
+            {/* User Routes */}
+            <Route path="/dashboard" element={<Dashboard />} />
+            <Route path="/orders" element={<OrdersPage />} />
+            <Route path="/order-dashboard" element={<OrderDashboard />} />
+            <Route path="/vip" element={<VIPPage />} />
+            <Route path="/ordersummary" element={<OrderSummary />} />
+            <Route path="/recharge" element={<RechargePage />} />
+            <Route path="/referral" element={<ReferralCode />} />
+            <Route path="/records" element={<RecordsPage />} />
+            <Route path="/account" element={<AccountPage />} />
+            <Route path="/product-rating" element={<ProductRatingPage />} />
+            {/* Use the LanguageSelector component directly if needed on a page */}
+            <Route path="/selector" element={<LanguageSelector />} />
+            <Route path="/payment" element={<ManualPayment />} />
+            <Route path="/settings" element={<UserSettingsPage />} />
+            <Route path="/withdraw" element={<WithdrawalPage />} />
 
-          {/* Admin Routes - NOW NESTED INSIDE LAYOUT */}
-          <Route path="/admin" element={<AdminDashboard />} /> {/* Admin landing page */}
-          <Route path="/usertable" element={<UserTable />} /> {/* UserTable now gets layout styling */}
-          <Route path="/admin/injection" element={<InjectionPlan />} /> {/* InjectionPlan now gets layout styling */}
+            {/* Admin Routes - NOW NESTED INSIDE LAYOUT */}
+            <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/usertable" element={<UserTable />} />
+            <Route path="/admin/injection" element={<InjectionPlan />} />
+          </Route>
 
-          {/* Optional: If you have specific admin sub-pages that also need the layout */}
-          {/* <Route path="/admin/user-management" element={<UserManagement />} /> */}
-          {/* <Route path="/admin/vip-settings" element={<VIPSettings />} /> */}
-          {/* <Route path="/admin/referral-management" element={<ReferralManagement />} /> */}
-          {/* <Route path="/admin/transaction-management" element={<TransactionManagement />} /> */}
-
-          {/* Removed direct routes for modals as they are controlled by parent components */}
-          {/* <Route path="/history-modal" element={<HistoryModal />} /> */}
-          {/* <Route path="/setting-modal" element={<SettingModal />} /> */}
-
-        </Route>
-
-        {/* Catch-all for any unmatched routes, redirects to login */}
-        <Route path="*" element={<Login />} />
-      </Routes>
+          {/* Catch-all for any unmatched routes, redirects to login */}
+          <Route path="*" element={<Login />} />
+        </Routes>
+      </LanguageProvider>
     </Router>
   );
 }

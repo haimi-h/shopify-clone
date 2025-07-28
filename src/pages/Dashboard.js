@@ -6,6 +6,7 @@ import { useEffect, useState, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import axios from "axios";
 import ChatWidget from "../pages/ChatWidget"; // Make sure to import ChatWidget
+import { LanguageContext } from '../components/LanguageProvider';
 
 export default function Dashboard() {
   const navigate = useNavigate();
