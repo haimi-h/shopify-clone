@@ -194,32 +194,6 @@ export default function UserSettingsPage() {
           {t('logoutButton')}
         </button>
       </div>
-
-      {/* Bottom Navigation (Placeholder as per sketch) */}
-      {/* This would typically be a separate component rendered outside or within Layout */}
-      <footer className="fixed bottom-0 left-0 right-0 bg-white dark:bg-gray-800 shadow-lg rounded-t-xl p-4 flex justify-around items-center sm:hidden">
-        {/* These would be actual navigation links/buttons */}
-        <div className="flex flex-col items-center text-gray-600 dark:text-gray-400">
-          <Home className="w-6 h-6" />
-          <span className="text-xs">{t('home')}</span>
-        </div>
-        <div className="flex flex-col items-center text-gray-600 dark:text-gray-400">
-          <List className="w-6 h-6" />
-          <span className="text-xs">{t('orders')}</span>
-        </div>
-        <div className="flex flex-col items-center text-gray-600 dark:text-gray-400">
-          <Clipboard className="w-6 h-6" />
-          <span className="text-xs">{t('task')}</span>
-        </div>
-        <div className="flex flex-col items-center text-gray-600 dark:text-gray-400">
-          <User className="w-6 h-6" />
-          <span className="text-xs">{t('profile')}</span>
-        </div>
-        <div className="flex flex-col items-center text-blue-500"> {/* Highlight current page */}
-          <Settings className="w-6 h-6" />
-          <span className="text-xs">{t('settings')}</span>
-        </div>
-      </footer>
     </div>
   );
 }
