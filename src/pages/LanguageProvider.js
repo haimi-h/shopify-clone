@@ -1,6 +1,4 @@
-import React, { useState, createContext, useEffect, useCallback, useContext, useRef} from 'react'; // Removed useRef
-// You might want to move Auth.css import to a more global CSS or specific components
-// import '../Auth.css';
+import React, { useState, createContext, useEffect, useCallback, useContext, useRef} from 'react';
 import '../LanguageSelector.css'
 
 // 1. Define LanguageContext
@@ -198,7 +196,7 @@ const translations = {
     aboutUsText: 'نحن ملتزمون بتقديم منتجات منسقة ورائجة ومميزة عبر منصتنا.',
     latestIncidentHeading: 'آخر حادث',
     noReportedIncidents: 'لا توجد حوادث مبلغ عنها في الوقت الحالي.',
-    trcHeading: 'مركز تقارير الشفافية',
+    trcHeading: 'TRC',
     trcText: 'مركز تقارير الشفافية - يتم مراقبة جميع المعاملات والأنشطة لأمانك.',
     faqHeading: 'الأسئلة الشائعة',
     partnerPlaceholder: 'شريك',
@@ -247,7 +245,6 @@ const translations = {
   },
 };
 
-
 // 3. LanguageProvider component to manage language state and provide translations
 export const LanguageProvider = ({ children }) => {
   const [currentLanguage, setCurrentLanguage] = useState(
@@ -263,8 +260,11 @@ export const LanguageProvider = ({ children }) => {
     return translations[currentLanguage][key] || key; // Fallback to key if translation not found
   }, [currentLanguage]);
 
+  // FIX: Define languagesArray here to be passed to context
+  const languagesArray = Object.keys(translations);
+
   return (
-    <LanguageContext.Provider value={{ currentLanguage, setCurrentLanguage, t, languages }}>
+    <LanguageContext.Provider value={{ currentLanguage, setCurrentLanguage, t, languages: languagesArray }}> {/* Use languagesArray here */}
       {children}
     </LanguageContext.Provider>
   );
@@ -276,10 +276,10 @@ const LanguageSelector = () => {
   const [isOpen, setIsOpen] = useState(false); // Internal state for this component
   const { currentLanguage, setCurrentLanguage, t } = useContext(LanguageContext);
   const [tempSelectedLanguage, setTempSelectedLanguage] = useState(currentLanguage);
-  const languages = Object.keys(translations);
+  const languages = Object.keys(translations); // This is correctly defined here for LanguageSelector's scope
 
   // Ref for click outside
-  const selectorRef = useRef(null); // Now used internally by LanguageSelector
+  const selectorRef = useRef(null); // useRef is correctly imported and used here
 
   useEffect(() => {
     setTempSelectedLanguage(currentLanguage);
