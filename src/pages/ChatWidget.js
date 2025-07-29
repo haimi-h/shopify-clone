@@ -39,7 +39,9 @@ const ChatWidget = ({ isOpen, onClose, initialMessage }) => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
-  const handleImageSend = async (e) => {
+  // your-project/src/ChatWidget.js
+
+const handleImageSend = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
@@ -64,13 +66,8 @@ const ChatWidget = ({ isOpen, onClose, initialMessage }) => {
 
     try {
         const token = localStorage.getItem("token");
-
-        // This configuration is correct.
-        // The browser will automatically set the Content-Type to 'multipart/form-data'
-        // with the required 'boundary' parameter.
         const config = {
             headers: {
-                // "Content-Type": "multipart/form-data", // This line MUST be removed or commented out
                 Authorization: `Bearer ${token}`,
             },
         };
@@ -79,7 +76,14 @@ const ChatWidget = ({ isOpen, onClose, initialMessage }) => {
             `${API_BASE_URL}/chat/messages/image`,
             formData,
             config
-        ); //
+        );
+
+        // ✅ FIX: Check if the socket is still connected before emitting.
+        // This prevents the app from crashing if the user closes the chat mid-upload.
+        if (!socketRef.current) {
+            console.warn("Socket disconnected before image message could be sent via WebSocket.");
+            return; // Exit the function gracefully
+        }
 
         socketRef.current.emit("sendMessage", {
             userId: currentUserId,
