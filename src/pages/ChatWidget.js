@@ -47,30 +47,34 @@ const ChatWidget = ({ isOpen, onClose, initialMessage }) => {
     formData.append("image", file);
     formData.append("userId", currentUserId);
 
-    const tempMessageId = `optimistic-image-user-${Date.now()}`; // Generate a tempId for the optimistic image message
+    const tempMessageId = `optimistic-image-user-${Date.now()}`;
 
-    // Optimistically add the message to state
     setMessages((prev) => [
         ...prev,
         {
-            id: tempMessageId, // Use tempId here initially
-            tempId: tempMessageId, // Store tempId for later matching
+            id: tempMessageId,
+            tempId: tempMessageId,
             sender: "user",
-            text: null, // Image messages typically don't have text
-            imageUrl: URL.createObjectURL(file), // OPTIONAL: Display local file instantly
+            text: null,
+            imageUrl: URL.createObjectURL(file),
             timestamp: new Date().toISOString(),
         },
     ]);
-    optimisticMessageIds.current.add(tempMessageId); // Add tempId to set
+    optimisticMessageIds.current.add(tempMessageId);
 
     try {
         const token = localStorage.getItem("token");
+
+        // ✅ FIX: The 'Content-Type' header is removed.
+        // The browser will automatically set it to 'multipart/form-data'
+        // with the correct boundary.
         const config = {
             headers: {
-                "Content-Type": "multipart/form-data",
+                // "Content-Type": "multipart/form-data", // <-- THIS LINE IS REMOVED
                 Authorization: `Bearer ${token}`,
             },
         };
+
         const response = await axios.post(
             `${API_BASE_URL}/chat/messages/image`,
             formData,
@@ -79,25 +83,18 @@ const ChatWidget = ({ isOpen, onClose, initialMessage }) => {
 
         console.log('Backend response for image upload:', response.data);
 
-        // Now, emit the message to the socket with the tempId for the backend to acknowledge
-        // The backend should then emit a 'receiveMessage' including this tempId and the real message ID
         socketRef.current.emit("sendMessage", {
             userId: currentUserId,
-            senderId: currentUserId, // Or adminId if applicable
+            senderId: currentUserId,
             senderRole: "user",
-            messageText: null, // No text for image messages
-            imageUrl: response.data.imageUrl, // Send the URL returned by the backend
-            tempId: tempMessageId, // Send tempId for confirmation
+            messageText: null,
+            imageUrl: response.data.imageUrl,
+            tempId: tempMessageId,
         });
 
-        // No need to setMessages again here, handleReceiveMessage will do the update
-        // if you emit the message via socket. If not emitting via socket for self,
-        // you'd update here to remove tempId and add real id.
-        // For now, let handleReceiveMessage handle the final update from socket.
     } catch (err) {
         console.error("Failed to send image:", err);
         setChatError("Failed to send image.");
-        // OPTIONAL: Remove the optimistic message on error or mark as failed
         setMessages((prev) => prev.filter(msg => msg.tempId !== tempMessageId));
         optimisticMessageIds.current.delete(tempMessageId);
     }
