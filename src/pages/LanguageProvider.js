@@ -3,6 +3,8 @@ import React, { useState, createContext, useEffect, useCallback, useContext} fro
 // import '../Auth.css';
 import '../LanguageSelector.css'
 
+
+
 // 1. Define LanguageContext
 export const LanguageContext = createContext();
 
@@ -217,13 +219,16 @@ export const LanguageProvider = ({ children }) => {
   );
 };
 
+
 // 4. LanguageSelector component (your globe icon UI)
 // This component now *consumes* the context provided by LanguageProvider
-const LanguageSelector = () => {
-  const [isOpen, setIsOpen] = useState(false);
+const LanguageSelector = ({ isOpen, setIsOpen }) => {
   const { currentLanguage, setCurrentLanguage, t } = useContext(LanguageContext);
   const [tempSelectedLanguage, setTempSelectedLanguage] = useState(currentLanguage);
   const languages = Object.keys(translations);
+
+  // Use a ref to attach to the language selector modal content
+  const selectorRef = useRef(null);
 
   useEffect(() => {
     setTempSelectedLanguage(currentLanguage);
@@ -238,18 +243,12 @@ const LanguageSelector = () => {
     setTempSelectedLanguage(lang);
   };
 
+  // Removed the globe icon and its onClick from here, as the parent will control isOpen
   return (
     <>
-      <img
-        src="https://cdn-icons-png.flaticon.com/512/44/44386.png"
-        alt="Globe Icon"
-        className="globe-icon"
-        onClick={() => setIsOpen(true)}
-        title={t('selectLanguageButton')}
-      />
       {isOpen && (
         <div className="language-overlay">
-          <div className="language-selector">
+          <div className="language-selector" ref={selectorRef}> {/* Attach ref here */}
             <button
               className="close-button"
               onClick={() => setIsOpen(false)}
