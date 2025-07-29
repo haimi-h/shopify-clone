@@ -65,6 +65,8 @@ export default function Dashboard() {
     }
   }, [location.state]);
 
+  // Dashboard.js
+
   const fetchLiveBalance = useCallback(async () => {
     const token = localStorage.getItem('token');
     if (!token) return;
@@ -108,6 +110,27 @@ export default function Dashboard() {
     } finally {
       setLoadingBalance(false);
     }
+  }, [API_BASE_URL]);
+
+  useEffect(() => {
+    fetchLiveBalance();
+  }, [location, fetchLiveBalance]);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoadingProducts(true);
+        setProductsError(null);
+        const response = await axios.get(`${API_BASE_URL}/products`);
+        setProducts(response.data);
+      } catch (err) {
+        console.error("Error fetching products:", err);
+        setProductsError("Failed to load products.");
+      } finally {
+        setLoadingProducts(false);
+      }
+    };
+    fetchProducts();
   }, [API_BASE_URL]);
 
   useEffect(() => {
