@@ -422,77 +422,7 @@ body {
 .slide-in {
   animation: slideFade 0.5s ease-in-out;
 }
-.add-balance-button {
-  /* Positioning and Layout */
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 55px; /* Slightly larger for better tap target */
-  height: 55px;
-  border-radius: 50%;
-  position: fixed;
-  bottom: 30px; /* Consistent spacing from bottom */
-  right: 30px; /* Consistent spacing from right */
-  z-index: 999; /* Ensure it's on top */
 
-  /* Appearance */
-  background-color: #4CAF50; /* A vibrant primary blue, distinct from other greens */
-  color: white;
-  border: none;
-  /* Adjust shadow to be consistent with existing dashboard shadows */
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15), 0 0 0 8px rgba(74, 144, 226, 0.2); /* Soft shadow with a subtle, matching glow */
-  cursor: pointer;
-  font-size: 2.5rem; /* Larger plus sign for visibility */
-  font-weight: 300; /* Lighter weight for modern look */
-  line-height: 1; /* Center the plus sign vertically */
-  text-decoration: none;
-  outline: none;
-
-  /* Transitions for smooth interactions, matching other elements */
-  transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease;
-}
-
-.add-balance-button:hover {
-  background-color: #157347; /* Slightly darker blue on hover */
-  transform: translateY(-4px); /* More pronounced lift effect */
-  /* Enhanced shadow and glow on hover */
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25), 0 0 0 12px rgba(74, 144, 226, 0.35);
-}
-
-.add-balance-button:active {
-  background-color: #2a6bb5; /* Even darker on click */
-  transform: translateY(0); /* Press down effect */
-  /* Reset shadow to a smaller one on active */
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1), 0 0 0 4px rgba(74, 144, 226, 0.1);
-}
-
-/* Responsive adjustments for smaller screens (matching Dashboard.css breakpoints) */
-@media (max-width: 768px) {
-  .add-balance-button {
-    width: 50px; /* Slightly smaller for mobile */
-    height: 50px;
-    font-size: 2.2rem;
-    bottom: 85px; /* Adjust to be above the fixed bottom navbar (65px height + 20px margin) */
-    right: 20px;
-    /* Reduce shadow for mobile */
-    box-shadow: 0 3px 9px rgba(0, 0, 0, 0.15), 0 0 0 6px rgba(74, 144, 226, 0.15);
-  }
-
-  .add-balance-button:hover {
-    transform: translateY(-3px);
-    box-shadow: 0 5px 12px rgba(0, 0, 0, 0.2), 0 0 0 9px rgba(74, 144, 226, 0.25);
-  }
-}
-
-@media (max-width: 480px) {
-  .add-balance-button {
-    width: 45px; /* Even smaller for very small screens */
-    height: 45px;
-    font-size: 2rem;
-    bottom: 80px; /* Adjust based on new bottom bar height */
-    right: 15px;
-  }
-}
 @keyframes slideFade {
   0% {
     opacity: 0;
