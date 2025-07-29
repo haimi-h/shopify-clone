@@ -1,4 +1,4 @@
-import React, { useState, createContext, useEffect, useCallback, useContext} from 'react';
+import React, { useState, createContext, useEffect, useCallback, useContext, useRef} from 'react';
 // You might want to move Auth.css import to a more global CSS or specific components
 // import '../Auth.css';
 import '../LanguageSelector.css'
