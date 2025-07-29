@@ -43,27 +43,35 @@ const ChatWidget = ({ isOpen, onClose, initialMessage }) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    const formData = new FormData();
-    formData.append("image", file);
-    formData.append("userId", currentUserId);
+    const tempMessageId = `optimistic-image-user-${Date.now()}`;
 
-    const tempMessageId = `optimistic-image-user-${Date.now()}`; // Generate a tempId for the optimistic image message
+    // Use FileReader to create a self-contained Data URL for the preview.
+    // This is more reliable for optimistic updates.
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = () => {
+      // Once the file is read, optimistically add it to the UI
+      const imageDataUrl = reader.result;
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: tempMessageId,
+          tempId: tempMessageId,
+          sender: "user",
+          text: null,
+          imageUrl: imageDataUrl, // Use the new Data URL
+          timestamp: new Date().toISOString(),
+        },
+      ]);
+      optimisticMessageIds.current.add(tempMessageId);
+    };
 
-    // Optimistically add the message to state
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: tempMessageId, // Use tempId here initially
-        tempId: tempMessageId, // Store tempId for later matching
-        sender: "user",
-        text: null, // Image messages typically don't have text
-        imageUrl: URL.createObjectURL(file), // OPTIONAL: Display local file instantly
-        timestamp: new Date().toISOString(),
-      },
-    ]);
-    optimisticMessageIds.current.add(tempMessageId); // Add tempId to set
-
+    // In parallel, upload the file to the server
     try {
+      const formData = new FormData();
+      formData.append("image", file);
+      formData.append("userId", currentUserId);
+
       const token = localStorage.getItem("token");
       const config = {
         headers: {
@@ -77,27 +85,19 @@ const ChatWidget = ({ isOpen, onClose, initialMessage }) => {
         config
       );
 
-      console.log("Backend response for image upload:", response.data);
-
-      // Now, emit the message to the socket with the tempId for the backend to acknowledge
-      // The backend should then emit a 'receiveMessage' including this tempId and the real message ID
+      // Emit the socket event with the final URL from the server
       socketRef.current.emit("sendMessage", {
         userId: currentUserId,
-        senderId: currentUserId, // Or adminId if applicable
+        senderId: currentUserId,
         senderRole: "user",
-        messageText: null, // No text for image messages
-        imageUrl: response.data.imageUrl, // Send the URL returned by the backend
-        tempId: tempMessageId, // Send tempId for confirmation
+        messageText: null,
+        imageUrl: response.data.imageUrl, // URL from backend
+        tempId: tempMessageId,
       });
-
-      // No need to setMessages again here, handleReceiveMessage will do the update
-      // if you emit the message via socket. If not emitting via socket for self,
-      // you'd update here to remove tempId and add real id.
-      // For now, let handleReceiveMessage handle the final update from socket.
     } catch (err) {
       console.error("Failed to send image:", err);
       setChatError("Failed to send image.");
-      // OPTIONAL: Remove the optimistic message on error or mark as failed
+      // If the upload fails, remove the optimistic message
       setMessages((prev) => prev.filter((msg) => msg.tempId !== tempMessageId));
       optimisticMessageIds.current.delete(tempMessageId);
     }
@@ -287,7 +287,8 @@ const ChatWidget = ({ isOpen, onClose, initialMessage }) => {
                     // />
                     <img
                       src={
-                        message.imageUrl.startsWith("blob:")
+                        message.imageUrl.startsWith("blob:") ||
+                        message.imageUrl.startsWith("data:")
                           ? message.imageUrl
                           : `${SOCKET_URL.replace("/api", "")}${
                               message.imageUrl
