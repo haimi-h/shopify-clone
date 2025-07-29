@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { LanguageContext } from "./LanguageProvider";
 import LanguageSelector from "./LanguageProvider"; // This is the globe-icon version
-import LanguageOptionsModal from '../components/LanguageOptionsModal'; // NEW: Import the modal-only version
+import LanguageOptionsModal from '../pages/LanguageOptionsModal'; // NEW: Import the modal-only version
 import shopifyLogo from "../shopify-logo.png";
 import "../UserSettingsPage.css"; // Import the custom CSS file
 
