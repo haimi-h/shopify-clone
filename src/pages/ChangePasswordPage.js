@@ -34,10 +34,10 @@ export default function ChangePasswordPage() {
       setError(t('passwordsDoNotMatch'));
       return;
     }
-    if (formData.newPassword.length < 6) {
-      setError(t('passwordTooShort'));
-      return;
-    }
+    // if (formData.newPassword.length < 2) {
+    //   setError(t('passwordTooShort'));
+    //   return;
+    // }
 
     setLoading(true);
     try {

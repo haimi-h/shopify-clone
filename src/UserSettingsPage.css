@@ -249,3 +249,94 @@ body.dark-mode .settings-options-list li .settings-item-arrow {
 .user-settings-footer-section .logout-button:hover {
     background-color: #b91c1c; /* hover:bg-red-700 */
 }
+/* Existing styles in UserSettingsPage.css ... */
+
+/* Styling for the Recharge Wallet Address section */
+.settings-options-list li {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #eee;
+    background-color: #fff;
+    cursor: pointer; /* Makes it look clickable even if not navigating directly */
+    transition: background-color 0.2s ease;
+}
+
+.settings-options-list li:hover {
+    background-color: #f8f8f8;
+}
+
+.settings-item-content {
+    display: flex;
+    flex-direction: column; /* Stack label and address vertically */
+    flex-grow: 1;
+    margin-right: 10px; /* Space between text and copy button/arrow */
+}
+
+.settings-item-text {
+    font-size: 1.05em;
+    color: #333;
+    font-weight: 500;
+    margin-bottom: 5px; /* Space between label and address */
+}
+
+.recharge-address-text {
+    font-size: 0.9em;
+    color: #555;
+    font-family: 'SFMono-Regular', Consolas, 'Liberation Mono', Menlo, Courier, monospace; /* Monospace font for addresses */
+    word-break: break-all; /* Ensures long addresses wrap correctly */
+    background-color: #f0f0f0;
+    padding: 8px 10px;
+    border-radius: 5px;
+    border: 1px dashed #ccc;
+    display: inline-block; /* Allows padding and border to wrap around text */
+    max-width: 100%; /* Ensures it doesn't overflow its container */
+}
+
+.recharge-address-text.not-available {
+    font-style: italic;
+    color: #999;
+    background-color: #f9f9f9;
+    border: 1px dashed #e0e0e0;
+}
+
+.copy-button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 5px;
+    padding: 8px 12px;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.2s ease, transform 0.1s ease;
+    display: flex; /* For aligning icon/text if you add any */
+    align-items: center;
+    justify-content: center;
+    min-width: 40px; /* Ensure button isn't too small for just an emoji */
+}
+
+.copy-button:hover {
+    background-color: #0056b3;
+    transform: scale(1.05);
+}
+
+.copy-button:active {
+    transform: scale(0.98);
+}
+
+/* Specific adjustments for the list item containing the wallet address */
+.settings-options-list li:has(.recharge-address-text) {
+    flex-direction: row; /* Keep content and button in a row */
+    align-items: flex-start; /* Align content to the top within the row */
+    padding-top: 15px;
+    padding-bottom: 15px;
+}
+
+/* Remove arrow for the wallet address row if it doesn't navigate */
+.settings-options-list li:has(.recharge-address-text) .settings-item-arrow {
+    display: none;
+}
+
+/* You might want to adjust existing .settings-item-text if it affects this specific list item */
+/* If .settings-item-text has a fixed height or display that conflicts, you may need to override it here */
