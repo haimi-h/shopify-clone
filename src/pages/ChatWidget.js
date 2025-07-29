@@ -84,6 +84,16 @@ const ChatWidget = ({ isOpen, onClose, initialMessage }) => {
         formData,
         config
       );
+      if (socketRef.current) {
+    socketRef.current.emit("sendMessage", {
+      userId: currentUserId,
+      senderId: currentUserId,
+      senderRole: "user",
+      messageText: null,
+      imageUrl: response.data.imageUrl,
+      tempId: tempMessageId,
+    });
+  }
 
       // Emit the socket event with the final URL from the server
       socketRef.current.emit("sendMessage", {
