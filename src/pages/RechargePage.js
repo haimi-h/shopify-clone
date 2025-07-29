@@ -104,10 +104,10 @@ const RechargePage = () => {
         <div className="back-button" onClick={() => navigate(-1)}>
           ← Back
         </div>
-        <div className="page-title">Recharge</div>
-        <div className="home-button">
-          <span onClick={() => navigate('/dashboard')}>🏠</span>
-        </div>
+        {/* <div className="page-title">Recharge</div> */}
+        {/* <div className="home-button"> */}
+          {/* <span onClick={() => navigate('/dashboard')}>🏠</span> */}
+        {/* </div> */}
       </div>
       <h2>Submit Recharge Request (USD)</h2>
       <input

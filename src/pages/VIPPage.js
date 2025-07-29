@@ -60,13 +60,13 @@ export default function VIPPage() {
 
       <button className="go-button"> GO!</button>
 
-      <div className="vip-footer">
+      {/* <div className="vip-footer">
         <img
           src="https://upload.wikimedia.org/wikipedia/commons/8/80/Black_triangle_icon.png"
           alt="i3 logo"
         />
         <span>i3 mobile solutions</span>
-      </div>
+      </div> */}
     </div>
   );
 }

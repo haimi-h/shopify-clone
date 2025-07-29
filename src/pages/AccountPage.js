@@ -33,7 +33,7 @@ export default function AccountPage() {
                 const user = JSON.parse(userString);
                 setCurrentUser({
                     name: user.username || 'N/A',
-                    email: user.email || 'haimi@example.com (Placeholder)', // You might fetch real email later
+                    // email: user.email || 'haimi@example.com (Placeholder)', // You might fetch real email later
                     phone: user.phone || 'N/A',
                     vipLevel: user.vipLevel || 'Gold (Placeholder)', // You might fetch real VIP level later
                     id: user.id
