@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import axios from "axios";
 import io from "socket.io-client";
-import "../CustomerServicePage.css"; // Assuming this CSS provides necessary styles
+import "../CustomerServicePage.css";
 
 const UserIcon = () => <span className="icon user-icon">U</span>;
 const BotIcon = () => <span className="icon bot-icon">A</span>;
@@ -14,7 +14,6 @@ const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || "http://localhost:5000";
 
 const ChatWidget = ({ isOpen, onClose, initialMessage }) => {
   const [isChatOpen, setIsChatOpen] = useState(isOpen);
-  const [isUploading, setIsUploading] = useState(false);
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState(initialMessage || "");
   const chatEndRef = useRef(null);
@@ -37,115 +36,97 @@ const ChatWidget = ({ isOpen, onClose, initialMessage }) => {
   }, [initialMessage]);
 
   useEffect(() => {
-    // Scroll to bottom when messages change, but only if chat is open or becomes open
-    if (isChatOpen) {
-      chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [messages, isChatOpen]); // Added isChatOpen to dependency array
+    chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   const handleImageSend = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
-    setIsUploading(true);
-    setChatError(null); // Clear previous errors
-
     const formData = new FormData();
     formData.append("image", file);
     formData.append("userId", currentUserId);
 
-    const tempMessageId = `optimistic-image-user-${Date.now()}`;
-    const imageUrlPreview = URL.createObjectURL(file); // Create a temporary URL for preview
+    const tempMessageId = `optimistic-image-user-${Date.now()}`; // Generate a tempId for the optimistic image message
 
+    // Optimistically add the message to state
     setMessages((prev) => [
-      ...prev,
-      {
-        id: tempMessageId, // Use tempId as id for optimistic message
-        tempId: tempMessageId,
-        sender: "user",
-        text: null,
-        imageUrl: imageUrlPreview,
-        timestamp: new Date().toISOString(),
-        isUploading: true, // Flag for showing upload indicator
-      },
+        ...prev,
+        {
+            id: tempMessageId, // Use tempId here initially
+            tempId: tempMessageId, // Store tempId for later matching
+            sender: "user",
+            text: null, // Image messages typically don't have text
+            imageUrl: URL.createObjectURL(file), // OPTIONAL: Display local file instantly
+            timestamp: new Date().toISOString(),
+        },
     ]);
-    optimisticMessageIds.current.add(tempMessageId);
+    optimisticMessageIds.current.add(tempMessageId); // Add tempId to set
 
     try {
-      const token = localStorage.getItem("token");
-      const config = {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "multipart/form-data", // Ensure correct content type for file upload
-        },
-      };
+        const token = localStorage.getItem("token");
+        const config = {
+            headers: {
+                "Content-Type": "multipart/form-data",
+                Authorization: `Bearer ${token}`,
+            },
+        };
+        const response = await axios.post(
+            `${API_BASE_URL}/chat/messages/image`,
+            formData,
+            config
+        );
 
-      const response = await axios.post(
-        `${API_BASE_URL}/chat/messages/image`,
-        formData,
-        config
-      );
+        console.log('Backend response for image upload:', response.data);
 
-      // IMPORTANT: Check if the socket is still connected before emitting.
-      // This prevents the app from crashing if the user closes the chat mid-upload.
-      if (!socketRef.current) {
-        console.warn("Socket disconnected before image message could be sent via WebSocket. Removing optimistic message.");
-        // Remove the optimistic message if socket is not available to confirm it
+        // Now, emit the message to the socket with the tempId for the backend to acknowledge
+        // The backend should then emit a 'receiveMessage' including this tempId and the real message ID
+        socketRef.current.emit("sendMessage", {
+            userId: currentUserId,
+            senderId: currentUserId, // Or adminId if applicable
+            senderRole: "user",
+            messageText: null, // No text for image messages
+            imageUrl: response.data.imageUrl, // Send the URL returned by the backend
+            tempId: tempMessageId, // Send tempId for confirmation
+        });
+
+        // No need to setMessages again here, handleReceiveMessage will do the update
+        // if you emit the message via socket. If not emitting via socket for self,
+        // you'd update here to remove tempId and add real id.
+        // For now, let handleReceiveMessage handle the final update from socket.
+    } catch (err) {
+        console.error("Failed to send image:", err);
+        setChatError("Failed to send image.");
+        // OPTIONAL: Remove the optimistic message on error or mark as failed
         setMessages((prev) => prev.filter(msg => msg.tempId !== tempMessageId));
         optimisticMessageIds.current.delete(tempMessageId);
-        return;
-      }
-
-      // Emit the message via socket.io
-      socketRef.current.emit("sendMessage", {
-        userId: currentUserId,
-        senderId: currentUserId,
-        senderRole: "user",
-        messageText: null,
-        imageUrl: response.data.imageUrl, // Use the URL returned by the server
-        tempId: tempMessageId, // Pass tempId for server confirmation
-      });
-
-    } catch (err) {
-      console.error("Failed to send image:", err);
-      setChatError("Failed to send image.");
-      // On error, remove the optimistic message from the state
-      setMessages((prev) => prev.filter(msg => msg.tempId !== tempMessageId));
-      optimisticMessageIds.current.delete(tempMessageId); // Clear tempId from set
-    } finally {
-      setIsUploading(false); // Always set uploading to false when done
     }
-    // No need to revoke URL.createObjectURL here, it's revoked in the img onLoad
-  };
+};
 
   const handleReceiveMessage = useCallback((message) => {
     setMessages((prevMessages) => {
-      // If this is a confirmation for an optimistic user message
       if (
         message.sender_role === "user" &&
         message.tempId &&
         optimisticMessageIds.current.has(message.tempId)
       ) {
-        optimisticMessageIds.current.delete(message.tempId); // Remove from set
+        optimisticMessageIds.current.delete(message.tempId);
 
         return prevMessages.map((msg) =>
           msg.tempId === message.tempId
             ? {
-                id: message.id, // Replace tempId with actual ID from server
+                id: message.id,
                 sender: message.sender_role,
                 text: message.message_text,
                 imageUrl: message.image_url || message.imageUrl,
                 timestamp: message.timestamp,
-                isUploading: false, // Mark as no longer uploading
-                tempId: undefined, // Clear tempId
               }
             : msg
         );
       }
 
-      // Prevent duplicate messages (especially for non-optimistic messages or bot responses)
       const isDuplicate = prevMessages.some(
-        (msg) => msg.id === message.id || (message.tempId && msg.tempId === message.tempId)
+        (msg) => msg.id === message.id || msg.tempId === message.tempId
       );
 
       if (!isDuplicate) {
@@ -157,12 +138,11 @@ const ChatWidget = ({ isOpen, onClose, initialMessage }) => {
             text: message.message_text,
             imageUrl: message.image_url || message.imageUrl,
             timestamp: message.timestamp,
-            isUploading: false, // New messages are never uploading initially
           },
         ];
       }
 
-      return prevMessages; // If duplicate, return previous state
+      return prevMessages;
     });
   }, []);
 
@@ -179,20 +159,10 @@ const ChatWidget = ({ isOpen, onClose, initialMessage }) => {
       socketRef.current = io(SOCKET_URL);
 
       socketRef.current.on("connect", () => {
-        console.log("Socket connected:", socketRef.current.id);
         socketRef.current.emit("joinRoom", `user-${currentUserId}`);
       });
 
       socketRef.current.on("receiveMessage", handleReceiveMessage);
-
-      socketRef.current.on("disconnect", () => {
-        console.log("Socket disconnected");
-      });
-
-      socketRef.current.on("connect_error", (err) => {
-        console.error("Socket connection error:", err);
-        setChatError("Failed to connect to chat service.");
-      });
     }
 
     return () => {
@@ -206,7 +176,6 @@ const ChatWidget = ({ isOpen, onClose, initialMessage }) => {
   const fetchChatHistory = useCallback(async () => {
     if (!currentUserId) return;
     setLoadingChat(true);
-    setChatError(null); // Clear previous errors
     try {
       const token = localStorage.getItem("token");
       const config = { headers: { Authorization: `Bearer ${token}` } };
@@ -214,19 +183,18 @@ const ChatWidget = ({ isOpen, onClose, initialMessage }) => {
         `${API_BASE_URL}/chat/messages/${currentUserId}`,
         config
       );
-
+      
+      // FIXED: Ensure imageUrl is mapped from the history response
       setMessages(
         response.data.map((msg) => ({
           id: msg.id,
           sender: msg.sender_role,
           text: msg.message_text,
           timestamp: msg.timestamp,
-          imageUrl: msg.image_url || msg.imageUrl, // Ensure imageUrl is mapped
-          isUploading: false, // History messages are never uploading
+          imageUrl: msg.image_url || msg.imageUrl,
         }))
       );
     } catch (err) {
-      console.error("Failed to load chat history:", err);
       setChatError("Failed to load chat history.");
     } finally {
       setLoadingChat(false);
@@ -241,7 +209,7 @@ const ChatWidget = ({ isOpen, onClose, initialMessage }) => {
 
   const handleSendMessage = (e) => {
     e.preventDefault();
-    if (inputValue.trim() === "" || !socketRef.current || isUploading) return; // Disable if uploading
+    if (inputValue.trim() === "" || !socketRef.current) return;
 
     const tempMessageId = `optimistic-user-${Date.now()}`;
     const messageToSend = {
@@ -255,23 +223,20 @@ const ChatWidget = ({ isOpen, onClose, initialMessage }) => {
     setMessages((prev) => [
       ...prev,
       {
-        id: tempMessageId, // Use tempId as ID for optimistic message
+        id: tempMessageId,
         tempId: tempMessageId,
         sender: "user",
         text: messageToSend.messageText,
         timestamp: new Date().toISOString(),
-        isUploading: false, // Text messages aren't "uploading" in the same way as images
       },
     ]);
     optimisticMessageIds.current.add(tempMessageId);
     setInputValue("");
-    setChatError(null); // Clear any previous errors when sending new message
 
     socketRef.current.emit("sendMessage", messageToSend);
   };
 
   const toggleChat = () => {
-    if (isUploading) return; // Prevent closing/opening during upload
     const nextState = !isChatOpen;
     setIsChatOpen(nextState);
     if (!nextState && onClose) {
@@ -285,60 +250,49 @@ const ChatWidget = ({ isOpen, onClose, initialMessage }) => {
         onClick={toggleChat}
         className="chat-toggle-button"
         aria-label="Toggle chat"
-        disabled={isUploading} // Disable toggle button during upload
       >
         <ChatIcon />
       </button>
       <div className={`chat-popup ${isChatOpen ? "active" : ""}`}>
         <header className="chat-header">
           <h1>Customer Service</h1>
-          <button onClick={toggleChat} className="chat-close-button" disabled={isUploading}>
-            {isUploading ? "Uploading..." : <CloseIcon />} {/* More descriptive */}
+          <button onClick={toggleChat} className="chat-close-button">
+            <CloseIcon />
           </button>
         </header>
 
         <main className="chat-messages-area">
-        {loadingChat && <div className="loading-indicator">Loading chat history...</div>}
-        {chatError && <div className="error-message">Error: {chatError}</div>}
-        {messages.map((message) => (
-          <div
-            key={message.id || message.tempId} // Use tempId for optimistic messages until actual ID is received
-            className={`message-container ${
-              message.sender === "user" ? "user-message" : "bot-message"
-            }`}
-          >
-            {message.sender === "user" ? <UserIcon /> : <BotIcon />}
-            <div className="message-bubble">
-              {/* Spinner and "Sending..." text for uploading images */}
-              {message.isUploading && (
-                <div className="spinner-container">
-                  <div className="spinner"></div>
-                  <span>Sending...</span>
-                </div>
-              )}
-              {/* Display the image if imageUrl exists */}
-              {message.imageUrl && (
-                <img
-                  src={message.imageUrl}
-                  alt="Uploaded"
-                  className="chat-image" // Add a class for styling
-                  onLoad={(e) => URL.revokeObjectURL(e.target.src)} // Clean up blob URL
-                />
-              )}
-              {/* Display text message if text exists */}
-              {message.text && <p>{message.text}</p>}
-              {/* Timestamp */}
-              <span className="message-timestamp">
-                {new Date(message.timestamp).toLocaleTimeString([], {
-                  hour: "2-digit",
-                  minute: "2-digit",
-                })}
-              </span>
-            </div>
-          </div>
-        ))}
-        <div ref={chatEndRef} />
-      </main>
+          {loadingChat ? (
+            <div className="loading-message">Loading...</div>
+          ) : chatError ? (
+            <div className="error-message">{chatError}</div>
+          ) : (
+            messages.map((message) => (
+              <div
+                key={message.id}
+                className={`message-container ${
+                  message.sender === "user" ? "user-message" : "bot-message"
+                }`}
+              >
+                {message.sender !== "user" && <BotIcon />}
+                <div className="message-bubble">
+                  {message.text && <p>{message.text}</p>}
+                  {message.imageUrl && (
+                    <img
+                      src={`${SOCKET_URL.replace("/api", "")}${
+                        message.imageUrl
+                      }`}
+                      alt="User upload"
+                      className="chat-image"
+                    />
+                  )}
+                </div>
+                {message.sender === "user" && <UserIcon />}
+              </div>
+            ))
+          )}
+          <div ref={chatEndRef} />
+        </main>
 
         <footer className="chat-footer">
           <form onSubmit={handleSendMessage} className="message-form">
@@ -351,7 +305,7 @@ const ChatWidget = ({ isOpen, onClose, initialMessage }) => {
               accept="image/*"
               onChange={handleImageSend}
               style={{ display: "none" }}
-              disabled={!currentUserId || isUploading} // Disable file input during upload
+              disabled={!currentUserId}
             />
 
             <input
@@ -359,15 +313,15 @@ const ChatWidget = ({ isOpen, onClose, initialMessage }) => {
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               placeholder={
-                currentUserId && !isUploading ? "Type your message..." : "Please log in or wait..." // Update placeholder
+                currentUserId ? "Type your message..." : "Please log in to chat"
               }
               className="message-input"
-              disabled={!currentUserId || isUploading} // Disable text input during upload
+              disabled={!currentUserId}
             />
             <button
               type="submit"
               className="send-button"
-              disabled={!currentUserId || isUploading || inputValue.trim() === ""} // Disable send button during upload or if input is empty
+              disabled={!currentUserId}
             >
               ➤
             </button>
