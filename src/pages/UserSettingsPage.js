@@ -184,14 +184,14 @@ export default function UserSettingsPage() {
             )}
           </li>
           {/* Customer Service */}
-          <li onClick={() => handleSettingClick("/chat")}>
+          {/* <li onClick={() => handleSettingClick("/chat")}>
             <div className="settings-item-content">
               <span className="settings-item-text">
                 {t("customerServiceOption")}
               </span>
             </div>
             <span className="settings-item-arrow">&gt;</span>
-          </li>
+          </li> */}
           {/* About Us */}
           <li onClick={() => console.log(t("aboutUsText"))}>
             <div className="settings-item-content">
