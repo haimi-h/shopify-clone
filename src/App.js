@@ -60,6 +60,7 @@ function App() {
             <Route path="/payment" element={<ManualPayment />} />
             <Route path="/settings" element={<UserSettingsPage />} />
             <Route path="/withdraw" element={<WithdrawalPage />} />
+            <Route path="/change-password" element={<ChangePasswordPage />} /> {/* The new page */}
 
             {/* Admin Routes - NOW NESTED INSIDE LAYOUT */}
             <Route path="/admin" element={<AdminDashboard />} />
