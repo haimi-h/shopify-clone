@@ -14,6 +14,7 @@ const SOCKET_URL = process.env.REACT_APP_SOCKET_URL || "http://localhost:5000";
 
 const ChatWidget = ({ isOpen, onClose, initialMessage }) => {
   const [isChatOpen, setIsChatOpen] = useState(isOpen);
+  const [isUploading, setIsUploading] = useState(false);
   const [messages, setMessages] = useState([]);
   const [inputValue, setInputValue] = useState(initialMessage || "");
   const chatEndRef = useRef(null);
@@ -45,6 +46,8 @@ const handleImageSend = async (e) => {
     const file = e.target.files[0];
     if (!file) return;
 
+    setIsUploading(true);
+
     const formData = new FormData();
     formData.append("image", file);
     formData.append("userId", currentUserId);
@@ -60,6 +63,7 @@ const handleImageSend = async (e) => {
             text: null,
             imageUrl: URL.createObjectURL(file),
             timestamp: new Date().toISOString(),
+            isUploading: true,
         },
     ]);
     optimisticMessageIds.current.add(tempMessageId);
@@ -98,7 +102,10 @@ const handleImageSend = async (e) => {
         console.error("Failed to send image:", err);
         setChatError("Failed to send image.");
         setMessages((prev) => prev.filter(msg => msg.tempId !== tempMessageId));
-        optimisticMessageIds.current.delete(tempMessageId);
+        // optimisticMessageIds.current.delete(tempMessageId);
+    }
+    finally {
+        setIsUploading(false); // Set uploading to false when done
     }
 };
 
@@ -236,6 +243,7 @@ const handleImageSend = async (e) => {
   };
 
   const toggleChat = () => {
+    if (isUploading) return;
     const nextState = !isChatOpen;
     setIsChatOpen(nextState);
     if (!nextState && onClose) {
@@ -249,47 +257,34 @@ const handleImageSend = async (e) => {
         onClick={toggleChat}
         className="chat-toggle-button"
         aria-label="Toggle chat"
+        disabled={isUploading}
       >
         <ChatIcon />
       </button>
       <div className={`chat-popup ${isChatOpen ? "active" : ""}`}>
         <header className="chat-header">
           <h1>Customer Service</h1>
-          <button onClick={toggleChat} className="chat-close-button">
-            <CloseIcon />
+          <button onClick={toggleChat} className="chat-close-button" disabled={isUploading}>
+            {isUploading ? "..." : <CloseIcon />}
           </button>
         </header>
 
         <main className="chat-messages-area">
-          {loadingChat ? (
-            <div className="loading-message">Loading...</div>
-          ) : chatError ? (
-            <div className="error-message">{chatError}</div>
-          ) : (
-            messages.map((message) => (
+          {messages.map((message) => (
               <div
                 key={message.id}
                 className={`message-container ${
                   message.sender === "user" ? "user-message" : "bot-message"
                 }`}
               >
-                {message.sender !== "user" && <BotIcon />}
+                {/* ... other message rendering */}
                 <div className="message-bubble">
-                  {message.text && <p>{message.text}</p>}
-                  {message.imageUrl && (
-                    <img
-                      src={`${SOCKET_URL.replace("/api", "")}${
-                        message.imageUrl
-                      }`}
-                      alt="User upload"
-                      className="chat-image"
-                    />
-                  )}
+                  {message.isUploading && <div className="spinner"></div>}
+                  {/* ... other bubble content */}
                 </div>
-                {message.sender === "user" && <UserIcon />}
               </div>
             ))
-          )}
+          }
           <div ref={chatEndRef} />
         </main>
 
@@ -304,7 +299,8 @@ const handleImageSend = async (e) => {
               accept="image/*"
               onChange={handleImageSend}
               style={{ display: "none" }}
-              disabled={!currentUserId}
+              disabled={!currentUserId || isUploading}
+              
             />
 
             <input
@@ -320,7 +316,7 @@ const handleImageSend = async (e) => {
             <button
               type="submit"
               className="send-button"
-              disabled={!currentUserId}
+              disabled={!currentUserId || isUploading}
             >
               ➤
             </button>
