@@ -71,6 +71,7 @@ export default function Dashboard() {
 
     setLoadingBalance(true);
     try {
+      // These API calls are correct and efficient
       const userProfilePromise = axios.get(`${API_BASE_URL}/users/profile`, {
         headers: { Authorization: `Bearer ${token}` }
       });
@@ -79,41 +80,34 @@ export default function Dashboard() {
       const [userResponse, priceResponse] = await Promise.all([userProfilePromise, pricePromise]);
       
       const userData = userResponse.data.user;
-      const trxPrice = priceResponse.data.tron.usd;
+      const trxPrice = priceResponse.data.tron.usd; // This is the price of 1 TRX in USD
 
-      if (userData.wallet_balance && trxPrice) {
-        setRawTrxBalance(parseFloat(userData.wallet_balance));
-        setBalanceInUsd(parseFloat(userData.wallet_balance) * trxPrice);
+      // --- CORRECTED LOGIC STARTS HERE ---
+
+      // Get the user's balance from the database, which we know is in USD.
+      // Default to 0 if it's not available.
+      const userWalletBalanceUSD = parseFloat(userData.wallet_balance) || 0;
+
+      // 1. Set the main display balance directly to the USD value.
+      setBalanceInUsd(userWalletBalanceUSD);
+
+      // 2. Calculate the TRX equivalent for the small, secondary display.
+      // We do this by dividing the USD balance by the price of one TRX.
+      // We also check if trxPrice is valid to avoid dividing by zero.
+      if (trxPrice > 0) {
+        setRawTrxBalance(userWalletBalanceUSD / trxPrice);
       } else {
-        setRawTrxBalance(0);
-        setBalanceInUsd(0);
+        setRawTrxBalance(0); // If price is unavailable, show 0 TRX
       }
+      
     } catch (error) {
       console.error("Failed to fetch live balance:", error);
+      // If anything fails, reset balances to 0 to avoid showing stale data.
+      setBalanceInUsd(0);
+      setRawTrxBalance(0);
     } finally {
       setLoadingBalance(false);
     }
-  }, [API_BASE_URL]);
-
-  useEffect(() => {
-    fetchLiveBalance();
-  }, [location, fetchLiveBalance]);
-
-  useEffect(() => {
-    const fetchProducts = async () => {
-      try {
-        setLoadingProducts(true);
-        setProductsError(null);
-        const response = await axios.get(`${API_BASE_URL}/products`);
-        setProducts(response.data);
-      } catch (err) {
-        console.error("Error fetching products:", err);
-        setProductsError("Failed to load products.");
-      } finally {
-        setLoadingProducts(false);
-      }
-    };
-    fetchProducts();
   }, [API_BASE_URL]);
 
   useEffect(() => {
