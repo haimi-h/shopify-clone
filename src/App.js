@@ -22,6 +22,7 @@ import ProductRatingPage from './pages/ProductRatingPage';
 import ManualPayment from './pages/ManualPayment';
 import UserSettingsPage from './pages/UserSettingsPage';
 import WithdrawalPage from './pages/WithdrawalPage';
+import ChangePasswordPage from './pages/ChangePasswordPage';
 
 // Admin pages (will be inside Layout)
 import AdminDashboard from './pages/admin/AdminDashboard';
