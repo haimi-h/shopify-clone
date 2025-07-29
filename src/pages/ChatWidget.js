@@ -39,6 +39,70 @@ const ChatWidget = ({ isOpen, onClose, initialMessage }) => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  const handleImageSend = async (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const tempMessageId = `optimistic-image-user-${Date.now()}`;
+
+  // Use FileReader to create a self-contained Data URL for the preview.
+  // This is more reliable for optimistic updates.
+  const reader = new FileReader();
+  reader.readAsDataURL(file);
+  reader.onload = () => {
+    // Once the file is read, optimistically add it to the UI
+    const imageDataUrl = reader.result;
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: tempMessageId,
+        tempId: tempMessageId,
+        sender: "user",
+        text: null,
+        imageUrl: imageDataUrl, // Use the new Data URL
+        timestamp: new Date().toISOString(),
+      },
+    ]);
+    optimisticMessageIds.current.add(tempMessageId);
+  };
+
+  // In parallel, upload the file to the server
+  try {
+    const formData = new FormData();
+    formData.append("image", file);
+    formData.append("userId", currentUserId);
+
+    const token = localStorage.getItem("token");
+    const config = {
+      headers: {
+        "Content-Type": "multipart/form-data",
+        Authorization: `Bearer ${token}`,
+      },
+    };
+    const response = await axios.post(
+      `${API_BASE_URL}/chat/messages/image`,
+      formData,
+      config
+    );
+
+    // Emit the socket event with the final URL from the server
+    socketRef.current.emit("sendMessage", {
+      userId: currentUserId,
+      senderId: currentUserId,
+      senderRole: "user",
+      messageText: null,
+      imageUrl: response.data.imageUrl, // URL from backend
+      tempId: tempMessageId,
+    });
+  } catch (err) {
+    console.error("Failed to send image:", err);
+    setChatError("Failed to send image.");
+    // If the upload fails, remove the optimistic message
+    setMessages((prev) => prev.filter((msg) => msg.tempId !== tempMessageId));
+    optimisticMessageIds.current.delete(tempMessageId);
+  }
+};
+
   const handleReceiveMessage = useCallback((message) => {
     setMessages((prevMessages) => {
       if (
@@ -47,6 +111,7 @@ const ChatWidget = ({ isOpen, onClose, initialMessage }) => {
         optimisticMessageIds.current.has(message.tempId)
       ) {
         optimisticMessageIds.current.delete(message.tempId);
+
         return prevMessages.map((msg) =>
           msg.tempId === message.tempId
             ? {
@@ -82,134 +147,34 @@ const ChatWidget = ({ isOpen, onClose, initialMessage }) => {
   }, []);
 
   useEffect(() => {
-    // Disconnect existing socket if it exists before trying to connect a new one
-    if (socketRef.current) {
-      socketRef.current.disconnect();
-      socketRef.current = null;
+    if (!currentUserId || !isChatOpen) {
+      if (socketRef.current) {
+        socketRef.current.disconnect();
+        socketRef.current = null;
+      }
+      return;
     }
 
-    if (isChatOpen && currentUserId) {
+    if (!socketRef.current) {
       socketRef.current = io(SOCKET_URL);
 
       socketRef.current.on("connect", () => {
-        console.log("Socket connected, joining room:", `user-${currentUserId}`);
         socketRef.current.emit("joinRoom", `user-${currentUserId}`);
       });
 
       socketRef.current.on("receiveMessage", handleReceiveMessage);
-
-      socketRef.current.on("disconnect", () => {
-        console.log("Socket disconnected");
-      });
-
-      socketRef.current.on("connect_error", (err) => {
-        console.error("Socket connection error:", err);
-        setChatError("Could not connect to chat server.");
-      });
-
     }
 
-    // Cleanup function for when component unmounts or dependencies change
     return () => {
       if (socketRef.current) {
-        console.log("Disconnecting socket in cleanup");
         socketRef.current.disconnect();
         socketRef.current = null;
       }
     };
   }, [isChatOpen, currentUserId, handleReceiveMessage]);
 
-
-  const handleImageSend = async (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
-
-    if (!currentUserId) {
-      setChatError("Please log in to send images.");
-      return;
-    }
-
-    // IMPORTANT: Check socketRef.current BEFORE proceeding with optimistic update and API call
-    if (!socketRef.current || !socketRef.current.connected) {
-      setChatError("Chat is not connected. Please try again.");
-      return;
-    }
-
-    const tempMessageId = `optimistic-image-user-${Date.now()}`;
-
-    // Use FileReader to create a self-contained Data URL for the preview.
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = () => {
-      const imageDataUrl = reader.result;
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: tempMessageId,
-          tempId: tempMessageId,
-          sender: "user",
-          text: null,
-          imageUrl: imageDataUrl,
-          timestamp: new Date().toISOString(),
-        },
-      ]);
-      optimisticMessageIds.current.add(tempMessageId);
-    };
-
-    try {
-      const formData = new FormData();
-      formData.append("image", file);
-      formData.append("userId", currentUserId);
-
-      const token = localStorage.getItem("token");
-      const config = {
-        headers: {
-          "Content-Type": "multipart/form-data",
-          Authorization: `Bearer ${token}`,
-        },
-      };
-      const response = await axios.post(
-        `${API_BASE_URL}/chat/messages/image`,
-        formData,
-        config
-      );
-
-      // After successful upload, emit the socket event with the actual server URL
-      // Re-check socketRef.current here as well, in case connection dropped during async operation
-      if (socketRef.current && socketRef.current.connected) {
-        socketRef.current.emit("sendMessage", {
-          userId: currentUserId,
-          senderId: currentUserId,
-          senderRole: "user",
-          messageText: null,
-          imageUrl: response.data.imageUrl, // URL from backend
-          tempId: tempMessageId, // Keep tempId to match with confirmation
-        });
-      } else {
-        console.warn("Socket disconnected after image upload, could not emit message.");
-        // Optionally, revert the optimistic update or show a specific error
-        setMessages((prev) => prev.filter((msg) => msg.tempId !== tempMessageId));
-        optimisticMessageIds.current.delete(tempMessageId);
-        setChatError("Image sent to server, but chat connection lost. Message might not be delivered immediately.");
-      }
-
-    } catch (err) {
-      console.error("Failed to send image:", err);
-      setChatError("Failed to send image.");
-      // If the upload fails, remove the optimistic message
-      setMessages((prev) => prev.filter((msg) => msg.tempId !== tempMessageId));
-      optimisticMessageIds.current.delete(tempMessageId);
-    }
-  };
-
   const fetchChatHistory = useCallback(async () => {
-    if (!currentUserId) {
-      // If no user, clear messages and return
-      setMessages([]);
-      setChatError("Please log in to view chat history.");
-      return;
-    }
-
+    if (!currentUserId) return;
     setLoadingChat(true);
     try {
       const token = localStorage.getItem("token");
@@ -219,6 +184,7 @@ const ChatWidget = ({ isOpen, onClose, initialMessage }) => {
         config
       );
 
+      // FIXED: Ensure imageUrl is mapped from the history response
       setMessages(
         response.data.map((msg) => ({
           id: msg.id,
@@ -229,7 +195,6 @@ const ChatWidget = ({ isOpen, onClose, initialMessage }) => {
         }))
       );
     } catch (err) {
-      console.error("Failed to load chat history:", err);
       setChatError("Failed to load chat history.");
     } finally {
       setLoadingChat(false);
@@ -239,26 +204,12 @@ const ChatWidget = ({ isOpen, onClose, initialMessage }) => {
   useEffect(() => {
     if (isChatOpen) {
       fetchChatHistory();
-    } else {
-        // When chat closes, clear messages and errors
-        setMessages([]);
-        setChatError(null);
     }
   }, [isChatOpen, fetchChatHistory]);
 
   const handleSendMessage = (e) => {
     e.preventDefault();
-    if (inputValue.trim() === "") return;
-
-    if (!currentUserId) {
-        setChatError("Please log in to send messages.");
-        return;
-    }
-
-    if (!socketRef.current || !socketRef.current.connected) {
-        setChatError("Chat is not connected. Please try again.");
-        return;
-    }
+    if (inputValue.trim() === "" || !socketRef.current) return;
 
     const tempMessageId = `optimistic-user-${Date.now()}`;
     const messageToSend = {
@@ -327,10 +278,16 @@ const ChatWidget = ({ isOpen, onClose, initialMessage }) => {
                 <div className="message-bubble">
                   {message.text && <p>{message.text}</p>}
                   {message.imageUrl && (
+                    // <img
+                    //   src={`${SOCKET_URL.replace("/api", "")}${
+                    //     message.imageUrl
+                    //   }`}
+                    //   alt="User upload"
+                    //   className="chat-image"
+                    // />
                     <img
                       src={
-                        message.imageUrl.startsWith("blob:") ||
-                        message.imageUrl.startsWith("data:")
+                        message.imageUrl.startsWith("blob:")
                           ? message.imageUrl
                           : `${SOCKET_URL.replace("/api", "")}${
                               message.imageUrl
@@ -375,7 +332,7 @@ const ChatWidget = ({ isOpen, onClose, initialMessage }) => {
             <button
               type="submit"
               className="send-button"
-              disabled={!currentUserId || inputValue.trim() === ""}
+              disabled={!currentUserId}
             >
               ➤
             </button>
