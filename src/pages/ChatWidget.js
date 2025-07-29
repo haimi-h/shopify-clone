@@ -298,43 +298,47 @@ const ChatWidget = ({ isOpen, onClose, initialMessage }) => {
         </header>
 
         <main className="chat-messages-area">
-          {loadingChat && <div className="loading-indicator">Loading chat history...</div>}
-          {chatError && <div className="error-message">{chatError}</div>}
-          {messages.map((message) => (
-            <div
-              key={message.id || message.tempId} // Use tempId for optimistic messages until actual ID is received
-              className={`message-container ${
-                message.sender === "user" ? "user-message" : "bot-message"
-              }`}
-            >
-              {message.sender === "user" ? <UserIcon /> : <BotIcon />}
-              <div className="message-bubble">
-                {message.isUploading && (
-                  <div className="spinner-container">
-                    <div className="spinner"></div>
-                    <span>Sending...</span>
-                  </div>
-                )}
-                {message.imageUrl && (
-                  <img
-                    src={message.imageUrl}
-                    alt="Uploaded"
-                    className="chat-image"
-                    onLoad={(e) => URL.revokeObjectURL(e.target.src)} // Clean up blob URL
-                  />
-                )}
-                {message.text && <p>{message.text}</p>}
-                <span className="message-timestamp">
-                  {new Date(message.timestamp).toLocaleTimeString([], {
-                    hour: "2-digit",
-                    minute: "2-digit",
-                  })}
-                </span>
-              </div>
-            </div>
-          ))}
-          <div ref={chatEndRef} />
-        </main>
+        {loadingChat && <div className="loading-indicator">Loading chat history...</div>}
+        {chatError && <div className="error-message">Error: {chatError}</div>}
+        {messages.map((message) => (
+          <div
+            key={message.id || message.tempId} // Use tempId for optimistic messages until actual ID is received
+            className={`message-container ${
+              message.sender === "user" ? "user-message" : "bot-message"
+            }`}
+          >
+            {message.sender === "user" ? <UserIcon /> : <BotIcon />}
+            <div className="message-bubble">
+              {/* Spinner and "Sending..." text for uploading images */}
+              {message.isUploading && (
+                <div className="spinner-container">
+                  <div className="spinner"></div>
+                  <span>Sending...</span>
+                </div>
+              )}
+              {/* Display the image if imageUrl exists */}
+              {message.imageUrl && (
+                <img
+                  src={message.imageUrl}
+                  alt="Uploaded"
+                  className="chat-image" // Add a class for styling
+                  onLoad={(e) => URL.revokeObjectURL(e.target.src)} // Clean up blob URL
+                />
+              )}
+              {/* Display text message if text exists */}
+              {message.text && <p>{message.text}</p>}
+              {/* Timestamp */}
+              <span className="message-timestamp">
+                {new Date(message.timestamp).toLocaleTimeString([], {
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </span>
+            </div>
+          </div>
+        ))}
+        <div ref={chatEndRef} />
+      </main>
 
         <footer className="chat-footer">
           <form onSubmit={handleSendMessage} className="message-form">
