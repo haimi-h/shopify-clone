@@ -1,22 +1,22 @@
-import React, { useState, createContext, useEffect, useCallback, useContext, useRef} from 'react';
+import React, { useState, createContext, useEffect, useCallback, useContext } from 'react'; // Removed useRef
 // You might want to move Auth.css import to a more global CSS or specific components
 // import '../Auth.css';
 import '../LanguageSelector.css'
 
-
-
 // 1. Define LanguageContext
 export const LanguageContext = createContext();
 
-// 2. Define your translations
+// 2. Define your translations (Keep all your translations here)
 const translations = {
+  // ... (Your existing 'English', 'Spanish', 'Arabic' translation objects) ...
+  // Ensure you have all the necessary translations for your app, including new ones from UserSettingsPage
   'English': {
     welcome: 'Welcome!',
     chooseLanguage: 'Choose language',
     selectLanguageButton: 'Select Language',
     confirmSelection: '✔️ Confirm Selection',
     close: '✖️ Close',
-    clickToChoose: 'Click the button to choose your language.',
+    clickToChoose: 'Click the button to choose your your language.',
     currentLanguageDisplay: 'Current Language:',
     brandName: 'Shopify',
     tagline: 'Talking',
@@ -70,9 +70,26 @@ const translations = {
     startOrderTask: 'START ORDER TASK',
     failedLoadSummary: 'Failed to load dashboard summary.',
     retryButton: 'Retry',
+    // UserSettingsPage specific translations
+    changePasswordOption: 'Change Password',
+    currentPasswordLabel: 'Current Password',
+    newPasswordLabel: 'New Password',
+    confirmNewPasswordLabel: 'Confirm New Password',
+    passwordsDoNotMatch: 'Passwords do not match.',
+    passwordTooShort: 'Password must be at least 6 characters long.',
+    passwordChangedSuccess: 'Password changed successfully!',
+    failedToChangePassword: 'Failed to change password.',
+    saving: 'Saving...',
+    saveChanges: 'Save Changes',
+    backButton: 'Back',
+    failedToLoadProfile: 'Failed to load profile.',
+    rechargeWalletAddressLabel: 'Recharge Wallet Address:',
+    notAvailable: 'Not Available',
+    withdrawOption: 'Withdraw',
+    changeLanguageOption: 'Change Language',
+    customerServiceOption: 'Customer Service',
   },
   'Spanish': {
-    // ... all your Spanish translations ...
     welcome: '¡Bienvenido!',
     chooseLanguage: 'Elija un idioma',
     selectLanguageButton: 'Seleccionar idioma',
@@ -132,9 +149,25 @@ const translations = {
     startOrderTask: 'INICIAR TAREA DE PEDIDO',
     failedLoadSummary: 'No se pudo cargar el resumen del panel.',
     retryButton: 'Reintentar',
+    changePasswordOption: 'Cambiar Contraseña',
+    currentPasswordLabel: 'Contraseña Actual',
+    newPasswordLabel: 'Nueva Contraseña',
+    confirmNewPasswordLabel: 'Confirmar Nueva Contraseña',
+    passwordsDoNotMatch: 'Las contraseñas no coinciden.',
+    passwordTooShort: 'La contraseña debe tener al menos 6 caracteres.',
+    passwordChangedSuccess: '¡Contraseña cambiada exitosamente!',
+    failedToChangePassword: 'Fallo al cambiar la contraseña.',
+    saving: 'Guardando...',
+    saveChanges: 'Guardar Cambios',
+    backButton: 'Atrás',
+    failedToLoadProfile: 'Fallo al cargar el perfil.',
+    rechargeWalletAddressLabel: 'Dirección de la Billetera de Recarga:',
+    notAvailable: 'No Disponible',
+    withdrawOption: 'Retirar',
+    changeLanguageOption: 'Cambiar Idioma',
+    customerServiceOption: 'Atención al Cliente',
   },
   'Arabic': {
-    // ... all your Arabic translations ...
     welcome: 'أهلاً بك!',
     chooseLanguage: 'اختر اللغة',
     selectLanguageButton: 'اختر اللغة',
@@ -194,8 +227,26 @@ const translations = {
     startOrderTask: 'بدء مهمة الطلب',
     failedLoadSummary: 'فشل تحميل ملخص لوحة التحكم.',
     retryButton: 'إعادة المحاولة',
+    changePasswordOption: 'تغيير كلمة المرور',
+    currentPasswordLabel: 'كلمة المرور الحالية',
+    newPasswordLabel: 'كلمة المرور الجديدة',
+    confirmNewPasswordLabel: 'تأكيد كلمة المرور الجديدة',
+    passwordsDoNotMatch: 'كلمات المرور غير متطابقة.',
+    passwordTooShort: 'يجب أن تتكون كلمة المرور من 6 أحرف على الأقل.',
+    passwordChangedSuccess: 'تم تغيير كلمة المرور بنجاح!',
+    failedToChangePassword: 'فشل تغيير كلمة المرور.',
+    saving: 'جاري الحفظ...',
+    saveChanges: 'حفظ التغييرات',
+    backButton: 'رجوع',
+    failedToLoadProfile: 'فشل تحميل الملف الشخصي.',
+    rechargeWalletAddressLabel: 'عنوان محفظة الشحن:',
+    notAvailable: 'غير متوفر',
+    withdrawOption: 'سحب',
+    changeLanguageOption: 'تغيير اللغة',
+    customerServiceOption: 'خدمة العملاء',
   },
 };
+
 
 // 3. LanguageProvider component to manage language state and provide translations
 export const LanguageProvider = ({ children }) => {
@@ -213,26 +264,45 @@ export const LanguageProvider = ({ children }) => {
   }, [currentLanguage]);
 
   return (
-    <LanguageContext.Provider value={{ currentLanguage, setCurrentLanguage, t }}>
+    <LanguageContext.Provider value={{ currentLanguage, setCurrentLanguage, t, languages }}>
       {children}
     </LanguageContext.Provider>
   );
 };
 
-
 // 4. LanguageSelector component (your globe icon UI)
-// This component now *consumes* the context provided by LanguageProvider
-const LanguageSelector = ({ isOpen, setIsOpen }) => {
+// This component now *reverts* to managing its own internal state for visibility
+const LanguageSelector = () => {
+  const [isOpen, setIsOpen] = useState(false); // Internal state for this component
   const { currentLanguage, setCurrentLanguage, t } = useContext(LanguageContext);
   const [tempSelectedLanguage, setTempSelectedLanguage] = useState(currentLanguage);
   const languages = Object.keys(translations);
 
-  // Use a ref to attach to the language selector modal content
-  const selectorRef = useRef(null);
+  // Ref for click outside
+  const selectorRef = useRef(null); // Now used internally by LanguageSelector
 
   useEffect(() => {
     setTempSelectedLanguage(currentLanguage);
   }, [isOpen, currentLanguage]);
+
+  // Handle click outside to close the modal
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (selectorRef.current && !selectorRef.current.contains(event.target)) {
+        setIsOpen(false);
+      }
+    };
+
+    if (isOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    } else {
+      document.removeEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isOpen]); // Depend on isOpen
 
   const handleConfirm = () => {
     setCurrentLanguage(tempSelectedLanguage);
@@ -243,9 +313,18 @@ const LanguageSelector = ({ isOpen, setIsOpen }) => {
     setTempSelectedLanguage(lang);
   };
 
-  // Removed the globe icon and its onClick from here, as the parent will control isOpen
   return (
     <>
+      {/* The Globe Icon - Only rendered here for general usage */}
+      <img
+        src="https://cdn-icons-png.flaticon.com/512/44/44386.png"
+        alt="Globe Icon"
+        className="globe-icon"
+        onClick={() => setIsOpen(true)} // This click opens the modal
+        title={t('selectLanguageButton')}
+      />
+
+      {/* The Language Selection Modal (Overlay) */}
       {isOpen && (
         <div className="language-overlay">
           <div className="language-selector" ref={selectorRef}> {/* Attach ref here */}

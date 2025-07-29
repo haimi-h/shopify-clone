@@ -2,7 +2,8 @@ import React, { useState, useEffect, useCallback, useContext, useRef } from "rea
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { LanguageContext } from "./LanguageProvider";
-import LanguageSelector from "./LanguageProvider"; // This imports the default export, which is LanguageSelector
+import LanguageSelector from "./LanguageProvider"; // This is the globe-icon version
+import LanguageOptionsModal from '../components/LanguageOptionsModal'; // NEW: Import the modal-only version
 import shopifyLogo from "../shopify-logo.png";
 import "../UserSettingsPage.css"; // Import the custom CSS file
 
@@ -17,10 +18,7 @@ export default function UserSettingsPage() {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [showLanguageModal, setShowLanguageModal] = useState(false); // New state to control LanguageSelector modal visibility
-
-  // Ref to detect clicks outside the language options modal
-  const languageModalRef = useRef(null); // Attach this to the LanguageSelector component's container
+  const [showLanguageOptions, setShowLanguageOptions] = useState(false); // State to control the LanguageOptionsModal visibility
 
   // Function to fetch user profile data
   const fetchUserProfile = useCallback(async () => {
@@ -39,8 +37,7 @@ export default function UserSettingsPage() {
       setUser(response.data.user);
     } catch (err) {
       console.error("Failed to fetch user profile:", err);
-      setError(t("failedToLoadProfile")); // Translated error message
-      // If unauthorized, clear token and redirect to login
+      setError(t("failedToLoadProfile"));
       if (
         err.response &&
         (err.response.status === 401 || err.response.status === 403)
@@ -58,33 +55,6 @@ export default function UserSettingsPage() {
     fetchUserProfile();
   }, [fetchUserProfile]);
 
-  // Click outside handler for language options modal
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      // Check if the click is outside the modal content itself, but not on the list item that opens it
-      // For this, we need the LanguageSelector's internal ref or a containing div.
-      // Since LanguageSelector is a default export, it doesn't expose its internal ref easily.
-      // We'll attach the ref to the div that renders LanguageSelector.
-      if (languageModalRef.current && !languageModalRef.current.contains(event.target)) {
-        // Prevent closing if the click originated from the "Change Language" list item itself
-        // This requires checking the event.target's parents, which can be tricky.
-        // A simpler approach is to only close if it's already open and the click is clearly outside.
-        setShowLanguageModal(false);
-      }
-    };
-
-    if (showLanguageModal) {
-      document.addEventListener("mousedown", handleClickOutside);
-    } else {
-      document.removeEventListener("mousedown", handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [showLanguageModal]);
-
-
   const handleLogout = () => {
     localStorage.removeItem("user");
     localStorage.removeItem("token");
@@ -95,9 +65,9 @@ export default function UserSettingsPage() {
   const handleSettingClick = (path, type) => {
     // If it's the "change language" option, open the modal instead of navigating
     if (type === 'changeLanguage') {
-      setShowLanguageModal(true); // Open the language selection modal
+      setShowLanguageOptions(true); // Open the language selection modal directly
     } else {
-      setShowLanguageModal(false); // Ensure modal is closed if another option is clicked
+      setShowLanguageOptions(false); // Ensure modal is closed if another option is clicked
       navigate(path);
     }
   };
@@ -116,7 +86,7 @@ export default function UserSettingsPage() {
         <p>{error}</p>
         <button
           onClick={fetchUserProfile}
-          className="retry-button" /* Custom class */
+          className="retry-button"
         >
           {t("retryButton")}
         </button>
@@ -126,32 +96,29 @@ export default function UserSettingsPage() {
 
   return (
     <div className="user-settings-page-container">
-      {/* Top Right Language Selector - Now conditionally rendered and controlled */}
-      {/* The LanguageSelector component is now rendered here and its visibility managed by showLanguageModal */}
-      {/* We need to pass the isOpen and setIsOpen props */}
-      <div className="language-selector-position" ref={languageModalRef}>
-         <LanguageSelector isOpen={showLanguageModal} setIsOpen={setShowLanguageModal} />
-      </div>
+      {/* NO GLOBE ICON here for UserSettingsPage. Instead, the LanguageOptionsModal is rendered conditionally. */}
+      {/* The LanguageOptionsModal is controlled by showLanguageOptions state */}
+      <LanguageOptionsModal isOpen={showLanguageOptions} setIsOpen={setShowLanguageOptions} />
 
 
       {/* Header Section */}
       <header className="user-settings-header">
         {user && (
           <>
-            <h1 className="user-name-heading">{user.username}</h1>{" "}
-            <p className="user-phone-text">{user.phone}</p> {/* Custom class */}
+            <h1 className="user-name-heading">{user.username}</h1>
+            <p className="user-phone-text">{user.phone}</p>
             <div className="balance-display">
               <span className="balance-amount">
                 {user.wallet_balance
                   ? parseFloat(user.wallet_balance).toFixed(2)
                   : "0.00"}
-              </span>{" "}
+              </span>
               <span className="currency-symbol">
                 {t("currencySymbol")}
-              </span>{" "}
+              </span>
               <button
                 onClick={() => handleSettingClick("/recharge")}
-                className="add-funds-button" /* Custom class */
+                className="add-funds-button"
                 title={t("addFundsButton")}
               >
                 +
@@ -179,8 +146,8 @@ export default function UserSettingsPage() {
             </div>
             <span className="settings-item-arrow">&gt;</span>
           </li>
-          {/* Change Language - MODIFIED to open modal */}
-          <li onClick={() => handleSettingClick(null, 'changeLanguage')}> {/* Pass a type */}
+          {/* Change Language - MODIFIED to open the specific modal */}
+          <li onClick={() => handleSettingClick(null, 'changeLanguage')}>
             <div className="settings-item-content">
               <span className="settings-item-text">
                 {t("changeLanguageOption")}
@@ -188,10 +155,9 @@ export default function UserSettingsPage() {
             </div>
             <span className="settings-item-arrow">&gt;</span>
           </li>
-          {/* Choose Avatar (Placeholder) */}
+          {/* Recharge Wallet Address (or whatever this setting is) */}
           <li>
             <div className="settings-item-content">
-              {/* Display the label and the address itself */}
               <span className="settings-item-text">
                 {t("rechargeWalletAddressLabel")}
                 {user && user.walletAddress ? (
@@ -205,7 +171,6 @@ export default function UserSettingsPage() {
                 )}
               </span>
             </div>
-            {/* Add a button to copy the address to the clipboard */}
             {user && user.walletAddress && (
               <button
                 onClick={() =>

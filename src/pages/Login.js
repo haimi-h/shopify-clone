@@ -1,6 +1,6 @@
 import "../Auth.css";
 import { Link, useNavigate } from "react-router-dom";
-import { useState, useContext } from "react";
+import { useState, useContext } from "react"; // Removed useRef and useEffect as they are not needed here anymore for LanguageSelector
 import axios from "axios";
 import shopifyLogo from '../shopify-logo.png';
 import { LanguageContext } from '../pages/LanguageProvider';
@@ -51,7 +51,11 @@ function Login() {
   return (
     <div className="auth-container">
       <div className="auth-card">
-        <div className="top-right"><LanguageSelector /></div> {/* Using LanguageSelector */}
+        {/* TOP RIGHT SECTION FOR GLOBE ICON */}
+        {/* LanguageSelector component now handles its own globe and modal logic */}
+        <div className="top-right">
+          <LanguageSelector />
+        </div>
 
         <img src={shopifyLogo} alt="Logo" className="logo" />
         <h2 className="brand-name">{t('brandName')}</h2>
