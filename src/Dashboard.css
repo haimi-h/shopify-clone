@@ -118,14 +118,14 @@ body {
   margin-bottom: 12px;
 }
 
-/* Horizontal scroll container */
+/* Horizontal scroll container (Desktop default) */
 .product-scroll {
   display: flex;
   flex-wrap: nowrap;
-  overflow-x: auto;
+  overflow-x: auto; /* Enables horizontal scrolling on desktop */
   overflow-y: hidden;
   max-width: 100%;
-  gap: 16px;
+  gap: 16px; /* Gap for desktop */
   padding-bottom: 12px;
   scrollbar-width: thin;
   scrollbar-color: #ccc transparent;
@@ -453,8 +453,11 @@ body {
   .product-scroll {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    overflow-x: hidden;
+    gap: 20px; /* Increased gap between products for mobile */
+    overflow-x: hidden; /* Remove horizontal scroll for mobile grid */
+    padding: 0 10px 12px 10px; /* Added horizontal padding for mobile */
+    max-height: 500px; /* Limit height to effectively show 6 products or so */
+    overflow-y: hidden; /* Hide vertical scrollbar if max-height is reached with more products (though we'll limit in JS) */
   }
 
   /* B. Allow product cards to fill the column */
