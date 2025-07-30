@@ -399,15 +399,10 @@ body {
 }
 
 @media (max-width: 768px) {
-  /* =================================================================== */
-  /* 1. Main Layout & Bottom Navigation (SIDEBAR FIX)
-  /* This is the most important part to fix the sidebar issue.
-  /* It transforms the side bar into a fixed bottom navigation bar on mobile.
-  /* =================================================================== */
+  /* --- Main Layout & Bottom Navigation (Kept from before) --- */
   .dashboard-layout {
     flex-direction: column;
   }
-
   .sidebar {
     width: 100%;
     height: 65px;
@@ -415,63 +410,65 @@ body {
     bottom: 0;
     left: 0;
     z-index: 1000;
-    flex-direction: row; /* Changed from column to row */
+    flex-direction: row;
     justify-content: space-around;
     align-items: center;
     padding: 0;
     box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
   }
-
-  .sidebar .shopify-logo {
-    display: none; /* Hide the logo on the small bottom bar */
-  }
-
+  .sidebar .shopify-logo { display: none; }
   .nav-links {
     flex-direction: row;
     justify-content: space-around;
     width: 100%;
     align-items: center;
-    gap: 10px;
   }
-
   .main-wrapper {
-    padding-bottom: 80px; /* Add padding to the bottom of the content to prevent overlap with the new navbar */
+    padding-bottom: 80px;
   }
 
-
-  /* =================================================================== */
-  /* 2. Content, Header, and Product Fixes
-  /* This fixes the narrow content, the header layout, and product gaps.
-  /* =================================================================== */
-
-  /* FIX: Ensure content uses the full screen width */
+  /* --- FIX: Make main content area full-width --- */
   .main-content {
     width: 100%;
     box-sizing: border-box;
-    padding: 24px 16px;
+    padding-top: 24px;
+    padding-bottom: 24px;
+    /* Side padding is removed here and applied to children instead */
   }
 
-  /* FIX: A cleaner, stacked header for mobile */
+  /* FIX: Add side padding to inner sections to control content alignment */
+  .dashboard-header,
+  .product-section,
+  .congrats-text,
+  .additional-info,
+  .start-button {
+    padding-left: 16px;
+    padding-right: 16px;
+    box-sizing: border-box;
+  }
+  
+  /* --- Header Layout (Kept from before) --- */
   .dashboard-header {
-    flex-direction: column; /* Stack user info and balance */
-    align-items: flex-start; /* Align items to the left */
-    gap: 16px; /* Add more space between the two sections */
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 16px;
   }
-
   .balance {
-    align-self: stretch; /* Make the balance section span the full width... */
-    text-align: right;   /* ...and then align the text inside to the right. */
+    align-self: stretch;
+    text-align: right;
   }
 
-  /* FIX: Add a visible gap between products */
+  /* --- FIX: New, more robust method for product grid and gap --- */
   .product-scroll {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px; /* <-- This adds the space between the columns */
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
   }
 
   .product-card {
-    width: 100%;
+    /* This creates a 2-column layout with a 12px gap in between */
+    width: calc(50% - 6px); 
+    margin-bottom: 12px; /* This creates the vertical gap */
   }
 
   .product-image {
@@ -480,30 +477,27 @@ body {
     aspect-ratio: 1 / 1;
     object-fit: cover;
   }
-
-  /* FIX: Widen the "Partnered With" section */
+  
+  /* --- Other sections --- */
+  .start-button {
+    width: 100%;
+    padding-top: 16px;
+    padding-bottom: 16px;
+    text-align: center;
+  }
   .partnered-section {
     padding: 24px 16px;
   }
-
   .partners-logos {
     display: grid;
     grid-template-columns: 1fr 1fr;
     align-items: center;
     gap: 20px;
   }
-
   .partners-logos img {
     max-width: 100%;
     height: 40px;
     object-fit: contain;
     justify-self: center;
-  }
-
-  /* --- Full-width button --- */
-  .start-button {
-    width: 100%;
-    padding: 16px;
-    text-align: center;
   }
 }
