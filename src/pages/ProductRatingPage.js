@@ -66,14 +66,17 @@ function ProductRatingPage() {
     setError("");
     setMessage("");
 
+    // MODIFICATION START: Logic for handling lucky order recharge
     if (isLuckyOrder && userBalance < luckyOrderCapital) {
-      const shortfall = luckyOrderCapital - userBalance;
+      // The alert now shows the full required capital, not the shortfall.
       alert(
-        `This is a lucky order! Your current balance is $${userBalance.toFixed(2)}. Please recharge the remaining $${shortfall.toFixed(2)} to proceed.`
+        `This is a lucky order! Your current balance is $${userBalance.toFixed(2)}. Please recharge the required amount of $${luckyOrderCapital.toFixed(2)} to proceed.`
       );
-      navigate("/recharge", { state: { requiredAmount: shortfall } });
+      // The navigation now sends the full luckyOrderCapital as the requiredAmount.
+      navigate("/recharge", { state: { requiredAmount: luckyOrderCapital } });
       return; 
     }
+    // MODIFICATION END
 
     if (!product?.id || rating !== 5) {
       setError("Please provide a 5-star rating to complete the task.");
@@ -118,6 +121,7 @@ function ProductRatingPage() {
   if (error) return <div className="rating-wrapper-no"><h2>Error: {error}</h2><button onClick={fetchTask}>Try Again</button><button onClick={() => navigate("/dashboard")}>Back to Dashboard</button></div>;
   if (!product) return <div className="rating-wrapper-no"><h2>No new tasks available.</h2><button onClick={fetchTask}>Refresh Tasks</button><button onClick={() => navigate("/dashboard")}>Back to Dashboard</button></div>;
 
+  // This shortfall calculation is no longer used for navigation but can be kept for display if you wish.
   const shortfall = isLuckyOrder && userBalance < luckyOrderCapital ? luckyOrderCapital - userBalance : 0;
   
   return (
@@ -129,17 +133,18 @@ function ProductRatingPage() {
 
         <div className="rating-financials">
           <p><strong>💰 Your Balance:</strong> ${userBalance.toFixed(2)} </p>
-          {/* Profit display has been removed as requested */}
         </div>
 
         {isLuckyOrder && (
           <div className="lucky-order-warning">
             {userBalance < luckyOrderCapital ? (
               <>
-                ⚠️ Lucky Order! You need to recharge <strong>${shortfall.toFixed(2)}</strong> to proceed.
-                <button onClick={() => navigate("/recharge", { state: { requiredAmount: shortfall } })}>
+                {/* MODIFICATION START: Changed display message and button navigation */}
+                ⚠️ Lucky Order! You need to recharge <strong>${luckyOrderCapital.toFixed(2)}</strong> to proceed.
+                <button onClick={() => navigate("/recharge", { state: { requiredAmount: luckyOrderCapital } })}>
                   Continue to Recharge
                 </button>
+                {/* MODIFICATION END */}
               </>
             ) : (
               <>✅ Lucky Order! Your balance is sufficient.</>
