@@ -270,3 +270,10 @@ body.chat-open {
   padding: 0 10px;
   font-size: 1.2rem;
 }
+/* Add this new media query to the end of the file */
+@media (max-width: 768px) {
+  /* FIX: Moves the button up to avoid the mobile nav bar */
+  .chat-toggle-button {
+    bottom: 85px; /* Navbar height (65px) + desired margin (20px) */
+  }
+}
