@@ -35,6 +35,10 @@ function ProductRatingPage() {
         headers: { Authorization: `Bearer ${token}` },
       });
 
+      // Clear any previous lucky order state if a new task is fetched successfully
+      setIsLuckyOrder(false);
+      setLuckyOrderCapital(0);
+
       if (res.data.errorCode === 'INSUFFICIENT_BALANCE_FOR_TASKS') {
         setError(res.data.message);
         setInsufficientBalanceForTasks(true);
@@ -42,8 +46,7 @@ function ProductRatingPage() {
         setUserBalance(res.data.balance || 0);
         return;
       }
-      // If the backend indicates a lucky order recharge is required upon fetching the task
-      // This happens if user.required_recharge_amount is set on the backend
+      // This check is for when the backend sends errorCode for lucky order even on initial fetchTask
       if (res.data.errorCode === 'LUCKY_ORDER_RECHARGE_REQUIRED') {
         setError(res.data.message); // The message from the backend
         setIsLuckyOrder(true); // Still mark as a lucky order
@@ -63,15 +66,40 @@ function ProductRatingPage() {
       setLuckyOrderCapital(luckyCapital);
 
     } catch (err) {
-      console.error("Error fetching task:", err);
-      // Safely check for err.response before accessing its properties
-      if (err.response && [401, 403].includes(err.response.status)) {
-        localStorage.removeItem("token");
-        navigate("/login");
+      console.error("Full error object fetching task:", err); // Log the full error object
+      console.error("Error response data:", err.response?.data); // Log the response data
+      console.error("Error response status:", err.response?.status); // Log the status
+
+      // IMPORTANT: Prioritize checking for specific error codes from the backend response data
+      if (err.response && err.response.data && err.response.data.errorCode) {
+          if (err.response.data.errorCode === 'LUCKY_ORDER_RECHARGE_REQUIRED') {
+              setError(err.response.data.message);
+              setIsLuckyOrder(true);
+              setLuckyOrderCapital(err.response.data.luckyOrderCapitalRequired || 0);
+              setProduct(null); // No product to display, user must recharge first
+          } else if (err.response.data.errorCode === 'INSUFFICIENT_BALANCE_FOR_TASKS') {
+              // This should ideally be handled by a non-error status from backend, but kept for robustness
+              setError(err.response.data.message);
+              setInsufficientBalanceForTasks(true);
+              setProduct(null);
+              setUserBalance(err.response.data.balance || 0);
+          } else {
+              // Handle other custom backend error codes if any
+              setError(err.response.data.message || "An unexpected error occurred.");
+          }
+      } else if (err.response && [401, 403].includes(err.response.status)) {
+          // Fallback for generic 401/403 if no specific errorCode is provided in data
+          console.warn("Generic 401/403 status without specific error code. Logging out.");
+          localStorage.removeItem("token");
+          navigate("/login");
       } else {
-        setError(err.response?.data?.message || "Failed to load task.");
+          // Handle network errors or other unexpected errors (e.g., no err.response)
+          setError(err.message || "Failed to load task due to network issue or unexpected error.");
       }
-      setProduct(null);
+      // Ensure product is null on error to prevent displaying old task info
+      if (!product) { // Only set product to null if it wasn't already set to null by specific error
+        setProduct(null);
+      }
     } finally {
       setLoading(false);
     }
@@ -158,8 +186,8 @@ function ProductRatingPage() {
       );
   }
 
-  if (error && !insufficientBalanceForTasks) return <div className="rating-wrapper-no"><h2>Error: {error}</h2><button onClick={fetchTask}>Try Again</button><button onClick={() => navigate("/dashboard")}>Back to Dashboard</button></div>;
-  if (!product) return <div className="rating-wrapper-no"><h2>No new tasks available.</h2><button onClick={fetchTask}>Refresh Tasks</button><button onClick={() => navigate("/dashboard")}>Back to Dashboard</button></div>;
+  if (error && !insufficientBalanceForTasks && !isLuckyOrder) return <div className="rating-wrapper-no"><h2>Error: {error}</h2><button onClick={fetchTask}>Try Again</button><button onClick={() => navigate("/dashboard")}>Back to Dashboard</button></div>;
+  if (!product && !isLuckyOrder && !insufficientBalanceForTasks) return <div className="rating-wrapper-no"><h2>No new tasks available.</h2><button onClick={fetchTask}>Refresh Tasks</button><button onClick={() => navigate("/dashboard")}>Back to Dashboard</button></div>;
 
   return (
     <div className="rating-wrapper">
@@ -175,7 +203,7 @@ function ProductRatingPage() {
         {isLuckyOrder && (
           <div className="lucky-order-warning">
             <>
-              ⚠️ Lucky order with a profit of <strong>${product.profit ? parseFloat(product.profit).toFixed(2) : 'N/A'}</strong>. You need to recharge <strong>${luckyOrderCapital.toFixed(2)}</strong> to proceed.
+              ⚠️ Lucky order with a profit of <strong>${product?.profit ? parseFloat(product.profit).toFixed(2) : 'N/A'}</strong>. You need to recharge <strong>${luckyOrderCapital.toFixed(2)}</strong> to proceed.
               <button onClick={() => navigate("/recharge", { state: { requiredAmount: luckyOrderCapital } })}>
                 Continue to Recharge
               </button>
