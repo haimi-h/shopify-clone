@@ -428,7 +428,8 @@ body {
 }
 .add-balance-button {
   
-  
+  margin-left: 4px;
+  padding-top: 2px;
   background-color: #198754;
   color: white;
   
