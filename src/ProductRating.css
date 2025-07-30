@@ -100,6 +100,45 @@
   box-shadow: none;
 }
 
+.rating-wrapper-no {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+  min-height: 300px;
+  text-align: center;
+  background-color: #f8f9fa;
+  border-radius: 12px;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+  margin: 2rem auto;
+  max-width: 500px;
+}
+
+.rating-wrapper-no h2 {
+  color: #dc3545; /* red for errors */
+  margin-bottom: 1.5rem;
+  font-size: 1.5rem;
+}
+
+.rating-wrapper-no button {
+  background-color: #198754;
+  color: white;
+  border: none;
+  padding: 10px 16px;
+  margin: 0.5rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.25s ease, transform 0.1s ease;
+}
+
+.rating-wrapper-no button:hover {
+  background-color: #157347;
+}
+
+.rating-wrapper-no button:active {
+  transform: scale(0.98);
+}
 
 .incomplete-message {
   font-size: 16px;
