@@ -443,7 +443,10 @@ body {
 
   .main-content {
     padding: 50px; /* Reduce padding on smaller screens */
-    margin: 5px;
+    width: 100%;
+  box-sizing: border-box;
+  padding: 24px 12px; /* Better for mobile */
+    /* margin: 5px; */
   }
 
   /* 6. Make fonts and other elements responsive */
