@@ -31,12 +31,12 @@ body {
   min-height: 100vh;
 }
 
-/* .main-content,
+.main-content,
 .main-wrapper {
   overflow-x: hidden;
   max-width: 100%;
   box-sizing: border-box;
-} */
+}
 
 .shopify-logo {
   margin-top: 40px;
@@ -469,11 +469,12 @@ body {
     grid-template-columns: 1fr 1fr;
     gap: 32px; /* <-- This adds the space between the columns */
     max-height: 500px;
+    margin: 2px;
   }
 
   .product-card {
     width: 100%;
-    margin: 5px;
+    margin: 2px;
   }
 
   .product-image {
