@@ -24,6 +24,8 @@ function ProductRatingPage() {
     setError("");
     setMessage("");
     setInsufficientBalanceForTasks(false);
+    // Ensure product is null at the start of fetch to prevent flashing old data
+    setProduct(null);
     try {
       const token = localStorage.getItem("token");
       if (!token) {
@@ -42,7 +44,7 @@ function ProductRatingPage() {
       if (res.data.errorCode === 'INSUFFICIENT_BALANCE_FOR_TASKS') {
         setError(res.data.message);
         setInsufficientBalanceForTasks(true);
-        setProduct(null);
+        setProduct(null); // Explicitly ensure product is null
         setUserBalance(res.data.balance || 0);
         return;
       }
@@ -51,7 +53,7 @@ function ProductRatingPage() {
         setError(res.data.message); // The message from the backend
         setIsLuckyOrder(true); // Still mark as a lucky order
         setLuckyOrderCapital(res.data.luckyOrderCapitalRequired || 0); // Get the required capital
-        setProduct(null); // No product to display yet, user needs to recharge first
+        setProduct(null); // Explicitly ensure product is null
         return;
       }
 
@@ -76,12 +78,12 @@ function ProductRatingPage() {
               setError(err.response.data.message);
               setIsLuckyOrder(true);
               setLuckyOrderCapital(err.response.data.luckyOrderCapitalRequired || 0);
-              setProduct(null); // No product to display, user must recharge first
+              setProduct(null); // Explicitly ensure product is null
           } else if (err.response.data.errorCode === 'INSUFFICIENT_BALANCE_FOR_TASKS') {
               // This should ideally be handled by a non-error status from backend, but kept for robustness
               setError(err.response.data.message);
               setInsufficientBalanceForTasks(true);
-              setProduct(null);
+              setProduct(null); // Explicitly ensure product is null
               setUserBalance(err.response.data.balance || 0);
           } else {
               // Handle other custom backend error codes if any
@@ -96,10 +98,7 @@ function ProductRatingPage() {
           // Handle network errors or other unexpected errors (e.g., no err.response)
           setError(err.message || "Failed to load task due to network issue or unexpected error.");
       }
-      // Ensure product is null on error to prevent displaying old task info
-      if (!product) { // Only set product to null if it wasn't already set to null by specific error
-        setProduct(null);
-      }
+      setProduct(null); // Always ensure product is null on an error path
     } finally {
       setLoading(false);
     }
@@ -186,9 +185,29 @@ function ProductRatingPage() {
       );
   }
 
-  if (error && !insufficientBalanceForTasks && !isLuckyOrder) return <div className="rating-wrapper-no"><h2>Error: {error}</h2><button onClick={fetchTask}>Try Again</button><button onClick={() => navigate("/dashboard")}>Back to Dashboard</button></div>;
-  if (!product && !isLuckyOrder && !insufficientBalanceForTasks) return <div className="rating-wrapper-no"><h2>No new tasks available.</h2><button onClick={fetchTask}>Refresh Tasks</button><button onClick={() => navigate("/dashboard")}>Back to Dashboard</button></div>;
+  // Handle general errors that are not specific lucky order or insufficient balance
+  if (error && !insufficientBalanceForTasks && !isLuckyOrder) {
+    return (
+      <div className="rating-wrapper-no">
+        <h2>Error: {error}</h2>
+        <button onClick={fetchTask}>Try Again</button>
+        <button onClick={() => navigate("/dashboard")}>Back to Dashboard</button>
+      </div>
+    );
+  }
 
+  // Handle case where no product is available after all other conditions (errors, lucky order) are checked
+  if (!product) { // This check should now correctly capture "no tasks available"
+    return (
+      <div className="rating-wrapper-no">
+        <h2>No new tasks available.</h2>
+        <button onClick={fetchTask}>Refresh Tasks</button>
+        <button onClick={() => navigate("/dashboard")}>Back to Dashboard</button>
+      </div>
+    );
+  }
+
+  // Only render the product rating card if `product` is not null
   return (
     <div className="rating-wrapper">
       <div className="rating-card">
