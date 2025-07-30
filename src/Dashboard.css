@@ -442,12 +442,10 @@ body {
   }
 
   .main-content {
-    padding: 50px; /* Reduce padding on smaller screens */
-    width: 100%;
+  width: 100%;
   box-sizing: border-box;
-  padding: 24px 12px; /* Better for mobile */
-    /* margin: 5px; */
-  }
+  padding: 24px 12px; /* Clean and mobile-friendly */
+}
 
   /* 6. Make fonts and other elements responsive */
   .dashboard-header {
