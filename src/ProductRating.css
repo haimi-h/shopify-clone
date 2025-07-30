@@ -72,18 +72,34 @@
 }
 
 .submit-rating-button {
-  margin-left: 4px;
-  padding-top: 2px;
+  margin-left: 8px;
+  padding: 10px 16px;
   background-color: #198754;
-  color: white;
+  color: #fff;
   text-align: center;
-  font-size: 20px;
+  font-size: 16px;
+  font-weight: 500;
   border: none;
-  border-radius: 10px;
+  border-radius: 8px;
   cursor: pointer;
-  transition: background-color 0.3s ease;
-  
+  transition: background-color 0.25s ease, transform 0.1s ease;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
 }
+
+.submit-rating-button:hover {
+  background-color: #157347; /* Slightly darker green */
+}
+
+.submit-rating-button:active {
+  transform: scale(0.98);
+}
+
+.submit-rating-button:disabled {
+  background-color: #b5d6c4;
+  cursor: not-allowed;
+  box-shadow: none;
+}
+
 
 .incomplete-message {
   font-size: 16px;
