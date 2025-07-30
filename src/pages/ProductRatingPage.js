@@ -26,7 +26,10 @@ function ProductRatingPage() {
     setInsufficientBalanceForTasks(false);
     try {
       const token = localStorage.getItem("token");
-      if (!token) { navigate("/login"); return; }
+      if (!token) {
+        navigate("/login");
+        return;
+      }
 
       const res = await axios.get(`${API_BASE_URL}/tasks/task`, {
         headers: { Authorization: `Bearer ${token}` },
@@ -37,13 +40,23 @@ function ProductRatingPage() {
         setInsufficientBalanceForTasks(true);
         setProduct(null);
         setUserBalance(res.data.balance || 0);
-        return; 
+        return;
       }
+      // If the backend indicates a lucky order recharge is required upon fetching the task
+      // This happens if user.required_recharge_amount is set on the backend
+      if (res.data.errorCode === 'LUCKY_ORDER_RECHARGE_REQUIRED') {
+        setError(res.data.message); // The message from the backend
+        setIsLuckyOrder(true); // Still mark as a lucky order
+        setLuckyOrderCapital(res.data.luckyOrderCapitalRequired || 0); // Get the required capital
+        setProduct(null); // No product to display yet, user needs to recharge first
+        return;
+      }
+
 
       setProduct(res.data.task);
       setRating(0);
       setUserBalance(res.data.balance || 0);
-      
+
       const isLucky = res.data.isLuckyOrder || false;
       const luckyCapital = res.data.luckyOrderCapitalRequired || 0;
       setIsLuckyOrder(isLucky);
@@ -66,17 +79,9 @@ function ProductRatingPage() {
     setError("");
     setMessage("");
 
-    // This logic remains the same. It correctly checks if the user has enough
-    // balance before attempting to submit the rating to the backend. This
-    // prevents errors and allows the process to continue after a recharge.
-    if (isLuckyOrder && userBalance < luckyOrderCapital) {
-      const profitMessage = product?.profit ? ` with a profit of $${parseFloat(product.profit).toFixed(2)}` : '';
-      alert(
-        `This is a lucky order${profitMessage}! Your current balance is $${userBalance.toFixed(2)}. Please recharge the required amount of $${luckyOrderCapital.toFixed(2)} to proceed.`
-      );
-      navigate("/recharge", { state: { requiredAmount: luckyOrderCapital } });
-      return; 
-    }
+    // Removed the client-side check for isLuckyOrder and userBalance < luckyOrderCapital.
+    // The backend's submitTaskRating will now handle the check for required_recharge_amount
+    // and return the 'LUCKY_ORDER_RECHARGE_REQUIRED' error code if a recharge is needed.
 
     if (!product?.id || rating !== 5) {
       setError("Please provide a 5-star rating to complete the task.");
@@ -92,10 +97,19 @@ function ProductRatingPage() {
       );
       setMessage(res.data.message);
       if (res.data.isCompleted) {
+        // If the task is completed (including lucky order after recharge)
+        // or if it's an ordinary task completed, fetch a new task.
         setTimeout(fetchTask, 1500);
       }
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to submit rating.");
+      // Handle the specific LUCKY_ORDER_RECHARGE_REQUIRED error from backend
+      if (err.response?.data?.errorCode === 'LUCKY_ORDER_RECHARGE_REQUIRED') {
+        alert(err.response.data.message); // Display the message from the backend
+        // Use luckyOrderCapital from state to navigate to recharge, as it was fetched with the task
+        navigate("/recharge", { state: { requiredAmount: luckyOrderCapital } });
+      } else {
+        setError(err.response?.data?.message || "Failed to submit rating.");
+      }
     }
   };
 
@@ -104,7 +118,7 @@ function ProductRatingPage() {
   }, []);
 
   if (loading) return <div className="rating-wrapper"><h2>Loading task...</h2></div>;
-  
+
   if (insufficientBalanceForTasks) {
     return (
       <div className="rating-wrapper">
@@ -118,9 +132,28 @@ function ProductRatingPage() {
     );
   }
 
-  if (error) return <div className="rating-wrapper-no"><h2>Error: {error}</h2><button onClick={fetchTask}>Try Again</button><button onClick={() => navigate("/dashboard")}>Back to Dashboard</button></div>;
+  // If a lucky order recharge is required from the initial fetchTask, display this.
+  // This case handles when required_recharge_amount is set on the user in the backend.
+  if (isLuckyOrder && luckyOrderCapital > 0 && product === null) {
+      return (
+          <div className="rating-wrapper">
+              <div className="lucky-order-warning-full-page">
+                  <h2 className="error-message">{error || "A lucky order requires a specific recharge."}</h2>
+                  <p>
+                      To proceed with your lucky order, you need to recharge <strong>${luckyOrderCapital.toFixed(2)}</strong>.
+                  </p>
+                  <button className="recharge-button" onClick={() => navigate("/recharge", { state: { requiredAmount: luckyOrderCapital } })}>
+                      Recharge Now
+                  </button>
+                  <button className="back-button" onClick={() => navigate("/dashboard")}>Back to Dashboard</button>
+              </div>
+          </div>
+      );
+  }
+
+  if (error && !insufficientBalanceForTasks) return <div className="rating-wrapper-no"><h2>Error: {error}</h2><button onClick={fetchTask}>Try Again</button><button onClick={() => navigate("/dashboard")}>Back to Dashboard</button></div>;
   if (!product) return <div className="rating-wrapper-no"><h2>No new tasks available.</h2><button onClick={fetchTask}>Refresh Tasks</button><button onClick={() => navigate("/dashboard")}>Back to Dashboard</button></div>;
-  
+
   return (
     <div className="rating-wrapper">
       <div className="rating-card">
