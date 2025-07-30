@@ -40,6 +40,7 @@ function ProductRatingPage() {
         return; 
       }
 
+      // The task object now contains the profit for lucky orders
       setProduct(res.data.task);
       setRating(0);
       setUserBalance(res.data.balance || 0);
@@ -66,17 +67,18 @@ function ProductRatingPage() {
     setError("");
     setMessage("");
 
-    // MODIFICATION START: Logic for handling lucky order recharge
     if (isLuckyOrder && userBalance < luckyOrderCapital) {
-      // The alert now shows the full required capital, not the shortfall.
+      // MODIFICATION START: Updated alert message to include profit
+      // Ensure product and product.profit exist before showing the alert
+      const profitMessage = product?.profit ? ` with a profit of $${parseFloat(product.profit).toFixed(2)}` : '';
       alert(
-        `This is a lucky order! Your current balance is $${userBalance.toFixed(2)}. Please recharge the required amount of $${luckyOrderCapital.toFixed(2)} to proceed.`
+        `This is a lucky order${profitMessage}! Your current balance is $${userBalance.toFixed(2)}. Please recharge the required amount of $${luckyOrderCapital.toFixed(2)} to proceed.`
       );
-      // The navigation now sends the full luckyOrderCapital as the requiredAmount.
+      // MODIFICATION END
+
       navigate("/recharge", { state: { requiredAmount: luckyOrderCapital } });
       return; 
     }
-    // MODIFICATION END
 
     if (!product?.id || rating !== 5) {
       setError("Please provide a 5-star rating to complete the task.");
@@ -120,9 +122,6 @@ function ProductRatingPage() {
 
   if (error) return <div className="rating-wrapper-no"><h2>Error: {error}</h2><button onClick={fetchTask}>Try Again</button><button onClick={() => navigate("/dashboard")}>Back to Dashboard</button></div>;
   if (!product) return <div className="rating-wrapper-no"><h2>No new tasks available.</h2><button onClick={fetchTask}>Refresh Tasks</button><button onClick={() => navigate("/dashboard")}>Back to Dashboard</button></div>;
-
-  // This shortfall calculation is no longer used for navigation but can be kept for display if you wish.
-  const shortfall = isLuckyOrder && userBalance < luckyOrderCapital ? luckyOrderCapital - userBalance : 0;
   
   return (
     <div className="rating-wrapper">
@@ -139,15 +138,16 @@ function ProductRatingPage() {
           <div className="lucky-order-warning">
             {userBalance < luckyOrderCapital ? (
               <>
-                {/* MODIFICATION START: Changed display message and button navigation */}
-                ⚠️ Lucky Order! You need to recharge <strong>${luckyOrderCapital.toFixed(2)}</strong> to proceed.
+                {/* MODIFICATION START: Updated display message with profit */}
+                ⚠️ Lucky order with a profit of <strong>${product.profit ? parseFloat(product.profit).toFixed(2) : 'N/A'}</strong>. You need to recharge <strong>${luckyOrderCapital.toFixed(2)}</strong> to proceed.
+                {/* MODIFICATION END */}
                 <button onClick={() => navigate("/recharge", { state: { requiredAmount: luckyOrderCapital } })}>
                   Continue to Recharge
                 </button>
-                {/* MODIFICATION END */}
               </>
             ) : (
-              <>✅ Lucky Order! Your balance is sufficient.</>
+              // You can also display the profit here if you want
+              <>✅ Lucky Order with a profit of <strong>${product.profit ? parseFloat(product.profit).toFixed(2) : 'N/A'}</strong>! Your balance is sufficient.</>
             )}
           </div>
         )}
