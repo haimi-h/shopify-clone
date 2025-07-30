@@ -399,12 +399,15 @@ body {
 }
 
 @media (max-width: 768px) {
-  /* 1. Change main layout to be vertical */
+  /* =================================================================== */
+  /* 1. Main Layout & Bottom Navigation (SIDEBAR FIX)
+  /* This is the most important part to fix the sidebar issue.
+  /* It transforms the side bar into a fixed bottom navigation bar on mobile.
+  /* =================================================================== */
   .dashboard-layout {
     flex-direction: column;
   }
 
-  /* 2. Transform the sidebar into a fixed bottom navbar */
   .sidebar {
     width: 100%;
     height: 65px;
@@ -412,18 +415,17 @@ body {
     bottom: 0;
     left: 0;
     z-index: 1000;
-    flex-direction: row;
-    justify-content: center;
+    flex-direction: row; /* Changed from column to row */
+    justify-content: space-around;
+    align-items: center;
     padding: 0;
     box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
   }
 
-  /* 3. Hide the logo on mobile */
   .sidebar .shopify-logo {
-    display: none;
+    display: none; /* Hide the logo on the small bottom bar */
   }
 
-  /* 4. Arrange nav icons in a row */
   .nav-links {
     flex-direction: row;
     justify-content: space-around;
@@ -432,72 +434,75 @@ body {
     gap: 10px;
   }
 
-  .nav-links svg {
-    font-size: 22px;
-  }
-
-  /* 5. Adjust main content to prevent overlap with the new navbar */
   .main-wrapper {
-    padding-bottom: 75px; /* Add padding for the fixed navbar */
+    padding-bottom: 80px; /* Add padding to the bottom of the content to prevent overlap with the new navbar */
   }
 
-  .main-content {
-  width: 100% !important;
-  box-sizing: border-box;
-  padding: 24px 12px; /* Clean and mobile-friendly */
-}
 
-  /* 6. Make fonts and other elements responsive */
+  /* =================================================================== */
+  /* 2. Content, Header, and Product Fixes
+  /* This fixes the narrow content, the header layout, and product gaps.
+  /* =================================================================== */
+
+  /* FIX: Ensure content uses the full screen width */
+  .main-content {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 24px 16px;
+  }
+
+  /* FIX: A cleaner, stacked header for mobile */
   .dashboard-header {
     flex-direction: column; /* Stack user info and balance */
-    align-items: flex-start;
-    gap: 10px;
+    align-items: flex-start; /* Align items to the left */
+    gap: 16px; /* Add more space between the two sections */
   }
 
   .balance {
-    align-self: flex-end; /* Move balance to the right */
+    align-self: stretch; /* Make the balance section span the full width... */
+    text-align: right;   /* ...and then align the text inside to the right. */
   }
 
-  .amount {
-    font-size: 28px; /* Slightly smaller font for the amount */
-  }
-
-  /*
-   * UPDATED PRODUCT SECTION FOR MOBILE
-   */
-
-  /* A. Change product list to a grid */
+  /* FIX: Add a visible gap between products */
   .product-scroll {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 20px; /* Increased gap between products for mobile */
-    overflow-x: hidden; /* Remove horizontal scroll for mobile grid */
-    padding: 0 10px 12px 10px; /* Added horizontal padding for mobile */
-    max-height: 500px; /* Limit height to effectively show 6 products or so */
-    overflow-y: hidden; /* Hide vertical scrollbar if max-height is reached with more products (though we'll limit in JS) */
+    gap: 12px; /* <-- This adds the space between the columns */
   }
 
-  /* B. Allow product cards to fill the column */
   .product-card {
-    width: 100%; /* Card will now fill the column's width */
+    width: 100%;
   }
 
-  /* C. Make product images scale correctly */
   .product-image {
-    width: 100%; /* Image fills the card's width */
-    height: auto; /* Height adjusts automatically */
-    aspect-ratio: 1; /* Keeps the image square */
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1 / 1;
     object-fit: cover;
   }
 
-  .congrats-text,
-  .additional-info h2,
-  .partnered-section h2 {
-    font-size: 18px; /* Adjust heading sizes */
+  /* FIX: Widen the "Partnered With" section */
+  .partnered-section {
+    padding: 24px 16px;
   }
 
+  .partners-logos {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    align-items: center;
+    gap: 20px;
+  }
+
+  .partners-logos img {
+    max-width: 100%;
+    height: 40px;
+    object-fit: contain;
+    justify-self: center;
+  }
+
+  /* --- Full-width button --- */
   .start-button {
-    width: 100%; /* Make the button full-width for easier tapping */
+    width: 100%;
     padding: 16px;
     text-align: center;
   }
