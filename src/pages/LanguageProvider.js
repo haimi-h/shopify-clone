@@ -1,5 +1,6 @@
 import React, { useState, createContext, useEffect, useCallback, useContext, useRef} from 'react';
-import '../LanguageSelector.css'
+import '../LanguageSelector.css';
+import '../LanguageGlobe.css';
 
 // 1. Define LanguageContext
 export const LanguageContext = createContext();
