@@ -5,7 +5,6 @@ body {
   background-color: #f5f7fa;
   color: #333;
   overflow-x: hidden;
-
 }
 
 /* Layout */
@@ -13,7 +12,6 @@ body {
   display: flex;
   height: 100vh;
 }
-
 
 /* Sidebar */
 .sidebar {
@@ -23,29 +21,15 @@ body {
   flex-direction: column;
   align-items: center;
   padding: 20px 0;
-  flex-shrink: 0
+  flex-shrink: 0;
 }
 
-/* .main-wrapper {
-  display: flex;
-  flex-direction: column;
-  flex-grow: 1;
-
-} */
 .main-wrapper {
   display: flex;
   flex-direction: column;
   flex-grow: 1;
-  min-height: 100vh; /* This is the key line */
+  min-height: 100vh;
 }
-
-
-/* .main-content {
-  flex-grow: 1;
-  padding: 20px;
-  overflow-y: auto;
- 
-} */
 
 .main-content,
 .main-wrapper {
@@ -53,7 +37,6 @@ body {
   max-width: 100%;
   box-sizing: border-box;
 }
-
 
 .shopify-logo {
   margin-top: 40px;
@@ -84,7 +67,6 @@ body {
   display: flex;
   flex-direction: column;
   padding: 24px;
-  /* overflow-y: auto; */
 }
 
 /* Header */
@@ -111,12 +93,10 @@ body {
 
 .username {
   font-weight: 600;
-
 }
 
 .balance {
   text-align: right;
-
 }
 
 .amount {
@@ -132,7 +112,6 @@ body {
 /* Product section */
 .product-section {
   margin-top: 20px;
-
 }
 
 .product-section h2 {
@@ -140,35 +119,19 @@ body {
 }
 
 /* Horizontal scroll container */
-/* .product-scroll {
-  display: flex;
-  overflow-x: auto;
-  gap: 16px;
-  padding-bottom: 12px;
-  scrollbar-width: thin;
-  scrollbar-color: #ccc transparent;
-  scroll-behavior: smooth;
-} */
 .product-scroll {
   display: flex;
   flex-wrap: nowrap;
-  /* no wrapping */
   overflow-x: auto;
   overflow-y: hidden;
   max-width: 100%;
-  /* important */
   gap: 16px;
   padding-bottom: 12px;
-
   scrollbar-width: thin;
   scrollbar-color: #ccc transparent;
   scroll-behavior: smooth;
   box-sizing: border-box;
 }
-
-
-
-
 
 .product-scroll::-webkit-scrollbar {
   height: 8px;
@@ -191,7 +154,6 @@ body {
   transition: transform 0.3s;
 }
 
-
 .product-card:hover {
   transform: scale(1.03);
 }
@@ -210,9 +172,6 @@ body {
   color: #333;
 }
 
-
-
-
 /* Congrats text */
 .congrats-text {
   background-color: #d1e7dd;
@@ -228,7 +187,6 @@ body {
 /* Start button */
 .start-button {
   margin-top: 20px;
-  /* margin-left: 30px; */
   padding: 14px 20px;
   background-color: #198754;
   color: white;
@@ -249,15 +207,6 @@ body {
 }
 
 /* Footer */
-/* .dashboard-footer {
-  margin: 0px;
-  padding: 12px;
-  text-align: center;
-  font-size: 14px;
-  color: white;
-  background-color: #212529;
-
-} */
 .dashboard-footer {
   padding: 12px;
   text-align: center;
@@ -265,7 +214,6 @@ body {
   color: white;
   background-color: #212529;
 }
-
 
 /* Additional Info Section */
 .additional-info {
@@ -373,7 +321,6 @@ body {
   margin-top: 40px;
   padding: 24px;
   background-color: #95BF47;
-  /* border-radius: 12px; */
   box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
   text-align: center;
 }
@@ -398,12 +345,8 @@ body {
   height: 50px;
   max-width: 120px;
   object-fit: contain;
-  /* filter: grayscale(100%) brightness(90%); */
   transition: all 0.3s ease;
   padding: 10px;
-  /* background-color: white; */
-  /* border-radius: 10px; */
-  /* box-shadow: 0 1px 6px rgba(0, 0, 0, 0.08); */
 }
 
 .partners-logos img:hover {
@@ -411,23 +354,12 @@ body {
   transform: translateY(-4px) scale(1.05);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
-/* .congrats-text {
-  height: 40px;
-  overflow: hidden;
-  position: relative;
-  font-size: 1.2rem;
-  font-weight: bold;
-  color: #4CAF50;
-  text-align: center;
-  margin: 20px 0;
-  padding: 30px;
-} */
 
 .slide-in {
   animation: slideFade 0.5s ease-in-out;
 }
+
 .add-balance-button {
-  
   margin-left: 4px;
   padding-top: 2px;
   background-color: #198754;
@@ -438,10 +370,8 @@ body {
   border-radius: 10px;
   cursor: pointer;
   transition: background-color 0.3s ease;
-  
-  
-
 }
+
 @keyframes slideFade {
   0% {
     opacity: 0;
@@ -454,7 +384,6 @@ body {
 }
 
 @media (max-width: 768px) {
-
   /* 1. Change main layout to be vertical */
   .dashboard-layout {
     flex-direction: column;
@@ -517,37 +446,36 @@ body {
   }
 
   /*
-  * UPDATED PRODUCT SECTION FOR MOBILE
-  */
+   * UPDATED PRODUCT SECTION FOR MOBILE
+   */
 
   /* A. Change product list to a grid */
   .product-scroll {
-    display: grid;                 /* 👈 Use a responsive grid */
-    grid-template-columns: 1fr 1fr;  /* 👈 Create two equal columns */
-    gap: 16px;                     /* 👈 Set space between cards */
-    overflow-x: hidden;            /* 👈 Remove horizontal scroll */
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    overflow-x: hidden;
   }
 
   /* B. Allow product cards to fill the column */
   .product-card {
-    width: 100%; /* 👈 Card will now fill the column's width */
+    width: 100%; /* Card will now fill the column's width */
   }
 
   /* C. Make product images scale correctly */
   .product-image {
-    width: 100%;      /* 👈 Image fills the card's width */
-    height: auto;     /* 👈 Height adjusts automatically */
-    aspect-ratio: 1;  /* 👈 Keeps the image square */
+    width: 100%; /* Image fills the card's width */
+    height: auto; /* Height adjusts automatically */
+    aspect-ratio: 1; /* Keeps the image square */
     object-fit: cover;
   }
-
 
   .congrats-text,
   .additional-info h2,
   .partnered-section h2 {
     font-size: 18px; /* Adjust heading sizes */
   }
-  
+
   .start-button {
     width: 100%; /* Make the button full-width for easier tapping */
     padding: 16px;
