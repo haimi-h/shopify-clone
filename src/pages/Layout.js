@@ -24,7 +24,7 @@ function Layout() {
                 <nav className="nav-links">
                     <FaHome title="Home" onClick={() => navigate('/dashboard')} />
                     <FaClipboardList title="Orders" onClick={() => navigate('/order-dashboard')} />
-                    <GiCutDiamond onClick={() => navigate('/vip')} />
+                    {/* <GiCutDiamond onClick={() => navigate('/vip')} /> */}
                     <FaUsers title="Referral" onClick={() => navigate('/referral')} />
                     <FaUserCircle title="Profile" onClick={() => navigate('/account')} />
                     <FaCog title="Settings" onClick={() => navigate('/settings')} />
