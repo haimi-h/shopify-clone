@@ -468,11 +468,12 @@ body {
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 18px; /* <-- This adds the space between the columns */
-    max-height: 500px;
+    max-height: 450px;
   }
 
   .product-card {
     width: 100%;
+    margin: 5px;
   }
 
   .product-image {
