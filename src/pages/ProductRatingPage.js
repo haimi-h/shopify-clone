@@ -64,12 +64,14 @@ function ProductRatingPage() {
 
     } catch (err) {
       console.error("Error fetching task:", err);
-      setError(err.response?.data?.message || "Failed to load task.");
-      setProduct(null);
-      if ([401, 403].includes(err.response?.status)) {
+      // Safely check for err.response before accessing its properties
+      if (err.response && [401, 403].includes(err.response.status)) {
         localStorage.removeItem("token");
         navigate("/login");
+      } else {
+        setError(err.response?.data?.message || "Failed to load task.");
       }
+      setProduct(null);
     } finally {
       setLoading(false);
     }
@@ -79,10 +81,6 @@ function ProductRatingPage() {
     setError("");
     setMessage("");
 
-    // Removed the client-side check for isLuckyOrder and userBalance < luckyOrderCapital.
-    // The backend's submitTaskRating will now handle the check for required_recharge_amount
-    // and return the 'LUCKY_ORDER_RECHARGE_REQUIRED' error code if a recharge is needed.
-
     if (!product?.id || rating !== 5) {
       setError("Please provide a 5-star rating to complete the task.");
       return;
@@ -90,6 +88,11 @@ function ProductRatingPage() {
 
     try {
       const token = localStorage.getItem("token");
+      if (!token) { // Double check token before submitting
+        navigate("/login");
+        return;
+      }
+
       const res = await axios.post(
         `${API_BASE_URL}/tasks/submit-rating`,
         { productId: product.id, rating },
@@ -97,18 +100,22 @@ function ProductRatingPage() {
       );
       setMessage(res.data.message);
       if (res.data.isCompleted) {
-        // If the task is completed (including lucky order after recharge)
-        // or if it's an ordinary task completed, fetch a new task.
         setTimeout(fetchTask, 1500);
       }
     } catch (err) {
-      // Handle the specific LUCKY_ORDER_RECHARGE_REQUIRED error from backend
-      if (err.response?.data?.errorCode === 'LUCKY_ORDER_RECHARGE_REQUIRED') {
-        alert(err.response.data.message); // Display the message from the backend
-        // Use luckyOrderCapital from state to navigate to recharge, as it was fetched with the task
-        navigate("/recharge", { state: { requiredAmount: luckyOrderCapital } });
+      // Safely check for err.response before accessing its properties
+      if (err.response) {
+        if (err.response.data?.errorCode === 'LUCKY_ORDER_RECHARGE_REQUIRED') {
+          alert(err.response.data.message);
+          navigate("/recharge", { state: { requiredAmount: luckyOrderCapital } });
+        } else if ([401, 403].includes(err.response.status)) {
+          localStorage.removeItem("token");
+          navigate("/login");
+        } else {
+          setError(err.response.data?.message || "Failed to submit rating.");
+        }
       } else {
-        setError(err.response?.data?.message || "Failed to submit rating.");
+        setError("Network error or server unreachable."); // Generic network error
       }
     }
   };
@@ -165,7 +172,6 @@ function ProductRatingPage() {
           <p><strong>💰 Your Balance:</strong> ${userBalance.toFixed(2)} </p>
         </div>
 
-        {/* MODIFICATION START: Removed the balance check to always show this message for lucky orders */}
         {isLuckyOrder && (
           <div className="lucky-order-warning">
             <>
@@ -176,7 +182,6 @@ function ProductRatingPage() {
             </>
           </div>
         )}
-        {/* MODIFICATION END */}
 
         <div className="rating-instruction">Rate this product (5 stars to complete task)</div>
         <div className="stars">
