@@ -442,7 +442,7 @@ body {
   }
 
   .main-content {
-    padding: 16px; /* Reduce padding on smaller screens */
+    padding: 26px; /* Reduce padding on smaller screens */
   }
 
   /* 6. Make fonts and other elements responsive */
