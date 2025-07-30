@@ -445,7 +445,7 @@ body {
   /* =================================================================== */
 
   /* FIX: Ensure content uses the full screen width */
-  .main-content {
+  .dashboard-page-content {
     width: 100%;
     box-sizing: border-box;
     padding: 24px 16px;

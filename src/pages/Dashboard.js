@@ -139,7 +139,7 @@ export default function Dashboard() {
   }, [phones.length]);
 
   return (
-    <main className="main-content">
+    <div className="dashboard-page-content">
       <header className="dashboard-header">
         <div className="user-info">
           <FaUser className="icon" />
@@ -219,6 +219,6 @@ export default function Dashboard() {
         onClose={() => setIsChatOpen(false)}
         initialMessage={initialChatMessage}
       />
-    </main>
+    </div>
   );
 }
