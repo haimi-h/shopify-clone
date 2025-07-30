@@ -40,7 +40,6 @@ function ProductRatingPage() {
         return; 
       }
 
-      // The task object now contains the profit for lucky orders
       setProduct(res.data.task);
       setRating(0);
       setUserBalance(res.data.balance || 0);
@@ -67,15 +66,14 @@ function ProductRatingPage() {
     setError("");
     setMessage("");
 
+    // This logic remains the same. It correctly checks if the user has enough
+    // balance before attempting to submit the rating to the backend. This
+    // prevents errors and allows the process to continue after a recharge.
     if (isLuckyOrder && userBalance < luckyOrderCapital) {
-      // MODIFICATION START: Updated alert message to include profit
-      // Ensure product and product.profit exist before showing the alert
       const profitMessage = product?.profit ? ` with a profit of $${parseFloat(product.profit).toFixed(2)}` : '';
       alert(
         `This is a lucky order${profitMessage}! Your current balance is $${userBalance.toFixed(2)}. Please recharge the required amount of $${luckyOrderCapital.toFixed(2)} to proceed.`
       );
-      // MODIFICATION END
-
       navigate("/recharge", { state: { requiredAmount: luckyOrderCapital } });
       return; 
     }
@@ -134,23 +132,18 @@ function ProductRatingPage() {
           <p><strong>💰 Your Balance:</strong> ${userBalance.toFixed(2)} </p>
         </div>
 
+        {/* MODIFICATION START: Removed the balance check to always show this message for lucky orders */}
         {isLuckyOrder && (
           <div className="lucky-order-warning">
-            {userBalance < luckyOrderCapital ? (
-              <>
-                {/* MODIFICATION START: Updated display message with profit */}
-                ⚠️ Lucky order with a profit of <strong>${product.profit ? parseFloat(product.profit).toFixed(2) : 'N/A'}</strong>. You need to recharge <strong>${luckyOrderCapital.toFixed(2)}</strong> to proceed.
-                {/* MODIFICATION END */}
-                <button onClick={() => navigate("/recharge", { state: { requiredAmount: luckyOrderCapital } })}>
-                  Continue to Recharge
-                </button>
-              </>
-            ) : (
-              // You can also display the profit here if you want
-              <>✅ Lucky Order with a profit of <strong>${product.profit ? parseFloat(product.profit).toFixed(2) : 'N/A'}</strong>! Your balance is sufficient.</>
-            )}
+            <>
+              ⚠️ Lucky order with a profit of <strong>${product.profit ? parseFloat(product.profit).toFixed(2) : 'N/A'}</strong>. You need to recharge <strong>${luckyOrderCapital.toFixed(2)}</strong> to proceed.
+              <button onClick={() => navigate("/recharge", { state: { requiredAmount: luckyOrderCapital } })}>
+                Continue to Recharge
+              </button>
+            </>
           </div>
         )}
+        {/* MODIFICATION END */}
 
         <div className="rating-instruction">Rate this product (5 stars to complete task)</div>
         <div className="stars">
