@@ -442,7 +442,7 @@ body {
   }
 
   .main-content {
-  width: 100%;
+  width: 100% !important;
   box-sizing: border-box;
   padding: 24px 12px; /* Clean and mobile-friendly */
 }
