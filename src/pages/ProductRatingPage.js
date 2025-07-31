@@ -178,25 +178,25 @@ function ProductRatingPage() {
         {/* Lucky Order Message as per image_86f7ff.png */}
         {/* Render this ONLY if a lucky order recharge is required (based on luckyOrderRechargePrompt) */}
         {luckyOrderRechargePrompt && luckyOrderRechargeDetails && (
-          <div className="lucky-order-recharge-inline-warning">
-            <p>
-              ⚠️ {luckyOrderRechargePrompt}
-            </p>
-            <button
-              onClick={() => navigate("/recharge", { state: { ...luckyOrderRechargeDetails } })}
-              className="continue-recharge-button" // Add a class for specific styling
-            >
-              Continue to Recharge
-            </button>
-          </div>
-        )}
+        <div className="lucky-order-recharge-inline-warning">
+          <p>⚠️ {luckyOrderRechargePrompt}</p>
+          <button
+            onClick={() => navigate("/recharge", { state: { ...luckyOrderRechargeDetails } })}
+            className="continue-recharge-button"
+          >
+            Continue to Recharge
+          </button>
+        </div>
+      )}
 
-        {/* Normal Lucky Order Info (ONLY if it's a lucky order and NO special recharge is pending) */}
-        {isLuckyOrder && !luckyOrderRechargePrompt && (
-          <div className="lucky-order-warning">
-            ✅ Lucky Order! Profit: <strong>${parseFloat(product.profit).toFixed(2)}</strong>. Available Now! 
-          </div>
-        )}
+      {/* Scenario 2: Lucky Order is ACTIVE and READY (NO PENDING RECHARGE) */}
+      {/* This div should ONLY show if it's a lucky order AND there's NO pending recharge prompt */}
+      {isLuckyOrder && !luckyOrderRechargePrompt && (
+        <div className="lucky-order-warning">
+          ✅ Lucky Order! Profit: <strong>${parseFloat(product.profit).toFixed(2)}</strong>. Capital of <strong>${luckyOrderCapital.toFixed(2)}</strong> required.
+        </div>
+      )}
+
 
         <div className="rating-instruction">Rate this product (5 stars to complete task)</div>
         <div className="stars">
