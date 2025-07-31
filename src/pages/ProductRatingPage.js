@@ -13,20 +13,22 @@ function ProductRatingPage() {
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(""); // For true errors (e.g., API failures)
-  const [infoMessage, setInfoMessage] = useState(""); // For informative messages like insufficient balance
-  const [message, setMessage] = useState(""); // For success messages (e.g., "Rating submitted")
+  const [error, setError] = useState("");
+  const [infoMessage, setInfoMessage] = useState("");
+  const [message, setMessage] = useState("");
   const [userBalance, setUserBalance] = useState(0);
   const [isLuckyOrder, setIsLuckyOrder] = useState(false);
   const [luckyOrderCapital, setLuckyOrderCapital] = useState(0);
+  const [rechargeDetails, setRechargeDetails] = useState(null); // State to hold recharge info
 
   const MIN_BALANCE_REQUIRED = 2;
 
   const fetchTask = async () => {
     setLoading(true);
-    setError("");        // Clear all previous messages/errors
+    setError("");
     setInfoMessage("");
     setMessage("");
+    setRechargeDetails(null); // Clear previous recharge details
 
     try {
       const token = localStorage.getItem("token");
@@ -39,28 +41,30 @@ function ProductRatingPage() {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      const { balance, isLuckyOrder, luckyOrderCapitalRequired, task, message: apiMessage } = res.data;
+      const { balance, isLuckyOrder, luckyOrderCapitalRequired, task, message: apiMessage, luckyOrderRequiresRecharge, injectionPlanId } = res.data;
 
       setUserBalance(balance || 0);
 
       // --- GENERAL MINIMUM BALANCE CHECK ---
       if (balance < MIN_BALANCE_REQUIRED) {
         setInfoMessage(`Your balance of $${balance.toFixed(2)} is insufficient. A minimum balance of $${MIN_BALANCE_REQUIRED.toFixed(2)} is required to start tasks.`);
-        setProduct(null); // No task to display
+        setRechargeDetails({ requiredAmount: MIN_BALANCE_REQUIRED }); // Set details for recharge button
+        setProduct(null);
         setLoading(false);
         return;
       }
 
       // --- LUCKY ORDER SPECIFIC RECHARGE CHECK ---
-      if (isLuckyOrder && res.data.luckyOrderRequiresRecharge) {
-        alert(apiMessage); // Keep alert for this specific backend-driven scenario
-        navigate("/recharge", {
-          state: {
+      if (isLuckyOrder && luckyOrderRequiresRecharge) {
+        // **MODIFICATION**: Instead of an alert, set an info message and recharge details.
+        setInfoMessage(apiMessage); // Show backend message in the UI
+        setRechargeDetails({
             requiredAmount: luckyOrderCapitalRequired,
-            injectionPlanId: res.data.injectionPlanId,
-          },
+            injectionPlanId: injectionPlanId,
         });
-        return;
+        setProduct(null); // Don't show the task
+        setLoading(false);
+        return; // Stop execution
       }
 
       // If checks pass, proceed with setting task
@@ -72,7 +76,6 @@ function ProductRatingPage() {
         setIsLuckyOrder(isLuckyOrder);
         setLuckyOrderCapital(luckyOrderCapitalRequired);
       }
-
     } catch (err) {
       setError(err.response?.data?.message || "Failed to load task.");
       setProduct(null);
@@ -81,17 +84,17 @@ function ProductRatingPage() {
         navigate("/login");
       }
     } finally {
-      setLoading(false); // Ensure loading is always set to false in the end
+      setLoading(false);
     }
   };
 
   const handleSubmitRating = async () => {
     setError("");
-    setMessage(""); // Clear message on new submission attempt
-    setInfoMessage(""); // Clear info message on new submission attempt
+    setMessage("");
+    setInfoMessage("");
 
     if (!product?.id || rating !== 5) {
-      setError("Please provide a 5-star rating to complete the task."); // This is a validation error
+      setError("Please provide a 5-star rating to complete the task.");
       return;
     }
 
@@ -120,64 +123,56 @@ function ProductRatingPage() {
   useEffect(() => {
     if (location.state?.message) {
       setMessage(location.state.message);
-      // Clear location state message after displaying to prevent it from re-appearing
       navigate(location.pathname, { replace: true, state: {} });
     }
     fetchTask();
-  }, [location.state?.message]); // Re-run if a message comes via location state
+  }, [location.state?.message]);
+
 
   // --- Render Logic ---
 
-  // Display loading screen while data is being fetched and no error/info message is present
   if (loading && !error && !infoMessage) {
     return <div className="rating-wrapper"><h2>Loading task...</h2></div>;
   }
 
-  // Handle messages that prevent a task from being displayed (either error or info)
+  // **MODIFICATION**: This block now handles all cases where a task cannot be shown.
   if (error || infoMessage) {
     return (
       <div className="rating-wrapper-no">
-        {/* Display general errors with "Error:" prefix */}
         {error && <h2>Error: {error}</h2>}
-        {/* Display info messages without "Error:" prefix */}
         {infoMessage && <h2>{infoMessage}</h2>}
 
-        {/* Recharge button specifically for insufficient balance */}
-        {infoMessage.includes("insufficient") && (
-            <button onClick={() => navigate("/recharge", { state: { requiredAmount: MIN_BALANCE_REQUIRED } })}>
-                Recharge Now
-            </button>
+        {/* This button will now appear for ANY case that requires a recharge */}
+        {rechargeDetails && (
+          <button onClick={() => navigate("/recharge", { state: { ...rechargeDetails } })}>
+            Recharge Now
+          </button>
         )}
-        {/* "Try Again" button for general errors or if user wants to re-fetch */}
+
         <button onClick={fetchTask}>Try Again</button>
         <button onClick={() => navigate("/dashboard")}>Back to Dashboard</button>
       </div>
     );
   }
 
-  // If no product is available (e.g., backend says no tasks)
   if (!product) {
     return <div className="rating-wrapper-no"><h2>{message || "No new tasks available."}</h2><button onClick={() => navigate("/dashboard")}>Back to Dashboard</button></div>;
   }
 
-  // Default display for when a product is available
   return (
     <div className="rating-wrapper">
       <div className="rating-card">
         <img src={product.image_url} alt={product.name} className="rating-image" />
         <h2 className="rating-title">{product.name}</h2>
         <p className="rating-price">Price: ${parseFloat(product.price).toFixed(2)}</p>
-
         <div className="rating-financials">
           <p><strong>💰 Your Balance:</strong> ${userBalance.toFixed(2)}</p>
         </div>
-
         {isLuckyOrder && (
           <div className="lucky-order-warning">
             ✅ Lucky Order! Profit: <strong>${parseFloat(product.profit).toFixed(2)}</strong>. Capital of <strong>${luckyOrderCapital.toFixed(2)}</strong> required.
           </div>
         )}
-
         <div className="rating-instruction">Rate this product (5 stars to complete task)</div>
         <div className="stars">
           {[...Array(5)].map((_, index) => (
@@ -191,9 +186,7 @@ function ProductRatingPage() {
             />
           ))}
         </div>
-
         {message && <p className="success-message">{message}</p>}
-
         <button
           className="submit-rating-button"
           onClick={handleSubmitRating}
