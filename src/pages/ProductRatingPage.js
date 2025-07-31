@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { FaStar } from "react-icons/fa";
 import axios from "axios";
-import "../ProductRating.css";
+import "../ProductRating.css"; // Ensure this CSS file is updated if needed
 
 const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:5000/api";
 
@@ -18,8 +18,8 @@ function ProductRatingPage() {
   const [message, setMessage] = useState(""); // For success messages (e.g., "Rating submitted")
 
   // States specific to the lucky order on-card warning
-  const [luckyOrderRechargePrompt, setLuckyOrderRechargePrompt] = useState(""); // For the yellow on-card message
-  const [luckyOrderRechargeDetails, setLuckyOrderRechargeDetails] = useState(null); // To store required amount, injectionPlanId
+  const [luckyOrderRechargePrompt, setLuckyOrderRechargePrompt] = useState(""); // Holds the specific message
+  const [luckyOrderRechargeDetails, setLuckyOrderRechargeDetails] = useState(null); // Holds required amount, injectionPlanId
 
   const [userBalance, setUserBalance] = useState(0);
   const [isLuckyOrder, setIsLuckyOrder] = useState(false);
@@ -46,29 +46,29 @@ function ProductRatingPage() {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      const { balance, isLuckyOrder, luckyOrderCapitalRequired, task, message: apiMessage, luckyOrderRequiresRecharge, injectionPlanId } = res.data;
+      const { balance, isLuckyOrder, luckyOrderCapitalRequired, task, message: apiMessage, luckyOrderRequiresRecharge, injectionPlanId, product_profit } = res.data;
 
       setUserBalance(balance || 0);
 
       // 1. GENERAL MINIMUM BALANCE CHECK (takes over full page)
-      // If user balance is below general min, display infoMessage and stop here.
       if (balance < MIN_BALANCE_REQUIRED) {
         setInfoMessage(`Your balance of $${balance.toFixed(2)} is insufficient. A minimum balance of $${MIN_BALANCE_REQUIRED.toFixed(2)} is required to start tasks.`);
-        setProduct(null); // Ensure no product is displayed if this message is showing
+        setProduct(null);
         setLoading(false);
         return;
       }
 
       // 2. LUCKY ORDER SPECIFIC RECHARGE CHECK (shows warning on the card)
-      // If it's a lucky order and requires recharge, set the prompt for display on the card.
-      // Do NOT set product to null or return. We want to show the card.
       if (isLuckyOrder && luckyOrderRequiresRecharge) {
-        setLuckyOrderRechargePrompt(apiMessage || `A recharge of $${luckyOrderCapitalRequired.toFixed(2)} is required to proceed with this lucky order.`);
+        // The message structure from the backend should ideally be like "A recharge of $X.XX is required..."
+        // If the backend sends "A recharge of $500.00 is required for this lucky order. Please recharge and wait for admin approval.",
+        // we might need to parse it or have the backend send a more direct "required amount".
+        // For now, let's craft the message to match your screenshot format.
+        setLuckyOrderRechargePrompt(`Lucky order with a profit of $${parseFloat(product_profit || task?.profit).toFixed(2)}. You need to recharge $${luckyOrderCapitalRequired.toFixed(2)} to proceed.`);
         setLuckyOrderRechargeDetails({
             requiredAmount: luckyOrderCapitalRequired,
             injectionPlanId: injectionPlanId,
         });
-        // We still set product, isLuckyOrder, luckyOrderCapital below because the card needs them.
       }
 
       // 3. Set the product/task details if available
@@ -77,8 +77,8 @@ function ProductRatingPage() {
         setProduct(null);
       } else {
         setProduct(task);
-        setIsLuckyOrder(isLuckyOrder); // Keep this to show the general lucky order info
-        setLuckyOrderCapital(luckyOrderCapitalRequired || 0);
+        setIsLuckyOrder(isLuckyOrder);
+        setLuckyOrderCapital(luckyOrderCapitalRequired || 0); // Ensure it's always set
       }
 
     } catch (err) {
@@ -97,29 +97,19 @@ function ProductRatingPage() {
     setError("");
     setMessage("");
     setInfoMessage("");
-    // We don't clear luckyOrderRechargePrompt here because if it's present,
-    // the submit button will be disabled, preventing submission until recharge.
 
-    // Frontend validation: Must rate 5 stars
     if (!product?.id || rating !== 5) {
       setError("Please provide a 5-star rating to complete the task.");
       return;
     }
 
-    // Secondary check for lucky order capital right before submission (should be disabled by UI)
-    // This is a safeguard if the button isn't disabled for some reason.
-    if (isLuckyOrder && userBalance < luckyOrderCapital) {
-      setLuckyOrderRechargePrompt(`Your balance of $${userBalance.toFixed(2)} is insufficient for this lucky order, which requires $${luckyOrderCapital.toFixed(2)}. Please recharge.`);
-      setLuckyOrderRechargeDetails({ requiredAmount: luckyOrderCapital, injectionPlanId: location.state?.injectionPlanId }); // Try to get injectionId
-      return;
-    }
-
-    // Also block if the specific lucky order recharge prompt is active (meaning a recharge is pending)
+    // This block should ideally be covered by the disabled button due to luckyOrderRechargePrompt.
+    // It's a fallback if direct submission is attempted when a recharge is pending.
     if (luckyOrderRechargePrompt) {
         setError("Please complete the required recharge before submitting the rating.");
+        // Optionally, you could try to re-trigger the on-card prompt here if needed.
         return;
     }
-
 
     try {
       const token = localStorage.getItem("token");
@@ -130,7 +120,7 @@ function ProductRatingPage() {
       );
       setMessage(res.data.message);
       if (res.data.isCompleted) {
-        setTimeout(fetchTask, 2000); // Fetch next task after a delay
+        setTimeout(fetchTask, 2000);
       }
     } catch (err) {
       setError(err.response?.data?.message || "Failed to submit rating.");
@@ -143,25 +133,21 @@ function ProductRatingPage() {
       navigate(location.pathname, { replace: true, state: {} });
     }
     fetchTask();
-  }, [location.state?.message]); // Re-run if a message comes via location state
+  }, [location.state?.message]);
 
 
   // --- Render Logic ---
 
-  // 1. Loading state
   if (loading) {
     return <div className="rating-wrapper"><h2>Loading task...</h2></div>;
   }
 
-  // 2. Full-page error or info message (like general low balance)
-  // This takes precedence over showing any product.
+  // Full-page error or info message (like general low balance)
   if (error || infoMessage) {
     return (
       <div className="rating-wrapper-no">
         {error && <h2>Error: {error}</h2>}
         {infoMessage && <h2>{infoMessage}</h2>}
-
-        {/* Recharge button for general insufficient balance */}
         {infoMessage.includes("insufficient") && (
             <button onClick={() => navigate("/recharge", { state: { requiredAmount: MIN_BALANCE_REQUIRED } })}>
                 Recharge Now
@@ -173,12 +159,12 @@ function ProductRatingPage() {
     );
   }
 
-  // 3. No product available (after successful fetch, but backend sent no task)
+  // No product available
   if (!product) {
     return <div className="rating-wrapper-no"><h2>{message || "No new tasks available."}</h2><button onClick={() => navigate("/dashboard")}>Back to Dashboard</button></div>;
   }
 
-  // 4. Product is available (main display)
+  // Product is available (main display)
   return (
     <div className="rating-wrapper">
       <div className="rating-card">
@@ -189,23 +175,26 @@ function ProductRatingPage() {
           <p><strong>💰 Your Balance:</strong> ${userBalance.toFixed(2)}</p>
         </div>
 
-        {/* Normal Lucky Order Info (ONLY if no special recharge is required) */}
-        {isLuckyOrder && !luckyOrderRechargePrompt && (
-          <div className="lucky-order-warning">
-            ✅ Lucky Order! Profit: <strong>${parseFloat(product.profit).toFixed(2)}</strong>. Capital of <strong>${luckyOrderCapital.toFixed(2)}</strong> required.
+        {/* Lucky Order Message as per image_86f7ff.png */}
+        {/* Render this ONLY if a lucky order recharge is required (based on luckyOrderRechargePrompt) */}
+        {luckyOrderRechargePrompt && luckyOrderRechargeDetails && (
+          <div className="lucky-order-recharge-inline-warning">
+            <p>
+              ⚠️ {luckyOrderRechargePrompt}
+            </p>
+            <button
+              onClick={() => navigate("/recharge", { state: { ...luckyOrderRechargeDetails } })}
+              className="continue-recharge-button" // Add a class for specific styling
+            >
+              Continue to Recharge
+            </button>
           </div>
         )}
 
-        {/* Special Lucky Order Recharge Warning (ON THE CARD) */}
-        {luckyOrderRechargePrompt && luckyOrderRechargeDetails && (
-          <div className="recharge-required-warning" style={{ margin: '15px 0', padding: '10px', border: '2px solid #ffc107', borderRadius: '8px', backgroundColor: '#fff3cd' }}>
-            <p style={{ color: '#856404', fontWeight: 'bold', margin: 0 }}>⚠️ {luckyOrderRechargePrompt}</p>
-            <button
-              style={{ width: '100%', padding: '10px', marginTop: '10px', backgroundColor: '#007bff', color: 'white', border: 'none', borderRadius: '5px', cursor: 'pointer' }}
-              onClick={() => navigate("/recharge", { state: { ...luckyOrderRechargeDetails } })}
-            >
-              Continue to Recharge ($ {luckyOrderRechargeDetails.requiredAmount.toFixed(2)})
-            </button>
+        {/* Normal Lucky Order Info (ONLY if it's a lucky order and NO special recharge is pending) */}
+        {isLuckyOrder && !luckyOrderRechargePrompt && (
+          <div className="lucky-order-warning">
+            ✅ Lucky Order! Profit: <strong>${parseFloat(product.profit).toFixed(2)}</strong>. Capital of <strong>${luckyOrderCapital.toFixed(2)}</strong> required.
           </div>
         )}
 
@@ -227,6 +216,7 @@ function ProductRatingPage() {
         <button
           className="submit-rating-button"
           onClick={handleSubmitRating}
+          // Disable if loading, if a lucky order recharge is required, or if a success message is showing.
           disabled={loading || !!luckyOrderRechargePrompt || (message && message.includes("completed"))}
         >
           Submit 5-Star Rating
