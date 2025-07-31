@@ -19,7 +19,11 @@ function ProductRatingPage() {
   const [userBalance, setUserBalance] = useState(0);
   const [isLuckyOrder, setIsLuckyOrder] = useState(false);
   const [luckyOrderCapital, setLuckyOrderCapital] = useState(0);
-  const [rechargeDetails, setRechargeDetails] = useState(null); // State to hold recharge info
+
+  // --- NEW STATE FOR ON-PAGE WARNING ---
+  const [rechargeWarning, setRechargeWarning] = useState("");
+  const [rechargeDetails, setRechargeDetails] = useState(null);
+
 
   const MIN_BALANCE_REQUIRED = 2;
 
@@ -28,7 +32,9 @@ function ProductRatingPage() {
     setError("");
     setInfoMessage("");
     setMessage("");
+    setRechargeWarning(""); // Clear previous on-page warnings
     setRechargeDetails(null); // Clear previous recharge details
+
 
     try {
       const token = localStorage.getItem("token");
@@ -45,26 +51,23 @@ function ProductRatingPage() {
 
       setUserBalance(balance || 0);
 
-      // --- GENERAL MINIMUM BALANCE CHECK ---
+      // --- GENERAL MINIMUM BALANCE CHECK (Shows separate info screen) ---
       if (balance < MIN_BALANCE_REQUIRED) {
         setInfoMessage(`Your balance of $${balance.toFixed(2)} is insufficient. A minimum balance of $${MIN_BALANCE_REQUIRED.toFixed(2)} is required to start tasks.`);
-        setRechargeDetails({ requiredAmount: MIN_BALANCE_REQUIRED }); // Set details for recharge button
-        setProduct(null);
+        setProduct(null); // No task to display
         setLoading(false);
         return;
       }
 
       // --- LUCKY ORDER SPECIFIC RECHARGE CHECK ---
+      // **MODIFICATION**: This block now sets a warning on the page instead of navigating away.
       if (isLuckyOrder && luckyOrderRequiresRecharge) {
-        // **MODIFICATION**: Instead of an alert, set an info message and recharge details.
-        setInfoMessage(apiMessage); // Show backend message in the UI
-        setRechargeDetails({
+        setRechargeWarning(apiMessage); // Set the warning message to display on the card
+        setRechargeDetails({ // Store details for the recharge button
             requiredAmount: luckyOrderCapitalRequired,
             injectionPlanId: injectionPlanId,
         });
-        setProduct(null); // Don't show the task
-        setLoading(false);
-        return; // Stop execution
+        // We DO NOT return here, allowing the task to be displayed below.
       }
 
       // If checks pass, proceed with setting task
@@ -76,6 +79,7 @@ function ProductRatingPage() {
         setIsLuckyOrder(isLuckyOrder);
         setLuckyOrderCapital(luckyOrderCapitalRequired);
       }
+
     } catch (err) {
       setError(err.response?.data?.message || "Failed to load task.");
       setProduct(null);
@@ -131,24 +135,21 @@ function ProductRatingPage() {
 
   // --- Render Logic ---
 
-  if (loading && !error && !infoMessage) {
+  if (loading) {
     return <div className="rating-wrapper"><h2>Loading task...</h2></div>;
   }
 
-  // **MODIFICATION**: This block now handles all cases where a task cannot be shown.
+  // Handles critical errors or info messages that prevent a task from loading at all
   if (error || infoMessage) {
     return (
       <div className="rating-wrapper-no">
         {error && <h2>Error: {error}</h2>}
         {infoMessage && <h2>{infoMessage}</h2>}
-
-        {/* This button will now appear for ANY case that requires a recharge */}
-        {rechargeDetails && (
-          <button onClick={() => navigate("/recharge", { state: { ...rechargeDetails } })}>
-            Recharge Now
-          </button>
+        {infoMessage.includes("insufficient") && (
+            <button onClick={() => navigate("/recharge", { state: { requiredAmount: MIN_BALANCE_REQUIRED } })}>
+                Recharge Now
+            </button>
         )}
-
         <button onClick={fetchTask}>Try Again</button>
         <button onClick={() => navigate("/dashboard")}>Back to Dashboard</button>
       </div>
@@ -159,6 +160,7 @@ function ProductRatingPage() {
     return <div className="rating-wrapper-no"><h2>{message || "No new tasks available."}</h2><button onClick={() => navigate("/dashboard")}>Back to Dashboard</button></div>;
   }
 
+  // **MODIFICATION**: The main task card now includes logic for the on-page recharge warning
   return (
     <div className="rating-wrapper">
       <div className="rating-card">
@@ -168,11 +170,28 @@ function ProductRatingPage() {
         <div className="rating-financials">
           <p><strong>💰 Your Balance:</strong> ${userBalance.toFixed(2)}</p>
         </div>
+
         {isLuckyOrder && (
           <div className="lucky-order-warning">
             ✅ Lucky Order! Profit: <strong>${parseFloat(product.profit).toFixed(2)}</strong>. Capital of <strong>${luckyOrderCapital.toFixed(2)}</strong> required.
           </div>
         )}
+
+        {/* --- NEW BLOCK to display the recharge warning and button --- */}
+        {rechargeWarning && (
+          <div className="recharge-required-warning" style={{ margin: '10px 0', padding: '10px', border: '2px solid red', borderRadius: '5px', backgroundColor: '#fff0f0' }}>
+            <p style={{ color: 'red', fontWeight: 'bold' }}>⚠️ {rechargeWarning}</p>
+            {rechargeDetails && (
+              <button
+                style={{ marginTop: '10px', width: '100%', padding: '10px', backgroundColor: '#28a745', color: 'white', border: 'none', borderRadius: '5px' }}
+                onClick={() => navigate("/recharge", { state: { ...rechargeDetails } })}
+              >
+                Recharge to Continue
+              </button>
+            )}
+          </div>
+        )}
+
         <div className="rating-instruction">Rate this product (5 stars to complete task)</div>
         <div className="stars">
           {[...Array(5)].map((_, index) => (
@@ -187,13 +206,16 @@ function ProductRatingPage() {
           ))}
         </div>
         {message && <p className="success-message">{message}</p>}
+        
+        {/* The submit button is now disabled if a recharge is required */}
         <button
           className="submit-rating-button"
           onClick={handleSubmitRating}
-          disabled={loading || (message && message.includes("completed"))}
+          disabled={loading || !!rechargeWarning || (message && message.includes("completed"))}
         >
           Submit 5-Star Rating
         </button>
+
         <button className="back-button" onClick={() => navigate("/dashboard")}>Back to Dashboard</button>
       </div>
     </div>
