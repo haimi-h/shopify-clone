@@ -193,7 +193,7 @@ function ProductRatingPage() {
       {/* This div should ONLY show if it's a lucky order AND there's NO pending recharge prompt */}
       {isLuckyOrder && !luckyOrderRechargePrompt && (
         <div className="lucky-order-warning">
-          ✅ Lucky Order! Profit: <strong>${parseFloat(product.profit).toFixed(2)}</strong>. Capital of <strong>${luckyOrderCapital.toFixed(2)}</strong> required.
+          ✅ Lucky Order available! with a Profit: <strong>${parseFloat(product.profit).toFixed(2)}</strong>.
         </div>
       )}
 
