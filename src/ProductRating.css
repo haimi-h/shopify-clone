@@ -227,6 +227,55 @@
 .insufficient-balance-container .back-button {
   margin-bottom: 0; /* No margin-bottom, let gap handle it */
 }
+/* --- Styles for the ON-CARD Lucky Order Recharge Prompt (yellow box) --- */
+.lucky-order-recharge-inline-warning {
+    background-color: #fff3cd; /* Light yellow background */
+    border: 1px solid #ffc107; /* Yellow border */
+    border-radius: 8px; /* Slightly rounded corners */
+    padding: 10px 15px; /* Padding inside */
+    margin: 15px 0; /* Space above and below */
+    display: flex;
+    flex-direction: column; /* Stack message and button */
+    align-items: center; /* Center horizontally */
+    text-align: center; /* Center text */
+    font-size: 0.95em; /* Slightly smaller font */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* Subtle shadow */
+}
+
+.lucky-order-recharge-inline-warning p {
+    color: #856404; /* Dark yellow text color */
+    font-weight: bold; /* Bold text */
+    margin-bottom: 10px; /* Space between text and button */
+}
+
+.lucky-order-recharge-inline-warning .continue-recharge-button {
+    background-color: #007bff; /* Blue button background */
+    color: white; /* White text */
+    border: none;
+    border-radius: 5px; /* Rounded button corners */
+    padding: 8px 15px; /* Button padding */
+    cursor: pointer;
+    font-size: 1em;
+    width: 100%; /* Make button full width within its container */
+    max-width: 200px; /* Limit button width for better appearance */
+    transition: background-color 0.2s ease;
+}
+
+.lucky-order-recharge-inline-warning .continue-recharge-button:hover {
+    background-color: #0056b3; /* Darker blue on hover */
+}
+
+/* Also ensure the normal lucky order (green checkmark) is there if you use it */
+.lucky-order-warning {
+    background-color: #d4edda;
+    border: 1px solid #28a745;
+    color: #155724;
+    padding: 10px;
+    border-radius: 5px;
+    margin: 15px 0;
+    font-weight: bold;
+}
+
 
 /* Responsive adjustments */
 @media (max-width: 600px) {

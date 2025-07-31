@@ -194,7 +194,7 @@ function ProductRatingPage() {
         {/* Normal Lucky Order Info (ONLY if it's a lucky order and NO special recharge is pending) */}
         {isLuckyOrder && !luckyOrderRechargePrompt && (
           <div className="lucky-order-warning">
-            ✅ Lucky Order! Profit: <strong>${parseFloat(product.profit).toFixed(2)}</strong>. Capital of <strong>${luckyOrderCapital.toFixed(2)}</strong> required.
+            ✅ Lucky Order! Profit: <strong>${parseFloat(product.profit).toFixed(2)}</strong>. Available Now! 
           </div>
         )}
 
