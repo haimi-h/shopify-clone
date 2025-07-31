@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom"; // Import useLocation
+import { useNavigate, useLocation } from "react-router-dom";
 import { FaStar } from "react-icons/fa";
 import axios from "axios";
 import "../ProductRating.css";
@@ -8,7 +8,7 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || "http://localhost:500
 
 function ProductRatingPage() {
   const navigate = useNavigate();
-  const location = useLocation(); // To read state from navigation
+  const location = useLocation();
   const [product, setProduct] = useState(null);
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(null);
@@ -19,6 +19,8 @@ function ProductRatingPage() {
   const [isLuckyOrder, setIsLuckyOrder] = useState(false);
   const [luckyOrderCapital, setLuckyOrderCapital] = useState(0);
 
+  const MIN_BALANCE_REQUIRED = 2; // Define your minimum required balance here
+
   const fetchTask = async () => {
     setLoading(true);
     setError("");
@@ -26,38 +28,46 @@ function ProductRatingPage() {
 
     try {
       const token = localStorage.getItem("token");
-      if (!token) { navigate("/login"); return; }
+      if (!token) {
+        navigate("/login");
+        return;
+      }
 
       const res = await axios.get(`${API_BASE_URL}/tasks/task`, {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      // --- NEW LOGIC TO HANDLE REQUIRED RECHARGE ---
-      if (res.data.isLuckyOrder && res.data.luckyOrderRequiresRecharge) {
-        // API says a specific recharge is pending for this lucky order.
-        // Alert the user and redirect them to the recharge page.
-        alert(res.data.message); // Show the message from the backend
-        
-        // CRUCIAL: Redirect to the recharge page, passing the required amount
-        // and the specific injection plan ID to be linked with the recharge.
+      const { balance, isLuckyOrder, luckyOrderCapitalRequired, task, message: apiMessage } = res.data;
+
+      setUserBalance(balance || 0); // Always update balance first
+
+      // --- RE-INTRODUCING THE GENERAL MINIMUM BALANCE CHECK ---
+      if (balance < MIN_BALANCE_REQUIRED) {
+        alert(`Your balance of $${balance.toFixed(2)} is insufficient. A minimum balance of $${MIN_BALANCE_REQUIRED.toFixed(2)} is required to start tasks. Please recharge.`);
+        navigate("/recharge", { state: { requiredAmount: MIN_BALANCE_REQUIRED } });
+        return; // Stop further processing if balance is too low
+      }
+
+      // --- EXISTING NEW LOGIC TO HANDLE REQUIRED RECHARGE FOR LUCKY ORDER ---
+      if (isLuckyOrder && res.data.luckyOrderRequiresRecharge) {
+        alert(apiMessage);
         navigate("/recharge", {
           state: {
-            requiredAmount: res.data.luckyOrderCapitalRequired,
-            injectionPlanId: res.data.injectionPlanId, // Pass the ID
+            requiredAmount: luckyOrderCapitalRequired,
+            injectionPlanId: res.data.injectionPlanId,
           },
         });
-        return; // Stop further processing
+        return;
       }
-      
-      if (res.data.task === null) {
-         setMessage(res.data.message || "No new tasks available.");
-         setProduct(null);
+
+      if (task === null) {
+        setMessage(apiMessage || "No new tasks available.");
+        setProduct(null);
       } else {
-        setProduct(res.data.task);
-        setIsLuckyOrder(res.data.isLuckyOrder);
-        setLuckyOrderCapital(res.data.luckyOrderCapitalRequired);
+        setProduct(task);
+        setIsLuckyOrder(isLuckyOrder);
+        setLuckyOrderCapital(luckyOrderCapitalRequired);
       }
-      setUserBalance(res.data.balance || 0);
 
     } catch (err) {
       setError(err.response?.data?.message || "Failed to load task.");
@@ -79,13 +89,13 @@ function ProductRatingPage() {
       setError("Please provide a 5-star rating to complete the task.");
       return;
     }
-    
-    // This check is now secondary, as the main check is the approved recharge.
-    // It's a good fallback in case of state inconsistencies.
+
+    // This check is still valid for lucky orders, but the primary guard
+    // is now at the start of fetchTask and the luckyOrderRequiresRecharge from API.
     if (isLuckyOrder && userBalance < luckyOrderCapital) {
       alert(`Your balance of $${userBalance.toFixed(2)} is insufficient for this lucky order, which requires $${luckyOrderCapital.toFixed(2)}. Please recharge.`);
       navigate("/recharge", { state: { requiredAmount: luckyOrderCapital } });
-      return; 
+      return;
     }
 
     try {
@@ -97,7 +107,7 @@ function ProductRatingPage() {
       );
       setMessage(res.data.message);
       if (res.data.isCompleted) {
-        setTimeout(fetchTask, 2000); // Fetch next task after a delay
+        setTimeout(fetchTask, 2000);
       }
     } catch (err) {
       setError(err.response?.data?.message || "Failed to submit rating.");
@@ -105,17 +115,16 @@ function ProductRatingPage() {
   };
 
   useEffect(() => {
-    // A message from another page (like a successful recharge) can trigger a refresh.
     if (location.state?.message) {
       setMessage(location.state.message);
     }
     fetchTask();
-  }, []); // Run only on initial mount
+  }, [location.state?.message]); // Add location.state.message to dependency array for re-fetch after recharge
 
   if (loading) return <div className="rating-wrapper"><h2>Loading task...</h2></div>;
   if (error) return <div className="rating-wrapper-no"><h2>Error: {error}</h2><button onClick={fetchTask}>Try Again</button></div>;
   if (!product) return <div className="rating-wrapper-no"><h2>{message || "No new tasks available."}</h2><button onClick={() => navigate("/dashboard")}>Back to Dashboard</button></div>;
-  
+
   return (
     <div className="rating-wrapper">
       <div className="rating-card">
@@ -148,7 +157,7 @@ function ProductRatingPage() {
         </div>
 
         {message && <p className="success-message">{message}</p>}
-        
+
         <button
           className="submit-rating-button"
           onClick={handleSubmitRating}
