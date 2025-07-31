@@ -13,17 +13,19 @@ function ProductRatingPage() {
   const [rating, setRating] = useState(0);
   const [hover, setHover] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(""); // This will now hold the insufficient balance message
-  const [message, setMessage] = useState("");
+  const [error, setError] = useState(""); // For true errors (e.g., API failures)
+  const [infoMessage, setInfoMessage] = useState(""); // For informative messages like insufficient balance
+  const [message, setMessage] = useState(""); // For success messages (e.g., "Rating submitted")
   const [userBalance, setUserBalance] = useState(0);
   const [isLuckyOrder, setIsLuckyOrder] = useState(false);
   const [luckyOrderCapital, setLuckyOrderCapital] = useState(0);
 
-  const MIN_BALANCE_REQUIRED = 2; // Define your minimum required balance here
+  const MIN_BALANCE_REQUIRED = 2;
 
   const fetchTask = async () => {
     setLoading(true);
-    setError(""); // Clear previous errors/messages
+    setError("");        // Clear all previous messages/errors
+    setInfoMessage("");
     setMessage("");
 
     try {
@@ -39,24 +41,19 @@ function ProductRatingPage() {
 
       const { balance, isLuckyOrder, luckyOrderCapitalRequired, task, message: apiMessage } = res.data;
 
-      setUserBalance(balance || 0); // Always update balance first
+      setUserBalance(balance || 0);
 
-      // --- RE-INTRODUCING THE GENERAL MINIMUM BALANCE CHECK ---
+      // --- GENERAL MINIMUM BALANCE CHECK ---
       if (balance < MIN_BALANCE_REQUIRED) {
-        // Set the error state instead of an alert
-        setError(`Your balance of $${balance.toFixed(2)} is insufficient. A minimum balance of $${MIN_BALANCE_REQUIRED.toFixed(2)} is required to start tasks. Please recharge.`);
-        // Don't navigate immediately here unless you want to force navigation.
-        // The user will see the message and then decide to click the recharge button.
-        setProduct(null); // Ensure no product is displayed
-        setLoading(false); // Stop loading to show the message
-        return; // Stop further processing
+        setInfoMessage(`Your balance of $${balance.toFixed(2)} is insufficient. A minimum balance of $${MIN_BALANCE_REQUIRED.toFixed(2)} is required to start tasks.`);
+        setProduct(null); // No task to display
+        setLoading(false);
+        return;
       }
 
-      // --- EXISTING NEW LOGIC TO HANDLE REQUIRED RECHARGE FOR LUCKY ORDER ---
-      // This part still uses navigation because it's a specific requirement from the backend
-      // for a lucky order that needs a specific capital injection.
+      // --- LUCKY ORDER SPECIFIC RECHARGE CHECK ---
       if (isLuckyOrder && res.data.luckyOrderRequiresRecharge) {
-        alert(apiMessage); // Keep alert for this specific scenario as per original code
+        alert(apiMessage); // Keep alert for this specific backend-driven scenario
         navigate("/recharge", {
           state: {
             requiredAmount: luckyOrderCapitalRequired,
@@ -66,6 +63,7 @@ function ProductRatingPage() {
         return;
       }
 
+      // If checks pass, proceed with setting task
       if (task === null) {
         setMessage(apiMessage || "No new tasks available.");
         setProduct(null);
@@ -83,23 +81,21 @@ function ProductRatingPage() {
         navigate("/login");
       }
     } finally {
-      // setLoading(false) is moved into the specific branches where we stop processing,
-      // or at the end for successful cases.
+      setLoading(false); // Ensure loading is always set to false in the end
     }
   };
 
   const handleSubmitRating = async () => {
     setError("");
-    setMessage("");
+    setMessage(""); // Clear message on new submission attempt
+    setInfoMessage(""); // Clear info message on new submission attempt
 
     if (!product?.id || rating !== 5) {
-      setError("Please provide a 5-star rating to complete the task.");
+      setError("Please provide a 5-star rating to complete the task."); // This is a validation error
       return;
     }
 
     if (isLuckyOrder && userBalance < luckyOrderCapital) {
-      // This specific alert is fine to keep as it's a condition *during* submission
-      // and directly leads to a recharge action for that specific lucky order.
       alert(`Your balance of $${userBalance.toFixed(2)} is insufficient for this lucky order, which requires $${luckyOrderCapital.toFixed(2)}. Please recharge.`);
       navigate("/recharge", { state: { requiredAmount: luckyOrderCapital } });
       return;
@@ -124,33 +120,47 @@ function ProductRatingPage() {
   useEffect(() => {
     if (location.state?.message) {
       setMessage(location.state.message);
+      // Clear location state message after displaying to prevent it from re-appearing
+      navigate(location.pathname, { replace: true, state: {} });
     }
     fetchTask();
-  }, [location.state?.message]);
+  }, [location.state?.message]); // Re-run if a message comes via location state
 
-  // Render logic based on states
-  if (loading && !error) return <div className="rating-wrapper"><h2>Loading task...</h2></div>; // Only show loading if no error
-  
-  // If there's an error (including the balance message)
-  if (error) {
+  // --- Render Logic ---
+
+  // Display loading screen while data is being fetched and no error/info message is present
+  if (loading && !error && !infoMessage) {
+    return <div className="rating-wrapper"><h2>Loading task...</h2></div>;
+  }
+
+  // Handle messages that prevent a task from being displayed (either error or info)
+  if (error || infoMessage) {
     return (
       <div className="rating-wrapper-no">
-        <h2>Error: {error}</h2>
-        {/* Only show recharge button if the error is due to insufficient balance */}
-        {error.includes("insufficient") && (
+        {/* Display general errors with "Error:" prefix */}
+        {error && <h2>Error: {error}</h2>}
+        {/* Display info messages without "Error:" prefix */}
+        {infoMessage && <h2>{infoMessage}</h2>}
+
+        {/* Recharge button specifically for insufficient balance */}
+        {infoMessage.includes("insufficient") && (
             <button onClick={() => navigate("/recharge", { state: { requiredAmount: MIN_BALANCE_REQUIRED } })}>
                 Recharge Now
             </button>
         )}
-        <button onClick={fetchTask}>Try Again</button> {/* This is for other errors */}
+        {/* "Try Again" button for general errors or if user wants to re-fetch */}
+        <button onClick={fetchTask}>Try Again</button>
         <button onClick={() => navigate("/dashboard")}>Back to Dashboard</button>
       </div>
     );
   }
-  
-  // If no product is available (after successful fetch but no task)
-  if (!product) return <div className="rating-wrapper-no"><h2>{message || "No new tasks available."}</h2><button onClick={() => navigate("/dashboard")}>Back to Dashboard</button></div>;
 
+  // If no product is available (e.g., backend says no tasks)
+  if (!product) {
+    return <div className="rating-wrapper-no"><h2>{message || "No new tasks available."}</h2><button onClick={() => navigate("/dashboard")}>Back to Dashboard</button></div>;
+  }
+
+  // Default display for when a product is available
   return (
     <div className="rating-wrapper">
       <div className="rating-card">
