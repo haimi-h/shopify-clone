@@ -9,10 +9,9 @@ const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || 'http://localhost:500
 const RechargePage = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { openChat, initialChatMessage } = location.state || {};
 
-
-  const { requiredAmount } = location.state || {};
+  // --- FIX #1: Read injectionPlanId from the location state ---
+  const { requiredAmount, injectionPlanId } = location.state || {};
 
   const [amount, setAmount] = useState(requiredAmount ? String(requiredAmount) : '');
   const [message, setMessage] = useState('');
@@ -38,10 +37,7 @@ const RechargePage = () => {
     try {
       const token = localStorage.getItem('token');
       if (!token) {
-        // If there's no token, redirect to login. This is a safeguard.
         navigate('/login');
-        
-
         return;
       }
 
@@ -51,27 +47,33 @@ const RechargePage = () => {
         },
       };
 
+      // --- FIX #2: Include injectionPlanId in the POST request body if it exists ---
+      const payload = {
+        amount: numericAmount,
+        currency: 'USDT', // Assuming USDT as default currency
+      };
+
+      if (injectionPlanId) {
+        payload.injectionPlanId = injectionPlanId;
+        console.log('Submitting recharge for lucky order with ID:', injectionPlanId); // For debugging
+      }
+
       const response = await axios.post(
         `${API_BASE_URL}/recharge/submit`,
-        { amount: numericAmount, currency: 'USDT' }, // Assuming USDT as default currency
+        payload, // Use the new payload object
         config
       );
-
-      // Check if the token still exists after the API call, right before navigation
+      
       const tokenAfterRecharge = localStorage.getItem('token');
       if (!tokenAfterRecharge) {
-          // If the token is gone, it was likely an API-side issue.
           console.error("User token was cleared after recharge submission.");
           setMessage("Your session has expired. Please log in again.");
-          // We can navigate to login or just show the message.
           navigate('/login');
           return;
       }
 
-
       setMessage(response.data.message + " Please use the chat widget on the dashboard for further assistance and to provide your receipt.");
 
-      // Navigate to the dashboard with state to auto-open the chat widget.
       navigate('/dashboard', { 
           state: { 
               openChat: true, 
@@ -79,14 +81,12 @@ const RechargePage = () => {
           } 
       });
 
-
     } catch (error) {
       console.error('Recharge submission error:', error);
       
       let errorMessage = '❌ Failed to submit recharge request.';
       if (error.response?.status === 401 || error.response?.status === 403) {
           errorMessage = 'Your session has expired. Please log in again.';
-          // Redirect to login if unauthorized
           navigate('/login');
       } else {
           errorMessage = error.response?.data?.message || errorMessage;
@@ -104,10 +104,6 @@ const RechargePage = () => {
         <div className="back-button" onClick={() => navigate(-1)}>
           ← Back
         </div>
-        {/* <div className="page-title">Recharge</div> */}
-        {/* <div className="home-button"> */}
-          {/* <span onClick={() => navigate('/dashboard')}>🏠</span> */}
-        {/* </div> */}
       </div>
       <h2>Submit Recharge Request (USD)</h2>
       <input
@@ -117,10 +113,12 @@ const RechargePage = () => {
         placeholder="00.00"
         onChange={(e) => setAmount(e.target.value)}
         min="7"
+        // If it's a required amount for a lucky order, prevent user from changing it
+        readOnly={!!injectionPlanId} 
       />
       <div className="amount-options">
         {quickAmounts.map((amt) => (
-          <button key={amt} onClick={() => setAmount(String(amt))}>${amt.toFixed(2)}</button>
+          <button key={amt} onClick={() => setAmount(String(amt))} disabled={!!injectionPlanId}>${amt.toFixed(2)}</button>
         ))}
       </div>
 
