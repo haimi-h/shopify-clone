@@ -14,7 +14,7 @@ function ProductRatingPage() {
   const [hover, setHover] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(""); // For true errors (e.g., API failures)
-  const [infoMessage, setInfoMessage] = useState(""); // For informative messages like insufficient balance
+  const [infoMessage, setInfoMessage] = useState(""); // For informative messages like insufficient balance or lucky order recharge
   const [message, setMessage] = useState(""); // For success messages (e.g., "Rating submitted")
   const [userBalance, setUserBalance] = useState(0);
   const [isLuckyOrder, setIsLuckyOrder] = useState(false);
@@ -39,7 +39,7 @@ function ProductRatingPage() {
         headers: { Authorization: `Bearer ${token}` },
       });
 
-      const { balance, isLuckyOrder, luckyOrderCapitalRequired, task, message: apiMessage } = res.data;
+      const { balance, isLuckyOrder, luckyOrderCapitalRequired, task, message: apiMessage, luckyOrderRequiresRecharge, injectionPlanId } = res.data;
 
       setUserBalance(balance || 0);
 
@@ -51,15 +51,13 @@ function ProductRatingPage() {
         return;
       }
 
-      // --- LUCKY ORDER SPECIFIC RECHARGE CHECK ---
-      if (isLuckyOrder && res.data.luckyOrderRequiresRecharge) {
-        alert(apiMessage); // Keep alert for this specific backend-driven scenario
-        navigate("/recharge", {
-          state: {
-            requiredAmount: luckyOrderCapitalRequired,
-            injectionPlanId: res.data.injectionPlanId,
-          },
-        });
+      // --- LUCKY ORDER SPECIFIC RECHARGE CHECK (now using infoMessage) ---
+      if (isLuckyOrder && luckyOrderRequiresRecharge) {
+        setInfoMessage(apiMessage || `This is a lucky order requiring an additional capital of $${luckyOrderCapitalRequired.toFixed(2)}. Please recharge.`);
+        setLuckyOrderCapital(luckyOrderCapitalRequired); // Set capital so button can use it
+        // We'll pass the injectionPlanId via state when the recharge button is clicked
+        setProduct(null); // No task to display until recharge is done
+        setLoading(false);
         return;
       }
 
@@ -70,7 +68,7 @@ function ProductRatingPage() {
       } else {
         setProduct(task);
         setIsLuckyOrder(isLuckyOrder);
-        setLuckyOrderCapital(luckyOrderCapitalRequired);
+        setLuckyOrderCapital(luckyOrderCapitalRequired || 0); // Ensure it's always set
       }
 
     } catch (err) {
@@ -81,24 +79,28 @@ function ProductRatingPage() {
         navigate("/login");
       }
     } finally {
-      setLoading(false); // Ensure loading is always set to false in the end
+      setLoading(false);
     }
   };
 
   const handleSubmitRating = async () => {
     setError("");
-    setMessage(""); // Clear message on new submission attempt
+    setMessage("");
     setInfoMessage(""); // Clear info message on new submission attempt
 
     if (!product?.id || rating !== 5) {
-      setError("Please provide a 5-star rating to complete the task."); // This is a validation error
+      setError("Please provide a 5-star rating to complete the task.");
       return;
     }
 
+    // This check is now secondary, as the main check for lucky order capital
+    // is handled during fetchTask and would set infoMessage.
+    // However, it's a good fallback in case of state inconsistencies.
     if (isLuckyOrder && userBalance < luckyOrderCapital) {
-      alert(`Your balance of $${userBalance.toFixed(2)} is insufficient for this lucky order, which requires $${luckyOrderCapital.toFixed(2)}. Please recharge.`);
-      navigate("/recharge", { state: { requiredAmount: luckyOrderCapital } });
-      return;
+        // We can make this an infoMessage too, or keep it as an alert.
+        // For consistency, let's make it an infoMessage that appears briefly.
+        setInfoMessage(`Your balance of $${userBalance.toFixed(2)} is insufficient for this lucky order, which requires $${luckyOrderCapital.toFixed(2)}. Please recharge.`);
+        return;
     }
 
     try {
@@ -124,7 +126,7 @@ function ProductRatingPage() {
       navigate(location.pathname, { replace: true, state: {} });
     }
     fetchTask();
-  }, [location.state?.message]); // Re-run if a message comes via location state
+  }, [location.state?.message]);
 
   // --- Render Logic ---
 
@@ -137,18 +139,22 @@ function ProductRatingPage() {
   if (error || infoMessage) {
     return (
       <div className="rating-wrapper-no">
-        {/* Display general errors with "Error:" prefix */}
         {error && <h2>Error: {error}</h2>}
-        {/* Display info messages without "Error:" prefix */}
         {infoMessage && <h2>{infoMessage}</h2>}
 
-        {/* Recharge button specifically for insufficient balance */}
-        {infoMessage.includes("insufficient") && (
+        {/* Recharge button for general insufficient balance */}
+        {infoMessage.includes("insufficient") && !infoMessage.includes("lucky order") && (
             <button onClick={() => navigate("/recharge", { state: { requiredAmount: MIN_BALANCE_REQUIRED } })}>
                 Recharge Now
             </button>
         )}
-        {/* "Try Again" button for general errors or if user wants to re-fetch */}
+        {/* Recharge button for lucky order specific capital */}
+        {infoMessage.includes("lucky order") && luckyOrderCapital > 0 && (
+            <button onClick={() => navigate("/recharge", { state: { requiredAmount: luckyOrderCapital, injectionPlanId: location.state?.injectionPlanId } })}>
+                Recharge Capital ($ {luckyOrderCapital.toFixed(2)})
+            </button>
+        )}
+
         <button onClick={fetchTask}>Try Again</button>
         <button onClick={() => navigate("/dashboard")}>Back to Dashboard</button>
       </div>
